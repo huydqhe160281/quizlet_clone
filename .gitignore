@@ -74,3 +74,8 @@ next-env.d.ts
 .idea/
 .vscode/
 coverage
+
+# AI Kit (ai-kit onboard)
+openspec/changes/archive/
+openspec/.backup/
+.fastembed_cache

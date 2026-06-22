@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { unstable_cache } from 'next/cache';
 import { ApiError } from '@/lib/api-error';
 import type {
   libraryQuerySchema,
@@ -140,3 +141,19 @@ export async function getPublicSetPreview(setId: string) {
 
   return set;
 }
+
+export const getCachedPublicLibrary = async (query: LibraryQuery) => {
+  return unstable_cache(
+    async () => getPublicLibrary(query),
+    ['public-library', JSON.stringify(query)],
+    { tags: ['public-sets'], revalidate: 3600 }
+  )();
+};
+
+export const getCachedSearchPublicSets = async (query: SearchQuery) => {
+  return unstable_cache(
+    async () => searchPublicSets(query),
+    ['public-search', JSON.stringify(query)],
+    { tags: ['public-sets'], revalidate: 3600 }
+  )();
+};

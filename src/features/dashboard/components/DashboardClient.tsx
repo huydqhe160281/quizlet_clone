@@ -1,6 +1,5 @@
 'use client';
 
-import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { DueCardsAlert } from '@/features/dashboard/components/DueCardsAlert';
 import { StatsCards } from '@/features/dashboard/components/StatsCards';
@@ -43,9 +42,7 @@ export function DashboardClient({ stats, activity, sessions }: DashboardClientPr
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">Your study overview and progress.</p>
       </div>
-      <Suspense fallback={null}>
-        <DueCardsAlert />
-      </Suspense>
+      <DueCardsAlert dueCount={stats.dueToday} />
       <StatsCards stats={stats} />
       <ActivityHeatmap activity={activity} />
       <div className="rounded-xl border bg-card p-4">

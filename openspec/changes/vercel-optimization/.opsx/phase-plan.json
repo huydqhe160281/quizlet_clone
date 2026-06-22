@@ -1,0 +1,24 @@
+{
+  "phases_recommended": true,
+  "rationale": "Optimizations target different independent layers (React rendering, Data Caching, and Deployment config). They can be implemented sequentially with clear boundaries.",
+  "phases": [
+    {
+      "name": "RSC Migration",
+      "capabilities": ["Refactor client data fetching to Server Components"],
+      "boundaries": ["src/features/search", "src/features/library", "src/features/dashboard"],
+      "dependencies": []
+    },
+    {
+      "name": "Caching Implementation",
+      "capabilities": ["Implement Next.js cache() and unstable_cache for Prisma"],
+      "boundaries": ["src/server/db.ts", "API Routes"],
+      "dependencies": ["RSC Migration"]
+    },
+    {
+      "name": "Config Adjustments",
+      "capabilities": ["Align Vercel regions and DB connection limits"],
+      "boundaries": ["vercel.json", ".env"],
+      "dependencies": []
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import type { Prisma, Visibility } from '@prisma/client';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { ApiError } from '@/lib/api-error';
 import type {
   CreateSetInput,
@@ -29,33 +30,46 @@ const assertReadable = (set: { userId: string; visibility: Visibility }, userId?
   }
 };
 
+const invalidateSetCache = (userId: string, visibility: Visibility) => {
+  revalidateTag(`sets-${userId}`);
+  if (visibility === 'PUBLIC') {
+    revalidateTag('public-sets');
+  }
+};
+
 export async function getSets(userId: string, query: ListSetsQuery) {
-  const where: Prisma.FlashcardSetWhereInput = {
-    userId,
-    ...(query.visibility ? { visibility: query.visibility } : {}),
-    ...(query.language ? { language: query.language } : {}),
-    ...(query.folderId ? { folders: { some: { folderId: query.folderId } } } : {}),
-  };
+  return unstable_cache(
+    async () => {
+      const where: Prisma.FlashcardSetWhereInput = {
+        userId,
+        ...(query.visibility ? { visibility: query.visibility } : {}),
+        ...(query.language ? { language: query.language } : {}),
+        ...(query.folderId ? { folders: { some: { folderId: query.folderId } } } : {}),
+      };
 
-  const sets = await prisma.flashcardSet.findMany({
-    where,
-    include: setInclude,
-    take: query.limit + 1,
-    skip: query.cursor ? 1 : 0,
-    cursor: query.cursor ? { id: query.cursor } : undefined,
-    orderBy: { createdAt: 'desc' },
-  });
+      const sets = await prisma.flashcardSet.findMany({
+        where,
+        include: setInclude,
+        take: query.limit + 1,
+        skip: query.cursor ? 1 : 0,
+        cursor: query.cursor ? { id: query.cursor } : undefined,
+        orderBy: { createdAt: 'desc' },
+      });
 
-  const hasMore = sets.length > query.limit;
-  const data = hasMore ? sets.slice(0, -1) : sets;
+      const hasMore = sets.length > query.limit;
+      const data = hasMore ? sets.slice(0, -1) : sets;
 
-  return {
-    data,
-    pagination: {
-      nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
-      hasMore,
+      return {
+        data,
+        pagination: {
+          nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+          hasMore,
+        },
+      };
     },
-  };
+    ['user-sets', userId, JSON.stringify(query)],
+    { tags: [`sets-${userId}`], revalidate: 3600 }
+  )();
 }
 
 export async function getSet(setId: string, userId?: string) {
@@ -73,7 +87,7 @@ export async function getSet(setId: string, userId?: string) {
 }
 
 export async function createSet(userId: string, input: CreateSetInput) {
-  return prisma.flashcardSet.create({
+  const set = await prisma.flashcardSet.create({
     data: {
       title: input.title,
       description: input.description,
@@ -90,6 +104,9 @@ export async function createSet(userId: string, input: CreateSetInput) {
     },
     include: setInclude,
   });
+
+  invalidateSetCache(userId, set.visibility);
+  return set;
 }
 
 export async function updateSet(setId: string, userId: string, input: UpdateSetInput) {
@@ -120,6 +137,13 @@ export async function updateSet(setId: string, userId: string, input: UpdateSetI
     },
     include: setInclude,
   });
+
+  invalidateSetCache(userId, set.visibility);
+  // Also invalidate if it was previously public and is now private
+  if (existing.visibility === 'PUBLIC' && set.visibility !== 'PUBLIC') {
+    revalidateTag('public-sets');
+  }
+  return set;
 }
 
 export async function deleteSet(setId: string, userId: string) {
@@ -129,6 +153,7 @@ export async function deleteSet(setId: string, userId: string) {
   }
   assertOwner(existing, userId);
   await prisma.flashcardSet.delete({ where: { id: setId } });
+  invalidateSetCache(userId, existing.visibility);
 }
 
 export async function duplicateSet(setId: string, userId: string) {
@@ -164,4 +189,7 @@ export async function duplicateSet(setId: string, userId: string) {
     },
     include: setInclude,
   });
+
+  invalidateSetCache(userId, set.visibility);
+  return set;
 }

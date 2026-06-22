@@ -8,7 +8,19 @@ import { Button } from '@/components/ui/button';
 
 type SortOption = 'newest' | 'most_studied' | 'trending';
 
-export function LibraryPageClient() {
+export function LibraryPageClient({
+  initialData,
+}: {
+  initialData: {
+    data: Array<{
+      id: string;
+      title: string;
+      description: string | null;
+      language: string | null;
+      _count: { cards: number; studySessions: number };
+    }>;
+  };
+}) {
   const [sort, setSort] = useState<SortOption>('newest');
 
   const { data, isLoading } = useQuery({
@@ -28,6 +40,7 @@ export function LibraryPageClient() {
         }>;
       };
     },
+    initialData: sort === 'newest' ? initialData : undefined,
   });
 
   return (

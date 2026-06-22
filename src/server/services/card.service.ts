@@ -1,4 +1,6 @@
 import { ApiError } from '@/lib/api-error';
+import { revalidateTag } from 'next/cache';
+import type { Visibility } from '@prisma/client';
 import type { CreateCardInput, UpdateCardInput } from '@/features/cards/schemas/card.schema';
 import { prisma } from '@/server/db';
 
@@ -10,7 +12,14 @@ const getOwnedSet = async (setId: string, userId: string) => {
   if (set.userId !== userId) {
     throw new ApiError('FORBIDDEN', 'You do not have access to this set', 403);
   }
-  return set;
+  return set as typeof set & { visibility: Visibility };
+};
+
+const invalidateSetCache = (userId: string, visibility: Visibility) => {
+  revalidateTag(`sets-${userId}`);
+  if (visibility === 'PUBLIC') {
+    revalidateTag('public-sets');
+  }
 };
 
 export async function getCards(setId: string, userId?: string) {
@@ -47,6 +56,9 @@ export async function createCard(setId: string, userId: string, input: CreateCar
       sortOrder: input.sortOrder ?? (maxOrder._max.sortOrder ?? -1) + 1,
     },
   });
+
+  invalidateSetCache(userId, set.visibility);
+  return card;
 }
 
 export async function updateCard(
@@ -73,6 +85,9 @@ export async function updateCard(
       ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
     },
   });
+
+  invalidateSetCache(userId, set.visibility);
+  return updatedCard;
 }
 
 export async function deleteCard(setId: string, cardId: string, userId: string) {
@@ -84,6 +99,7 @@ export async function deleteCard(setId: string, cardId: string, userId: string) 
   }
 
   await prisma.flashcard.delete({ where: { id: cardId } });
+  invalidateSetCache(userId, set.visibility);
 }
 
 export async function reorderCards(setId: string, userId: string, cardIds: string[]) {
@@ -112,6 +128,8 @@ export async function reorderCards(setId: string, userId: string, cardIds: strin
     )
   );
 
+  invalidateSetCache(userId, set.visibility);
+
   return prisma.flashcard.findMany({
     where: { setId },
     orderBy: { sortOrder: 'asc' },
@@ -127,4 +145,6 @@ export async function deleteCards(setId: string, cardIds: string[], userId: stri
       id: { in: cardIds },
     },
   });
+
+  invalidateSetCache(userId, set.visibility);
 }

@@ -15,7 +15,7 @@ type PublicSetItem = {
   _count?: { cards: number; studySessions: number };
 };
 
-export function SearchPageClient() {
+export function SearchPageClient({ initialData }: { initialData: { data: PublicSetItem[] } }) {
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
 
@@ -33,6 +33,7 @@ export function SearchPageClient() {
       }
       return (await response.json()) as { data: PublicSetItem[] };
     },
+    initialData: submitted === '' ? initialData : undefined,
   });
 
   const isSearching = submitted.length > 0;
