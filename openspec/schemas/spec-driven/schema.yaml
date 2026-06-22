@@ -1,0 +1,42 @@
+name: spec-driven
+version: 2
+description: Standard spec-driven workflow schema (Upgraded)
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Problem definition and rationale
+    template: proposal.md
+    requires: []
+  # Canonical design artifact filename is design-brief.md (same as brainstorm schema)
+  # so status/dependency checks never miss work saved under design-brief.md.
+  - id: design
+    generates: design-brief.md
+    description: High-level design document (design brief)
+    template: design-brief.md
+    requires:
+      - proposal
+  - id: system_docs
+    generates: system_docs/**/*.md
+    description: System documentation updates (Detail Design, Basic Design, SRS)
+    template: system_docs/README.md
+    requires:
+      - design
+  # Glob required: @fission-ai/openspec marks an artifact "done" only when
+  # resolveArtifactOutputs finds files (directories like specs/ alone never match).
+  - id: specs
+    generates: specs/**/*.md
+    description: Specifications
+    template: spec.md
+    requires:
+      - design
+  - id: tasks
+    generates: tasks.md
+    description: Implementation tasks
+    template: tasks.md
+    requires:
+      - specs
+      - system_docs
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md

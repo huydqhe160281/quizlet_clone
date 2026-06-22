@@ -1,0 +1,25 @@
+name: docs
+version: 1
+description: Minimal schema for documentation updates
+artifacts:
+  - id: outline
+    generates: outline.md
+    description: Structure of the documentation changes
+    template: outline.md
+    requires: []
+  - id: content-draft
+    generates: content-draft.md
+    description: Draft of the actual documentation content
+    template: content-draft.md
+    requires:
+      - outline
+  - id: tasks
+    generates: tasks.md
+    description: Documentation writing tasks
+    template: tasks.md
+    requires:
+      - outline
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md

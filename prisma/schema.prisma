@@ -1,0 +1,276 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum StudyMode {
+  FLASHCARD
+  LEARN
+  WRITE
+  TEST
+}
+
+enum Grade {
+  AGAIN
+  HARD
+  GOOD
+  EASY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  image         String?
+  passwordHash  String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  sets           FlashcardSet[]
+  folders        Folder[]
+  studySessions  StudySession[]
+  cardProgress   CardProgress[]
+  reviewHistory  ReviewHistory[]
+  stats          UserStats?
+
+  @@index([email])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sets FolderSet[]
+
+  @@index([userId])
+  @@map("folders")
+}
+
+model FolderSet {
+  folderId String
+  setId    String
+
+  folder Folder       @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  set    FlashcardSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+
+  @@id([folderId, setId])
+  @@map("folder_sets")
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  name String @unique
+
+  sets SetTag[]
+
+  @@index([name])
+  @@map("tags")
+}
+
+model SetTag {
+  setId String
+  tagId String
+
+  set FlashcardSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  tag Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([setId, tagId])
+  @@map("set_tags")
+}
+
+model FlashcardSet {
+  id          String     @id @default(cuid())
+  title       String
+  description String?    @db.Text
+  language    String?
+  visibility  Visibility @default(PRIVATE)
+  coverImage  String?
+  userId       String
+  searchVector Unsupported("tsvector")? @map("search_vector")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards          Flashcard[]
+  tags           SetTag[]
+  folders        FolderSet[]
+  studySessions  StudySession[]
+
+  @@index([userId])
+  @@index([visibility])
+  @@index([language])
+  @@index([createdAt(sort: Desc)])
+  @@map("flashcard_sets")
+}
+
+model Flashcard {
+  id        String   @id @default(cuid())
+  setId     String
+  front     String   @db.Text
+  back      String   @db.Text
+  example   String?  @db.Text
+  imageUrl  String?
+  audioUrl  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  set           FlashcardSet    @relation(fields: [setId], references: [id], onDelete: Cascade)
+  sessionCards  SessionCard[]
+  progress      CardProgress[]
+  reviewHistory ReviewHistory[]
+
+  @@index([setId])
+  @@index([setId, sortOrder])
+  @@map("flashcards")
+}
+
+model CardProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  cardId       String
+  easeFactor   Float     @default(2.5)
+  interval     Int       @default(0)
+  repetitions  Int       @default(0)
+  dueDate      DateTime  @default(now())
+  reviewCount  Int       @default(0)
+  lastReviewed DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Flashcard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, cardId])
+  @@index([userId, dueDate])
+  @@index([cardId])
+  @@map("card_progress")
+}
+
+model ReviewHistory {
+  id         String   @id @default(cuid())
+  userId     String
+  cardId     String
+  grade      Grade
+  reviewedAt DateTime @default(now())
+  responseMs Int?
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card Flashcard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewedAt(sort: Desc)])
+  @@index([cardId])
+  @@map("review_history")
+}
+
+model StudySession {
+  id           String     @id @default(cuid())
+  userId       String
+  setId        String
+  mode         StudyMode
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
+  totalCards   Int        @default(0)
+  correctCount Int        @default(0)
+  score        Float?
+  settings     Json?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  set          FlashcardSet  @relation(fields: [setId], references: [id], onDelete: Cascade)
+  sessionCards SessionCard[]
+
+  @@index([userId, startedAt(sort: Desc)])
+  @@index([setId])
+  @@map("study_sessions")
+}
+
+model SessionCard {
+  id         String    @id @default(cuid())
+  sessionId  String
+  cardId     String
+  isCorrect  Boolean?
+  grade      Grade?
+  answeredAt DateTime?
+
+  session StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  card    Flashcard    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@map("session_cards")
+}
+
+model UserStats {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  currentStreak   Int       @default(0)
+  longestStreak   Int       @default(0)
+  totalReviews    Int       @default(0)
+  totalCorrect    Int       @default(0)
+  lastStudiedDate DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stats")
+}

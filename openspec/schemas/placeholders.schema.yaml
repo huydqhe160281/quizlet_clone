@@ -1,0 +1,43 @@
+# Canonical Schema for AI Customization Placeholders
+# This schema governs the tokens that are injected into the .ai-kit/ asset envelope.
+
+delimiter_syntax:
+  token_pattern: "\\{\\{\\s*([A-Z_]+)\\s*\\}\\}"
+  validation_sample: "{{ PROJECT_TECH_STACK }}"
+
+tokens:
+  - name: PROJECT_TECH_STACK_AND_CONVENTIONS
+    description: "The core technology stack and framework conventions of the project."
+    fallback: "GENERIC_SOFTWARE_ENGINEERING_PRACTICES"
+    injection_scope:
+      target_globs: ["**/*.md"]
+      max_targets: 50
+    constraints:
+      max_replacement_length: 500
+
+  - name: TESTING_FRAMEWORK
+    description: "The testing framework used in the project."
+    fallback: "GENERIC_TESTING_PRACTICES"
+    injection_scope:
+      target_globs: ["**/*.md"]
+      max_targets: 10
+    constraints:
+      max_replacement_length: 100
+
+  - name: LINTING_RULES
+    description: "The linting rules and conventions used in the project."
+    fallback: "GENERIC_LINTING_PRACTICES"
+    injection_scope:
+      target_globs: ["**/*.md"]
+      max_targets: 10
+    constraints:
+      max_replacement_length: 200
+
+  - name: DEPLOYMENT_TARGET
+    description: "The primary deployment target or hosting environment."
+    fallback: "GENERIC_DEPLOYMENT_PRACTICES"
+    injection_scope:
+      target_globs: ["**/*.md"]
+      max_targets: 5
+    constraints:
+      max_replacement_length: 100

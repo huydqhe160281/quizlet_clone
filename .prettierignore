@@ -1,0 +1,10 @@
+.next
+node_modules
+build
+dist
+.tmp
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+prisma/migrations
+openspec/changes

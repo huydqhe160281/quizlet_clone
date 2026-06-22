@@ -1,0 +1,31 @@
+name: refactor
+version: 1
+description: Minimal schema for codebase refactoring and tech debt removal
+artifacts:
+  - id: rationale
+    generates: rationale.md
+    description: Motivation and blast radius analysis of the refactoring
+    template: rationale.md
+    requires: []
+  - id: decomposition-plan
+    generates: decomposition-plan.md
+    description: Structured plan — sub-functions, signatures, call graph, extraction order
+    template: decomposition-plan.md
+    requires:
+      - rationale
+  - id: specs
+    generates: specs/**/*.md
+    description: Delta specifications ensuring architecture constraints
+    template: spec.md
+    requires:
+      - decomposition-plan
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist for the refactor
+    template: tasks.md
+    requires:
+      - decomposition-plan
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md

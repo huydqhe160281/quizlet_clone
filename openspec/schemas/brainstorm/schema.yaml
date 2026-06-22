@@ -1,0 +1,61 @@
+name: brainstorm
+version: 1
+description: >
+  Custom workflow schema for structured brainstorming — turning raw ideas into
+  clear, validated designs before implementation. Supports optional research
+  artifacts for evidence-first investigation.
+artifacts:
+  - id: exploration
+    generates: exploration.md
+    description: Problem space analysis — context, constraints, assumptions, and scope
+    template: exploration.md
+    instruction: |
+      Analyze the problem space thoroughly before proposing solutions.
+      Focus on understanding the problem, not solving it.
+      Document all assumptions explicitly with [ASSUMPTION] labels.
+    requires: []
+  - id: research
+    generates: research.md
+    description: Evidence-first investigation with sourced findings (optional — skip if not needed)
+    template: research.md
+    instruction: |
+      This artifact is OPTIONAL. Only fill it when the brainstorm requires
+      external evidence, benchmarks, prior art, or codebase investigation.
+      Label every finding with [SOURCED], [CODEBASE], [INFERENCE], or [ASSUMPTION].
+      If not needed, leave this artifact empty or write "No research required."
+    requires:
+      - exploration
+  - id: design-brief
+    generates: design-brief.md
+    description: Proposed approaches, trade-offs, recommended path, and crystallized decisions
+    template: design-brief.md
+    instruction: |
+      Propose 2-3 viable design approaches with clear trade-offs.
+      Lead with the recommended option.
+      Include a Decision Log section documenting all architectural choices.
+      If research.md exists and contains findings, reference them.
+      Run code_impact on key symbols for each approach.
+    requires:
+      - exploration
+  - id: system_docs
+    generates: system_docs/**/*.md
+    description: System documentation updates (Detail Design, Basic Design, SRS)
+    template: system_docs/README.md
+    requires:
+      - design-brief
+  - id: specs
+    generates: specs/**/*.md
+    description: Behavioral specifications for capabilities identified in the design
+    template: spec.md
+    requires:
+      - design-brief
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist following TDD workflow
+    template: tasks.md
+    requires:
+      - design-brief
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md

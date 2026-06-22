@@ -1,0 +1,37 @@
+name: bug-fix
+version: 1
+description: Custom workflow schema for reporting and fixing bugs
+artifacts:
+  - id: bug-report
+    generates: bug-report.md
+    description: Detailed description of the bug and reproduction steps
+    template: bug-report.md
+    requires: []
+  - id: reproduction
+    generates: reproduction.md
+    description: Automated reproduction test instructions or constraints
+    template: reproduction.md
+    requires:
+      - bug-report
+  - id: root-cause
+    generates: root-cause.md
+    description: Analysis of the root cause, blast radius, and proposed fix
+    template: root-cause.md
+    requires:
+      - bug-report
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist for the fix and testing strategy
+    template: tasks.md
+    requires:
+      - root-cause
+  - id: specs
+    generates: specs/**/*.md
+    description: Delta specifications for capabilities affected by the bug fix
+    template: spec.md
+    requires:
+      - root-cause
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md

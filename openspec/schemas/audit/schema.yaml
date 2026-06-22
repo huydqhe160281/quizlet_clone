@@ -1,0 +1,30 @@
+name: audit
+version: 1
+description: Batch audit process for maintaining spec health
+artifacts:
+  - id: audit-report
+    generates: audit-report.json
+    description: CLI-generated report of suspect files requiring classification
+    template: audit-report.json
+    required: true
+  - id: classification
+    generates: classification.md
+    description: AI-generated classification results (Valid/Partial/Critical)
+    template: classification.md
+    required: true
+  - id: healed-specs
+    generates: specs/**/*.md
+    description: Delta specifications for the partially stale specs
+    template: spec.md
+    required: false
+    requires:
+      - classification
+  - id: tasks
+    generates: tasks.md
+    description: Healing task checklist for partially stale specs
+    template: tasks.md
+    required: true
+apply:
+  requires:
+    - tasks
+  tracks: tasks.md

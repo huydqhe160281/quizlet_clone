@@ -1,0 +1,71 @@
+name: system-design
+version: 2
+description: >
+  Archetype-aware system design schema for Phase 0 strategic planning.
+  Supports project-aware sync routing for multi-project setups.
+  Produces sharded architecture documents and inline implementation artifacts
+  within a single change directory.
+
+archetype:
+  detection: user-select  # user-select | auto-suggest
+  options: [web-frontend, backend-api, mobile, full-stack, ai-ml]
+  default: full-stack
+
+target:
+  required: true
+  fields:
+    - project   # string: project name
+    - root      # string: path to project root (relative or absolute)
+
+artifacts:
+  - id: system-brief
+    generates: system-brief.md
+    description: "Problem statement, strategic goals, scope, NFRs, tech stack, archetype"
+    template: system-brief.md
+    requires: []
+
+  - id: architecture
+    generates: architecture/**/*.md
+    description: "Sharded architecture — overview + archetype-conditional sections + ADRs"
+    template: architecture/
+    requires: [system-brief]
+
+  - id: decomposition
+    generates: decomposition.md
+    description: "Dependency graph, implementation phases, completeness check"
+    template: decomposition.md
+    requires: [architecture]
+
+  - id: design
+    generates: design-brief.md
+    description: "Architectural decisions using WHAT/WHY/REJECTED format, risks, migration plan"
+    template: design-brief.md
+    requires: [decomposition]
+
+  - id: specs
+    generates: specs/**/*.md
+    description: "Capability specifications with Gherkin scenarios and engine layer map"
+    template: spec.md
+    requires: [design]
+
+  - id: system_docs
+    generates: system_docs/**/*.md
+    description: "System documentation updates (Detail Design, Basic Design, SRS)"
+    template: system_docs/README.md
+    requires: [design]
+
+  - id: tasks
+    generates: tasks.md
+    description: "Implementation tasks structured by phases from decomposition"
+    template: tasks.md
+    requires: [specs, system_docs]
+
+sync:
+  destination: "{target.root}/docs/system-design/{target.project}/"
+  method: move
+  conflict: prompt-user
+  specs: "{target.root}/openspec/specs/"
+  
+apply:
+  requires: [tasks]
+  tracks: tasks.md
