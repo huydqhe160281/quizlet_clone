@@ -38,14 +38,14 @@ export async function getCards(setId: string, userId?: string) {
 }
 
 export async function createCard(setId: string, userId: string, input: CreateCardInput) {
-  await getOwnedSet(setId, userId);
+  const set = await getOwnedSet(setId, userId);
 
   const maxOrder = await prisma.flashcard.aggregate({
     where: { setId },
     _max: { sortOrder: true },
   });
 
-  return prisma.flashcard.create({
+  const card = await prisma.flashcard.create({
     data: {
       setId,
       front: input.front,
@@ -67,14 +67,14 @@ export async function updateCard(
   userId: string,
   input: UpdateCardInput
 ) {
-  await getOwnedSet(setId, userId);
+  const set = await getOwnedSet(setId, userId);
 
   const card = await prisma.flashcard.findFirst({ where: { id: cardId, setId } });
   if (!card) {
     throw new ApiError('NOT_FOUND', 'Card not found', 404);
   }
 
-  return prisma.flashcard.update({
+  const updatedCard = await prisma.flashcard.update({
     where: { id: cardId },
     data: {
       ...(input.front !== undefined ? { front: input.front } : {}),
@@ -91,7 +91,7 @@ export async function updateCard(
 }
 
 export async function deleteCard(setId: string, cardId: string, userId: string) {
-  await getOwnedSet(setId, userId);
+  const set = await getOwnedSet(setId, userId);
 
   const card = await prisma.flashcard.findFirst({ where: { id: cardId, setId } });
   if (!card) {
@@ -103,7 +103,7 @@ export async function deleteCard(setId: string, cardId: string, userId: string) 
 }
 
 export async function reorderCards(setId: string, userId: string, cardIds: string[]) {
-  await getOwnedSet(setId, userId);
+  const set = await getOwnedSet(setId, userId);
 
   const cards = await prisma.flashcard.findMany({
     where: { setId },
@@ -137,7 +137,7 @@ export async function reorderCards(setId: string, userId: string, cardIds: strin
 }
 
 export async function deleteCards(setId: string, cardIds: string[], userId: string) {
-  await getOwnedSet(setId, userId);
+  const set = await getOwnedSet(setId, userId);
 
   await prisma.flashcard.deleteMany({
     where: {

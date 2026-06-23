@@ -10,7 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleButton } from '@/features/auth/components/GoogleButton';
 
-export function RegisterForm() {
+type RegisterFormProps = {
+  googleAuthEnabled?: boolean;
+};
+
+export function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -60,10 +64,12 @@ export function RegisterForm() {
         <CardDescription>Start building your flashcard sets.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <GoogleButton />
-        <div className="relative text-center text-xs uppercase text-muted-foreground">
-          <span className="bg-card px-2">or</span>
-        </div>
+        {googleAuthEnabled ? <GoogleButton /> : null}
+        {googleAuthEnabled ? (
+          <div className="relative text-center text-xs uppercase text-muted-foreground">
+            <span className="bg-card px-2">or</span>
+          </div>
+        ) : null}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name (optional)</Label>

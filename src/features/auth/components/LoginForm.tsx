@@ -11,14 +11,30 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleButton } from '@/features/auth/components/GoogleButton';
 
-export function LoginForm() {
+function safeCallbackUrl(raw: string | null): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) {
+    return '/dashboard';
+  }
+  return raw;
+}
+
+type LoginFormProps = {
+  googleAuthEnabled?: boolean;
+};
+
+export function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard';
+  const callbackUrl = safeCallbackUrl(searchParams.get('callbackUrl'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => {
+    if (searchParams.get('error') === 'OAuthAccountNotLinked') {
+      return 'Email đã được đăng ký, vui lòng đăng nhập bằng mật khẩu.';
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -51,10 +67,12 @@ export function LoginForm() {
         <CardDescription>Welcome back — continue studying.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <GoogleButton />
-        <div className="relative text-center text-xs uppercase text-muted-foreground">
-          <span className="bg-card px-2">or</span>
-        </div>
+        {googleAuthEnabled ? <GoogleButton /> : null}
+        {googleAuthEnabled ? (
+          <div className="relative text-center text-xs uppercase text-muted-foreground">
+            <span className="bg-card px-2">or</span>
+          </div>
+        ) : null}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

@@ -126,7 +126,7 @@ export async function updateSet(setId: string, userId: string, input: UpdateSetI
           },
         };
 
-  return prisma.flashcardSet.update({
+  const set = await prisma.flashcardSet.update({
     where: { id: setId },
     data: {
       ...(input.title !== undefined ? { title: input.title } : {}),
@@ -139,7 +139,6 @@ export async function updateSet(setId: string, userId: string, input: UpdateSetI
   });
 
   invalidateSetCache(userId, set.visibility);
-  // Also invalidate if it was previously public and is now private
   if (existing.visibility === 'PUBLIC' && set.visibility !== 'PUBLIC') {
     revalidateTag('public-sets');
   }
@@ -168,7 +167,7 @@ export async function duplicateSet(setId: string, userId: string) {
 
   assertReadable(source, userId);
 
-  return prisma.flashcardSet.create({
+  const set = await prisma.flashcardSet.create({
     data: {
       title: `${source.title} (copy)`,
       description: source.description,
