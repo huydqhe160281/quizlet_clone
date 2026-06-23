@@ -20,7 +20,7 @@ export function SessionComplete({
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
   return (
-    <Card className="mx-auto max-w-md text-center">
+    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-2xl border-border/50 text-center shadow-lg">
       <CardHeader>
         <CardTitle>Session complete</CardTitle>
         <CardDescription>{mode} mode finished</CardDescription>

@@ -17,11 +17,15 @@ export default auth((req) => {
     return Response.redirect(loginUrl);
   }
 
+  const isAuthPageOrRoot = pathname === '/' || pathname === '/login' || pathname === '/register';
+  if (isAuthPageOrRoot && req.auth) {
+    const dashboardUrl = new URL('/dashboard', req.nextUrl.origin);
+    return Response.redirect(dashboardUrl);
+  }
+
   return undefined;
 });
 
 export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|login|register|forgot-password|reset-password|$).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|forgot-password|reset-password).*)'],
 };

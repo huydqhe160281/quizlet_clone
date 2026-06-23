@@ -6,6 +6,8 @@ import './globals.css';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+import { ThemeProvider } from '@/components/providers/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -20,13 +22,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} min-h-screen font-sans antialiased`}>
-        <QueryProvider>
-          <AuthSessionProvider>
-            <ErrorBoundary>{children}</ErrorBoundary>
-          </AuthSessionProvider>
-        </QueryProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} min-h-screen font-sans antialiased bg-gradient-to-b from-background to-muted/20 dark:from-background dark:to-background`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          storageKey="flashcards-theme"
+          disableTransitionOnChange
+        >
+          <QueryProvider>
+            <AuthSessionProvider>
+              <ErrorBoundary>{children}</ErrorBoundary>
+            </AuthSessionProvider>
+          </QueryProvider>
+          <Toaster />
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>

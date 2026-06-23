@@ -58,12 +58,13 @@ export function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create account</CardTitle>
+    <Card className="glass-panel relative overflow-hidden rounded-2xl border-border/50 shadow-xl">
+      <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <CardHeader className="relative z-10 text-center">
+        <CardTitle className="text-2xl font-bold">Create account</CardTitle>
         <CardDescription>Start building your flashcard sets.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 relative z-10">
         {googleAuthEnabled ? <GoogleButton /> : null}
         {googleAuthEnabled ? (
           <div className="relative text-center text-xs uppercase text-muted-foreground">

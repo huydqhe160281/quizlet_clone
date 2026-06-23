@@ -66,7 +66,7 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
+    <Card className="glass-panel w-full max-w-lg mx-auto overflow-hidden rounded-2xl border-border/50 shadow-lg">
       <CardHeader>
         <CardTitle>Study Settings</CardTitle>
         <CardDescription>

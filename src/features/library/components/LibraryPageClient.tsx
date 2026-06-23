@@ -45,8 +45,10 @@ export function LibraryPageClient({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Public library</h1>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Public library
+        </h1>
         <p className="text-muted-foreground">Browse and duplicate public flashcard sets.</p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -67,15 +69,25 @@ export function LibraryPageClient({
           <Link
             key={set.id}
             href={`/shared/${set.id}`}
-            className="rounded-xl border bg-card p-4 transition-colors hover:border-primary/40"
+            className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 transition-all hover:border-primary/40 hover:shadow-md"
           >
-            <h3 className="font-semibold">{set.title}</h3>
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-              {set.description ?? 'No description'}
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Badge variant="secondary">{set._count.cards} cards</Badge>
-              {set.language && <Badge variant="outline">{set.language}</Badge>}
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10" />
+            <div className="relative z-10">
+              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                {set.title}
+              </h3>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {set.description ?? 'No description'}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge
+                  variant="secondary"
+                  className="group-hover:bg-primary/10 group-hover:text-primary transition-colors"
+                >
+                  {set._count.cards} cards
+                </Badge>
+                {set.language && <Badge variant="outline">{set.language}</Badge>}
+              </div>
             </div>
           </Link>
         ))}

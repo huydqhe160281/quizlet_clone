@@ -13,7 +13,7 @@ type StudyLauncherProps = {
 export function StudyLauncher({ setId, cardCount }: StudyLauncherProps) {
   if (cardCount === 0) {
     return (
-      <Card>
+      <Card className="glass-panel overflow-hidden rounded-2xl border-border/50">
         <CardHeader>
           <CardTitle>Study</CardTitle>
           <CardDescription>Add at least one card before studying.</CardDescription>
@@ -23,7 +23,7 @@ export function StudyLauncher({ setId, cardCount }: StudyLauncherProps) {
   }
 
   return (
-    <Card>
+    <Card className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-sm">
       <CardHeader>
         <CardTitle>Study this set</CardTitle>
         <CardDescription>

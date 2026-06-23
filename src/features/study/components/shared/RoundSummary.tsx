@@ -21,7 +21,7 @@ export function RoundSummary({
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
   return (
-    <Card className="mx-auto max-w-md text-center shadow-lg border bg-card">
+    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-2xl border-border/50 text-center shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
           Round {roundIndex + 1} Complete

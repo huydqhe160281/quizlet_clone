@@ -80,7 +80,11 @@ export function WriteMode({ setId }: WriteModeProps) {
   };
 
   if (study.isLoading) {
-    return <p className="text-sm text-muted-foreground">Starting session…</p>;
+    return (
+      <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
+        Starting session…
+      </div>
+    );
   }
 
   if (study.error) {
@@ -120,7 +124,7 @@ export function WriteMode({ setId }: WriteModeProps) {
         <span>Round {study.roundIndex + 1}</span>
         <StudyProgress current={study.currentIndex + 1} total={roundCards.length} />
       </div>
-      <div className="rounded-xl border bg-card p-6 text-center">
+      <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
         <p className="text-sm text-muted-foreground">Type the answer</p>
         <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
       </div>

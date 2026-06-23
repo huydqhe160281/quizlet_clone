@@ -51,12 +51,13 @@ export function ResetPasswordForm() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Set new password</CardTitle>
+    <Card className="glass-panel relative overflow-hidden rounded-2xl border-border/50 shadow-xl">
+      <div className="absolute -right-20 -bottom-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <CardHeader className="relative z-10 text-center">
+        <CardTitle className="text-2xl font-bold">Set new password</CardTitle>
         <CardDescription>Choose a new password for your account.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 relative z-10">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="password">New password</Label>

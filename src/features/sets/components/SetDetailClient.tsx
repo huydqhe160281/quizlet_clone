@@ -23,13 +23,17 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
   const { deleteSet, duplicateSet } = useSetMutations();
 
   if (isLoading || !set) {
-    return <p className="text-sm text-muted-foreground">Loading set…</p>;
+    return (
+      <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
+        Loading set…
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <div className="-mb-2">
-        <Button variant="ghost" size="sm" asChild className="-ml-3">
+        <Button variant="ghost" size="sm" asChild className="-ml-3 rounded-full">
           <Link
             href="/sets"
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
@@ -41,7 +45,9 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{set.title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+            {set.title}
+          </h1>
           <p className="mt-1 text-muted-foreground">{set.description ?? 'No description'}</p>
           <div className="mt-2 flex gap-2">
             <Badge variant="secondary">{set._count.cards} cards</Badge>

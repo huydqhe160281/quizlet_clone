@@ -17,6 +17,14 @@ vi.mock('@/server/db', () => ({
   prisma: prismaMock,
 }));
 
+vi.mock('next/cache', () => ({
+  revalidateTag: vi.fn(),
+  unstable_cache:
+    <T>(fn: () => T | Promise<T>) =>
+    () =>
+      fn(),
+}));
+
 import {
   createSet,
   deleteSet,

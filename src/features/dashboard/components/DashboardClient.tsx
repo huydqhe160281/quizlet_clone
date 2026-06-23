@@ -38,16 +38,21 @@ type DashboardClientProps = {
 export function DashboardClient({ stats, activity, sessions }: DashboardClientProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+          Dashboard
+        </h1>
         <p className="text-muted-foreground">Your study overview and progress.</p>
       </div>
       <DueCardsAlert dueCount={stats.dueToday} />
       <StatsCards stats={stats} />
       <ActivityHeatmap activity={activity} />
-      <div className="rounded-xl border bg-card p-4">
-        <h3 className="mb-4 font-medium">Recent sessions</h3>
-        <RecentSessions sessions={sessions} />
+      <div className="glass-panel relative overflow-hidden rounded-2xl p-5 shadow-sm">
+        <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
+        <h3 className="mb-5 text-lg font-semibold tracking-tight relative z-10">Recent sessions</h3>
+        <div className="relative z-10">
+          <RecentSessions sessions={sessions} />
+        </div>
       </div>
     </div>
   );

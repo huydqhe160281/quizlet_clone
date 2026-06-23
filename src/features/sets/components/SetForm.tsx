@@ -62,7 +62,7 @@ export function SetForm({ mode = 'create', setId, initial }: SetFormProps) {
   const loading = createSet.isPending || updateSet.isPending;
 
   return (
-    <Card>
+    <Card className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-lg">
       <CardHeader>
         <CardTitle>{mode === 'create' ? 'New flashcard set' : 'Edit set'}</CardTitle>
         <CardDescription>Add metadata for your study material.</CardDescription>

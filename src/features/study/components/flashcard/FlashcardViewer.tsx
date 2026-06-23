@@ -36,21 +36,29 @@ export function FlashcardViewer({
       >
         <div
           className={cn(
-            'absolute inset-0 flex flex-col items-center justify-center rounded-xl border bg-card p-6 shadow-md backface-hidden'
+            'absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm p-6 shadow-lg backface-hidden'
           )}
         >
-          <p className="text-sm text-muted-foreground">Front</p>
-          <p className="mt-2 text-center text-xl font-medium">{front}</p>
+          <p className="absolute top-4 left-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Front
+          </p>
+          <p className="mt-2 text-center text-3xl font-bold tracking-tight">{front}</p>
           {!isFlipped && imageUrl && <CardMediaImage src={imageUrl} alt={front} />}
         </div>
         <div
           className={cn(
-            'absolute inset-0 flex flex-col items-center justify-center rounded-xl border bg-primary/5 p-6 shadow-md backface-hidden rotate-y-180'
+            'absolute inset-0 flex flex-col items-center justify-center rounded-2xl border border-primary/20 bg-primary/5 backdrop-blur-sm p-6 shadow-lg backface-hidden rotate-y-180'
           )}
         >
-          <p className="text-sm text-muted-foreground">Back</p>
-          <p className="mt-2 text-center text-xl font-medium">{back}</p>
-          {example && <p className="mt-2 text-center text-sm text-muted-foreground">{example}</p>}
+          <p className="absolute top-4 left-4 text-xs font-semibold uppercase tracking-wider text-primary/70">
+            Back
+          </p>
+          <p className="mt-2 text-center text-2xl font-bold tracking-tight text-foreground">
+            {back}
+          </p>
+          {example && (
+            <p className="mt-6 text-center text-sm font-medium text-muted-foreground">{example}</p>
+          )}
         </div>
       </motion.div>
     </button>

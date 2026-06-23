@@ -11,11 +11,16 @@ export function DueCardsAlert({ dueCount }: { dueCount: number }) {
   }
 
   return (
-    <Card className="border-primary/30 bg-primary/5">
-      <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-2">
-        <AlertCircle className="h-5 w-5 text-primary" />
+    <Card className="relative overflow-hidden rounded-2xl border-primary/30 bg-primary/5 backdrop-blur-sm shadow-md">
+      <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+      <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-3 relative z-10">
+        <div className="rounded-full bg-primary/20 p-2 text-primary">
+          <AlertCircle className="h-6 w-6" />
+        </div>
         <div>
-          <CardTitle className="text-base">{dueCount} cards due today</CardTitle>
+          <CardTitle className="text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            {dueCount} cards due today
+          </CardTitle>
           <CardDescription>Keep your streak going with spaced repetition.</CardDescription>
         </div>
       </CardHeader>

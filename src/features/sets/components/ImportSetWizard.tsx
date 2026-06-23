@@ -125,7 +125,7 @@ export function ImportSetWizard({ setId, onSuccess }: ImportSetWizardProps) {
 
   if (result) {
     return (
-      <Card className="w-full max-w-lg mx-auto">
+      <Card className="glass-panel w-full max-w-lg mx-auto overflow-hidden rounded-2xl border-border/50 shadow-lg">
         <CardHeader>
           <CardTitle>✅ Import successful!</CardTitle>
           <CardDescription>
@@ -163,7 +163,7 @@ export function ImportSetWizard({ setId, onSuccess }: ImportSetWizardProps) {
   }
 
   return (
-    <Card className="w-full max-w-lg mx-auto border-0 shadow-none p-0">
+    <Card className="glass-panel w-full max-w-lg mx-auto overflow-hidden rounded-2xl border-border/50 shadow-sm p-0">
       <CardHeader className="px-0 pt-0">
         <CardTitle>{setId ? 'Import cards into this set' : 'Import flashcard set'}</CardTitle>
         <CardDescription>

@@ -83,7 +83,11 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   }, [study.isComplete, showSummary, currentCard, flip, goNext, goPrev]);
 
   if (study.isLoading) {
-    return <p className="text-sm text-muted-foreground">Starting session…</p>;
+    return (
+      <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
+        Starting session…
+      </div>
+    );
   }
 
   if (study.error) {
@@ -120,7 +124,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
 
   return (
     <div
-      className="space-y-6"
+      className="glass-panel mx-auto max-w-xl space-y-6 rounded-2xl p-4 shadow-sm md:p-6"
       onTouchStart={(event) => {
         touchStartX.current = event.touches[0]?.clientX ?? null;
       }}

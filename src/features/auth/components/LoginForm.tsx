@@ -61,12 +61,13 @@ export function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sign in</CardTitle>
+    <Card className="glass-panel relative overflow-hidden rounded-2xl border-border/50 shadow-xl">
+      <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <CardHeader className="relative z-10 text-center">
+        <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
         <CardDescription>Welcome back — continue studying.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 relative z-10">
         {googleAuthEnabled ? <GoogleButton /> : null}
         {googleAuthEnabled ? (
           <div className="relative text-center text-xs uppercase text-muted-foreground">

@@ -5,21 +5,27 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
 
+const studyLoading = () => (
+  <div className="glass-panel animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
+    Loading…
+  </div>
+);
+
 const FlashcardMode = dynamic(
   () => import('@/features/study/components/flashcard/FlashcardMode').then((m) => m.FlashcardMode),
-  { ssr: false, loading: () => <p className="text-sm text-muted-foreground">Loading…</p> }
+  { ssr: false, loading: studyLoading }
 );
 const LearnMode = dynamic(
   () => import('@/features/study/components/learn/LearnMode').then((m) => m.LearnMode),
-  { ssr: false, loading: () => <p className="text-sm text-muted-foreground">Loading…</p> }
+  { ssr: false, loading: studyLoading }
 );
 const WriteMode = dynamic(
   () => import('@/features/study/components/write/WriteMode').then((m) => m.WriteMode),
-  { ssr: false, loading: () => <p className="text-sm text-muted-foreground">Loading…</p> }
+  { ssr: false, loading: studyLoading }
 );
 const TestMode = dynamic(
   () => import('@/features/study/components/test/TestMode').then((m) => m.TestMode),
-  { ssr: false, loading: () => <p className="text-sm text-muted-foreground">Loading…</p> }
+  { ssr: false, loading: studyLoading }
 );
 
 const titles: Record<StudyModeValue, string> = {
@@ -60,7 +66,9 @@ function ButtonBack({ setId, title }: { setId: string; title: string }) {
         <ArrowLeft className="h-4 w-4" />
         Back to set
       </Link>
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+        {title}
+      </h1>
     </div>
   );
 }

@@ -36,7 +36,9 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{set.title}</h1>
+        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+          {set.title}
+        </h1>
         <p className="mt-2 text-muted-foreground">{set.description ?? 'No description'}</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Badge variant="secondary">{set._count.cards} cards</Badge>
@@ -47,7 +49,7 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
       <Button onClick={() => void duplicate()} disabled={loading}>
         {loading ? 'Duplicating…' : 'Duplicate to my sets'}
       </Button>
-      <div className="rounded-xl border">
+      <div className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-sm">
         {set.cards.map((card) => (
           <div
             key={`${card.front}-${card.back}`}

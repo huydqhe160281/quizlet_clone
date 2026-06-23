@@ -48,7 +48,7 @@ function SortableCardRow({ card, selected, onSelect, onDelete }: SortableCardPro
     <div
       ref={setNodeRef}
       style={style}
-      className="mb-2 flex items-start gap-2 rounded-md border bg-card p-3"
+      className="mb-2 flex items-start gap-2 rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-3 shadow-sm"
     >
       <div className="flex items-center gap-1.5 mt-1.5">
         <Checkbox checked={selected} onCheckedChange={(checked) => onSelect(!!checked)} />
@@ -152,12 +152,16 @@ export function CardEditor({ setId }: CardEditorProps) {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading cards…</p>;
+    return (
+      <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
+        Loading cards…
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3 rounded-md border p-4">
+      <div className="glass-panel space-y-3 rounded-2xl p-4 shadow-sm">
         <h3 className="font-medium">Add card</h3>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">

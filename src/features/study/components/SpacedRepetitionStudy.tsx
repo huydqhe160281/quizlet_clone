@@ -219,7 +219,11 @@ export function SpacedRepetitionStudy() {
   };
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Loading due cards…</p>;
+    return (
+      <div className="glass-panel animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
+        Loading due cards…
+      </div>
+    );
   }
 
   if (error) {
@@ -228,7 +232,7 @@ export function SpacedRepetitionStudy() {
 
   if (totalCards === 0 && !started) {
     return (
-      <div className="rounded-xl border bg-card p-8 text-center">
+      <div className="glass-panel rounded-2xl p-8 text-center shadow-sm">
         <h2 className="text-xl font-semibold">All caught up!</h2>
         <p className="mt-2 text-muted-foreground">No cards due for review right now.</p>
         <Button className="mt-4" asChild>
@@ -241,7 +245,7 @@ export function SpacedRepetitionStudy() {
   if (!started) {
     const maxPerRound = Math.min(50, totalCards);
     return (
-      <Card className="w-full max-w-lg mx-auto shadow-md">
+      <Card className="glass-panel w-full max-w-lg mx-auto overflow-hidden rounded-2xl border-border/50 shadow-lg">
         <CardHeader>
           <CardTitle>Spaced Repetition Study Settings</CardTitle>
           <CardDescription>
@@ -396,7 +400,7 @@ export function SpacedRepetitionStudy() {
         </>
       ) : settings.style === 'multiple_choice' ? (
         <>
-          <div className="rounded-xl border bg-card p-6 text-center">
+          <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
             <p className="text-sm text-muted-foreground">Choose the correct answer</p>
             <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
           </div>
@@ -418,7 +422,7 @@ export function SpacedRepetitionStudy() {
         </>
       ) : (
         <>
-          <div className="rounded-xl border bg-card p-6 text-center">
+          <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
             <p className="text-sm text-muted-foreground">Type the answer</p>
             <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
           </div>
