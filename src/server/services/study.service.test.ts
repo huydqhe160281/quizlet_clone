@@ -170,4 +170,59 @@ describe('study.service', () => {
     const result = await recordSessionAnswer('session-1', 'user-a', 'card-1', true);
     expect(result.isCorrect).toBe(true);
   });
+
+  it('DRAW mode creates session with only new-word cards', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [
+        { id: 'card-1', sortOrder: 0, type: 'new-word', front: '大', back: 'big' },
+        { id: 'card-2', sortOrder: 1, type: null, front: 'b', back: 'b' },
+        { id: 'card-3', sortOrder: 2, type: 'new-word', front: '水', back: 'water' },
+        { id: 'card-4', sortOrder: 3, type: 'new-word', front: 'あ', back: 'a' },
+      ],
+    });
+
+    prismaMock.studySession.create.mockResolvedValue({
+      id: 'session-draw',
+      totalCards: 3,
+      mode: 'DRAW',
+    });
+
+    await createSession('user-a', 'set-1', 'DRAW');
+
+    expect(prismaMock.studySession.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          mode: 'DRAW',
+          totalCards: 3,
+          sessionCards: {
+            create: expect.arrayContaining([
+              { cardId: 'card-1' },
+              { cardId: 'card-3' },
+              { cardId: 'card-4' },
+            ]),
+          },
+        }),
+      })
+    );
+  });
+
+  it('DRAW mode with zero new-word cards throws DRAW_NO_CARDS', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [
+        { id: 'card-1', sortOrder: 0, type: null },
+        { id: 'card-2', sortOrder: 1, type: null },
+      ],
+    });
+
+    await expect(createSession('user-a', 'set-1', 'DRAW')).rejects.toMatchObject({
+      code: 'DRAW_NO_CARDS',
+      status: 422,
+    });
+  });
 });

@@ -27,12 +27,17 @@ const TestMode = dynamic(
   () => import('@/features/study/components/test/TestMode').then((m) => m.TestMode),
   { ssr: false, loading: studyLoading }
 );
+const DrawMode = dynamic(
+  () => import('@/features/study/components/draw/DrawMode').then((m) => m.DrawMode),
+  { ssr: false, loading: studyLoading }
+);
 
 const titles: Record<StudyModeValue, string> = {
   FLASHCARD: 'Flashcards',
   LEARN: 'Learn',
   WRITE: 'Write',
   TEST: 'Test',
+  DRAW: 'Draw',
 };
 
 type StudyPageClientProps = {
@@ -46,6 +51,7 @@ export function StudyPageClient({ setId, mode }: StudyPageClientProps) {
     LEARN: LearnMode,
     WRITE: WriteMode,
     TEST: TestMode,
+    DRAW: DrawMode,
   }[mode];
 
   return (

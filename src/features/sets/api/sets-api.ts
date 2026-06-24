@@ -25,6 +25,7 @@ export type FlashcardItem = {
   example: string | null;
   imageUrl: string | null;
   audioUrl: string | null;
+  type: string | null;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;

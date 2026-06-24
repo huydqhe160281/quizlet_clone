@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,9 +33,10 @@ type SortableCardProps = {
   selected: boolean;
   onSelect: (selected: boolean) => void;
   onDelete: (cardId: string) => void;
+  onTypeToggle: (cardId: string, checked: boolean) => void;
 };
 
-function SortableCardRow({ card, selected, onSelect, onDelete }: SortableCardProps) {
+function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: SortableCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: card.id,
   });
@@ -64,12 +66,23 @@ function SortableCardRow({ card, selected, onSelect, onDelete }: SortableCardPro
       <div className="grid flex-1 gap-2 sm:grid-cols-2">
         <div>
           <p className="text-xs text-muted-foreground">Front</p>
-          <p className="text-sm">{card.front}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm">{card.front}</p>
+            {card.type === 'new-word' && <Badge variant="secondary">Từ mới</Badge>}
+          </div>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Back</p>
           <p className="text-sm">{card.back}</p>
         </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox
+          checked={card.type === 'new-word'}
+          onCheckedChange={(checked) => onTypeToggle(card.id, checked === true)}
+          aria-label="Từ mới"
+        />
+        <span className="text-xs text-muted-foreground">Từ mới</span>
       </div>
       <Button variant="ghost" size="icon" onClick={() => onDelete(card.id)}>
         <Trash2 className="h-4 w-4" />
@@ -84,12 +97,13 @@ type CardEditorProps = {
 
 export function CardEditor({ setId }: CardEditorProps) {
   const { data: cards = [], isLoading } = useCards(setId);
-  const { createCard, deleteCard, deleteCards, reorderCards } = useSetMutations();
+  const { createCard, deleteCard, deleteCards, reorderCards, updateCard } = useSetMutations();
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
   const [example, setExample] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>();
   const [audioUrl, setAudioUrl] = useState<string | undefined>();
+  const [cardType, setCardType] = useState<'new-word' | null>(null);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
@@ -103,7 +117,14 @@ export function CardEditor({ setId }: CardEditorProps) {
     createCard.mutate(
       {
         setId,
-        input: { front, back, example: example || undefined, imageUrl, audioUrl },
+        input: {
+          front,
+          back,
+          example: example || undefined,
+          imageUrl,
+          audioUrl,
+          type: cardType,
+        },
       },
       {
         onSuccess: () => {
@@ -112,9 +133,18 @@ export function CardEditor({ setId }: CardEditorProps) {
           setExample('');
           setImageUrl(undefined);
           setAudioUrl(undefined);
+          setCardType(null);
         },
       }
     );
+  };
+
+  const handleTypeToggle = (cardId: string, checked: boolean) => {
+    updateCard.mutate({
+      setId,
+      cardId,
+      input: { type: checked ? 'new-word' : null },
+    });
   };
 
   const handleDeleteSingle = (cardId: string) => {
@@ -196,6 +226,16 @@ export function CardEditor({ setId }: CardEditorProps) {
             }}
           />
         </div>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="new-word"
+            checked={cardType === 'new-word'}
+            onCheckedChange={(checked) => setCardType(checked ? 'new-word' : null)}
+          />
+          <Label htmlFor="new-word" className="font-normal cursor-pointer">
+            Từ mới (luyện viết CJK)
+          </Label>
+        </div>
         <Button onClick={handleAdd} disabled={createCard.isPending}>
           Add card
         </Button>
@@ -252,6 +292,7 @@ export function CardEditor({ setId }: CardEditorProps) {
                 selected={selectedIds.includes(card.id)}
                 onSelect={(checked) => handleToggleSelect(card.id, checked)}
                 onDelete={handleDeleteSingle}
+                onTypeToggle={handleTypeToggle}
               />
             )}
           />
@@ -269,6 +310,7 @@ export function CardEditor({ setId }: CardEditorProps) {
                   selected={selectedIds.includes(card.id)}
                   onSelect={(checked) => handleToggleSelect(card.id, checked)}
                   onDelete={handleDeleteSingle}
+                  onTypeToggle={handleTypeToggle}
                 />
               ))}
             </SortableContext>

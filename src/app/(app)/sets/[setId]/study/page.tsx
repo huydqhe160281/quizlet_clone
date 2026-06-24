@@ -27,6 +27,7 @@ export default async function StudyPage({ params }: StudyPageProps) {
   }
 
   const cards = await getCards(setId, userId);
+  const newWordCount = cards.filter((card) => card.type === 'new-word').length;
 
   return (
     <main className="container max-w-2xl mx-auto py-8 px-4">
@@ -45,7 +46,7 @@ export default async function StudyPage({ params }: StudyPageProps) {
         <h1 className="text-2xl font-bold">{set.title}</h1>
         <p className="text-muted-foreground mt-1">Choose your study mode and settings.</p>
       </div>
-      <StudySettingsForm setId={setId} totalCards={cards.length} />
+      <StudySettingsForm setId={setId} totalCards={cards.length} newWordCount={newWordCount} />
     </main>
   );
 }

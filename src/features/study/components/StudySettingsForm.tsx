@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,16 +20,11 @@ import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.
 type StudySettingsFormProps = {
   setId: string;
   totalCards: number;
+  /** Cards tagged new-word (eligible for Draw mode) */
+  newWordCount: number;
 };
 
-const MODES: { value: StudyModeValue; label: string }[] = [
-  { value: 'FLASHCARD', label: 'Flashcards' },
-  { value: 'LEARN', label: 'Learn' },
-  { value: 'WRITE', label: 'Write' },
-  { value: 'TEST', label: 'Test' },
-];
-
-export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps) {
+export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySettingsFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<StudyModeValue>('FLASHCARD');
   const [settings, setSettings] = useState<StudySessionSettings>({
@@ -40,6 +35,20 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
   const [error, setError] = useState<string | null>(null);
 
   const maxPerRound = Math.min(50, totalCards);
+
+  const modes: { value: StudyModeValue; label: string; disabled?: boolean }[] = [
+    { value: 'FLASHCARD', label: 'Flashcards' },
+    { value: 'LEARN', label: 'Learn' },
+    { value: 'WRITE', label: 'Write' },
+    { value: 'TEST', label: 'Test' },
+    { value: 'DRAW', label: 'Draw (CJK)', disabled: newWordCount === 0 },
+  ];
+
+  useEffect(() => {
+    if (newWordCount === 0 && mode === 'DRAW') {
+      setMode('FLASHCARD');
+    }
+  }, [mode, newWordCount]);
 
   const handleStart = async () => {
     setLoading(true);
@@ -60,7 +69,6 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
     }
 
     const { data } = (await response.json()) as { data: { id: string } };
-    // Navigate to study mode with sessionId as query param
     const modeParam = mode.toLowerCase();
     router.push(`/sets/${setId}/${modeParam}?sessionId=${data.id}`);
   };
@@ -74,33 +82,36 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Mode selection */}
         <div className="space-y-2">
           <Label htmlFor="study-mode">Study mode</Label>
-          <Select value={mode} onValueChange={(v) => setMode(v as StudyModeValue)}>
+          <Select value={mode} onValueChange={(value) => setMode(value as StudyModeValue)}>
             <SelectTrigger id="study-mode">
               <SelectValue placeholder="Select mode" />
             </SelectTrigger>
             <SelectContent>
-              {MODES.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label}
+              {modes.map((item) => (
+                <SelectItem key={item.value} value={item.value} disabled={item.disabled}>
+                  {item.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {newWordCount === 0 && (
+            <p className="text-xs text-muted-foreground">
+              Không có thẻ &quot;từ mới&quot; trong bộ này
+            </p>
+          )}
         </div>
 
-        {/* Question style (only for Learn Mode) */}
         {mode === 'LEARN' && (
           <div className="space-y-2">
             <Label htmlFor="question-style">Question style</Label>
             <Select
               value={settings.presentation ?? 'multiple_choice'}
-              onValueChange={(v) =>
-                setSettings((s) => ({
-                  ...s,
-                  presentation: v as 'default' | 'multiple_choice',
+              onValueChange={(value) =>
+                setSettings((current) => ({
+                  ...current,
+                  presentation: value as 'default' | 'multiple_choice',
                 }))
               }
             >
@@ -115,7 +126,6 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
           </div>
         )}
 
-        {/* Cards per round */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Label htmlFor="cards-per-round-input">Cards per round</Label>
@@ -126,12 +136,12 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
                 min={1}
                 max={50}
                 value={settings.cardsPerRound}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value, 10);
-                  if (!isNaN(val)) {
-                    setSettings((s) => ({
-                      ...s,
-                      cardsPerRound: Math.max(1, Math.min(50, val)),
+                onChange={(event) => {
+                  const value = parseInt(event.target.value, 10);
+                  if (!Number.isNaN(value)) {
+                    setSettings((current) => ({
+                      ...current,
+                      cardsPerRound: Math.max(1, Math.min(50, value)),
                     }));
                   }
                 }}
@@ -146,31 +156,36 @@ export function StudySettingsForm({ setId, totalCards }: StudySettingsFormProps)
             max={maxPerRound}
             step={1}
             value={[settings.cardsPerRound]}
-            onValueChange={([v]) =>
-              setSettings((s) => ({ ...s, cardsPerRound: v ?? s.cardsPerRound }))
+            onValueChange={([value]) =>
+              setSettings((current) => ({
+                ...current,
+                cardsPerRound: value ?? current.cardsPerRound,
+              }))
             }
           />
           <p className="text-xs text-muted-foreground">1–{maxPerRound} cards per round</p>
         </div>
 
-        {/* Randomize */}
         <div className="flex items-center gap-2">
           <Checkbox
             id="randomize"
             checked={settings.randomize}
-            onCheckedChange={(c) => setSettings((s) => ({ ...s, randomize: c === true }))}
+            onCheckedChange={(checked) =>
+              setSettings((current) => ({ ...current, randomize: checked === true }))
+            }
           />
           <Label htmlFor="randomize" className="font-normal cursor-pointer">
             Randomize card order
           </Label>
         </div>
 
-        {/* Requeue wrong */}
         <div className="flex items-center gap-2">
           <Checkbox
             id="requeue-wrong"
             checked={settings.requeueWrong}
-            onCheckedChange={(c) => setSettings((s) => ({ ...s, requeueWrong: c === true }))}
+            onCheckedChange={(checked) =>
+              setSettings((current) => ({ ...current, requeueWrong: checked === true }))
+            }
           />
           <Label htmlFor="requeue-wrong" className="font-normal cursor-pointer">
             Review wrong answers in next round

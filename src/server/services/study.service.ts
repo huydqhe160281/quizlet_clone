@@ -4,7 +4,6 @@ import { calculateSm2, gradeToSm2 } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
 import { recordReviewStats } from '@/server/services/stats.service';
 import type { StudySessionSettings } from '@/features/study/schemas/study.schema';
-
 const shuffle = <T>(items: T[]): T[] => {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -51,9 +50,20 @@ export async function createSession(
   settings?: StudySessionSettings
 ) {
   const set = await getOwnedOrPublicSet(setId, userId);
+  const poolCards =
+    mode === 'DRAW' ? set.cards.filter((card) => card.type === 'new-word') : set.cards;
+
+  if (mode === 'DRAW' && poolCards.length === 0) {
+    throw new ApiError(
+      'DRAW_NO_CARDS',
+      "Bộ thẻ này không có từ nào được đánh dấu là 'từ mới'. Hãy đánh dấu ít nhất một thẻ trước khi dùng chế độ Vẽ.",
+      422
+    );
+  }
+
   // Respect randomize setting — default true for backward compat when no settings
   const shouldShuffle = settings ? settings.randomize : true;
-  const cards = shouldShuffle ? shuffle(set.cards) : [...set.cards];
+  const cards = shouldShuffle ? shuffle(poolCards) : [...poolCards];
 
   return prisma.studySession.create({
     data: {

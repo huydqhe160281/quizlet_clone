@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const studyModeSchema = z.enum(['FLASHCARD', 'LEARN', 'WRITE', 'TEST']);
+export const studyModeSchema = z.enum(['FLASHCARD', 'LEARN', 'WRITE', 'TEST', 'DRAW']);
 
 // ── Study session settings (round engine config) ──────────────────────────────
 export const studySessionSettingsSchema = z.object({

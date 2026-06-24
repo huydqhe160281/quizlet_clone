@@ -18,6 +18,7 @@ enum StudyMode {
   LEARN
   WRITE
   TEST
+  DRAW
 }
 
 enum Grade {
@@ -171,6 +172,7 @@ model Flashcard {
   example   String?  @db.Text
   imageUrl  String?
   audioUrl  String?
+  type      String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

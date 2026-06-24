@@ -46,6 +46,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.40.0",
+    "hanzi-writer": "^3.7.3",
     "lru-cache": "^11.0.2",
     "lucide-react": "^0.469.0",
     "next": "^15.1.3",

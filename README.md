@@ -67,7 +67,7 @@ In **production**, both variables are required. Point `OLLAMA_BASE_URL` at your 
 
 - **Auth** — Email/password, Google OAuth, password reset
 - **Sets & cards** — CRUD, folders, tags, media upload, drag-and-drop reorder
-- **Study modes** — Flashcard, Learn, Write (fuzzy match), Test (MC/T-F/Typing)
+- **Study modes** — Flashcard, Learn, Write (fuzzy match), Test (MC/T-F/Typing), Draw (CJK stroke practice via hanzi-writer; requires cards marked `type = new-word`)
 - **SM-2** — Spaced repetition queue at `/study`
 - **Dashboard** — Streak, accuracy, activity heatmap, recent sessions
 - **Search & library** — Public sets at `/library`, preview at `/shared/[setId]`

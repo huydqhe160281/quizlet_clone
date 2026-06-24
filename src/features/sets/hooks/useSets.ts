@@ -124,6 +124,7 @@ export function useSetMutations() {
         example?: string;
         imageUrl?: string;
         audioUrl?: string;
+        type?: 'new-word' | null;
       };
     }) => {
       const response = await fetch(`/api/v1/sets/${setId}/cards`, {
@@ -147,6 +148,7 @@ export function useSetMutations() {
         example: input.example ?? null,
         imageUrl: null,
         audioUrl: null,
+        type: input.type ?? null,
         sortOrder: previous?.length ?? 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -243,12 +245,55 @@ export function useSetMutations() {
     },
   });
 
+  const updateCard = useMutation({
+    mutationFn: async ({
+      setId,
+      cardId,
+      input,
+    }: {
+      setId: string;
+      cardId: string;
+      input: { type?: 'new-word' | null };
+    }) => {
+      const response = await fetch(`/api/v1/sets/${setId}/cards/${cardId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update card');
+      }
+      return (await response.json()) as { data: FlashcardItem };
+    },
+    onMutate: async ({ setId, cardId, input }) => {
+      await queryClient.cancelQueries({ queryKey: setKeys.cards(setId) });
+      const previous = queryClient.getQueryData<FlashcardItem[]>(setKeys.cards(setId));
+      queryClient.setQueryData(
+        setKeys.cards(setId),
+        (previous ?? []).map((card) =>
+          card.id === cardId ? { ...card, ...input, updatedAt: new Date().toISOString() } : card
+        )
+      );
+      return { previous };
+    },
+    onError: (_error, { setId }, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(setKeys.cards(setId), context.previous);
+      }
+    },
+    onSettled: (_data, _error, { setId }) => {
+      void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
+      void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
+    },
+  });
+
   return {
     createSet,
     updateSet,
     deleteSet,
     duplicateSet,
     createCard,
+    updateCard,
     deleteCard,
     deleteCards,
     reorderCards,

@@ -53,6 +53,7 @@ export async function createCard(setId: string, userId: string, input: CreateCar
       example: input.example,
       imageUrl: input.imageUrl,
       audioUrl: input.audioUrl,
+      type: input.type ?? null,
       sortOrder: input.sortOrder ?? (maxOrder._max.sortOrder ?? -1) + 1,
     },
   });
@@ -83,6 +84,7 @@ export async function updateCard(
       ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl } : {}),
       ...(input.audioUrl !== undefined ? { audioUrl: input.audioUrl } : {}),
       ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
+      ...(input.type !== undefined ? { type: input.type } : {}),
     },
   });
 
