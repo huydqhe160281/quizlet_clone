@@ -1,13 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Layers, Plus, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AIGenerateModal, GenerateWithAIButton } from '@/features/sets/components/AIGenerateModal';
 import { useSets } from '@/features/sets/hooks/useSets';
 
 export function SetsListClient() {
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useSets();
   const sets = data?.pages.flatMap((page) => page.data) ?? [];
 
@@ -21,26 +24,30 @@ export function SetsListClient() {
 
   if (sets.length === 0) {
     return (
-      <Card className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-lg">
-        <CardHeader>
-          <CardTitle>No sets yet</CardTitle>
-          <CardDescription>Create your first flashcard set to get started.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex gap-2">
-          <Button asChild>
-            <Link href="/sets/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Create set
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/sets/import">
-              <Upload className="mr-2 h-4 w-4" />
-              Import set
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <>
+        <Card className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-lg">
+          <CardHeader>
+            <CardTitle>No sets yet</CardTitle>
+            <CardDescription>Create your first flashcard set to get started.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <GenerateWithAIButton onClick={() => setAiModalOpen(true)} />
+            <Button asChild>
+              <Link href="/sets/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Create set
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/sets/import">
+                <Upload className="mr-2 h-4 w-4" />
+                Import set
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+        <AIGenerateModal open={aiModalOpen} onOpenChange={setAiModalOpen} />
+      </>
     );
   }
 
@@ -53,7 +60,8 @@ export function SetsListClient() {
           </h1>
           <p className="text-muted-foreground">Manage and study your flashcard collections.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <GenerateWithAIButton onClick={() => setAiModalOpen(true)} />
           <Button asChild variant="outline" className="shadow-sm">
             <Link href="/sets/import">
               <Upload className="mr-2 h-4 w-4" />
@@ -97,6 +105,7 @@ export function SetsListClient() {
           {isFetchingNextPage ? 'Loading…' : 'Load more'}
         </Button>
       )}
+      <AIGenerateModal open={aiModalOpen} onOpenChange={setAiModalOpen} />
     </div>
   );
 }

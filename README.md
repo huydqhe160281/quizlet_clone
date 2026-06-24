@@ -28,6 +28,29 @@ Open [http://localhost:3000](http://localhost:3000).
 | `SUPABASE_URL` / keys                       | Media upload via presigned URLs                  |
 | `SUPABASE_MEDIA_BUCKET`                     | Storage bucket name (default: `flashcard-media`) |
 | `RESEND_API_KEY`                            | Password reset emails (optional in dev)          |
+| `OLLAMA_BASE_URL`                           | Ollama API URL (required in production)          |
+| `OLLAMA_MODEL`                              | Ollama model name (required in production)       |
+| `OLLAMA_MODEL_LARGE`                        | Optional larger model for high-card requests     |
+
+### AI Set Generation (Ollama)
+
+For the **Generate with AI** feature, configure Ollama:
+
+```bash
+# Local development (defaults apply if unset)
+OLLAMA_BASE_URL=http://localhost:11434/api
+OLLAMA_MODEL=llama3
+# Optional fallback when requesting >50 cards
+# OLLAMA_MODEL_LARGE=gemma3:27b
+
+# Ollama Cloud example:
+# OLLAMA_BASE_URL=https://ollama.com/api
+# OLLAMA_MODEL=gemma3:12b
+# OLLAMA_MODEL_LARGE=gpt-oss:120b
+# OLLAMA_API_KEY=your-key
+```
+
+In **production**, both variables are required. Point `OLLAMA_BASE_URL` at your Ollama Cloud or self-hosted endpoint reachable from Vercel.
 
 ## Scripts
 

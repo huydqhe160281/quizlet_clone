@@ -1,3 +1,10 @@
+import {
+  resolveOllamaApiKey,
+  resolveOllamaBaseUrl,
+  resolveOllamaLargeModel,
+  resolveOllamaModel,
+} from '@/lib/ollama-env';
+
 const required = (key: string): string => {
   const value = process.env[key];
   if (!value) {
@@ -44,4 +51,11 @@ export const env = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   mediaBucket: process.env.SUPABASE_MEDIA_BUCKET ?? 'flashcard-media',
+  ollamaBaseUrl: resolveOllamaBaseUrl(
+    process.env.NODE_ENV ?? 'development',
+    process.env.OLLAMA_BASE_URL
+  ),
+  ollamaModel: resolveOllamaModel(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_MODEL),
+  ollamaLargeModel: resolveOllamaLargeModel(process.env.OLLAMA_MODEL_LARGE),
+  ollamaApiKey: resolveOllamaApiKey(process.env.OLLAMA_API_KEY),
 };
