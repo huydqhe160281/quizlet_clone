@@ -157,3 +157,14 @@ export const getCachedSearchPublicSets = async (query: SearchQuery) => {
     { tags: ['public-sets'], revalidate: 3600 }
   )();
 };
+
+const SITEMAP_PUBLIC_SET_LIMIT = 5000;
+
+export async function getPublicSetSitemapEntries(limit = SITEMAP_PUBLIC_SET_LIMIT) {
+  return prisma.flashcardSet.findMany({
+    where: { visibility: 'PUBLIC' },
+    select: { id: true, updatedAt: true },
+    orderBy: { updatedAt: 'desc' },
+    take: limit,
+  });
+}

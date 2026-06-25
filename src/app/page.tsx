@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { createPageMetadata } from '@/lib/seo/metadata';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+
+export const metadata: Metadata = createPageMetadata({
+  path: '/',
+});
 
 export default function LandingPage() {
   return (

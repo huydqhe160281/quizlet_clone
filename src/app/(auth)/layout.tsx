@@ -1,5 +1,9 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { createNoIndexMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = createNoIndexMetadata();
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
