@@ -24,7 +24,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { VirtualList } from '@/components/shared/VirtualList';
-import { MediaUpload } from '@/features/cards/components/MediaUpload';
+import { MediaUpload } from '@/features/sets/cards/components/MediaUpload';
 import type { FlashcardItem } from '@/features/sets/api/sets-api';
 import { useCards, useSetMutations } from '@/features/sets/hooks/useSets';
 

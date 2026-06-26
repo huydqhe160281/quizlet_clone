@@ -12,7 +12,7 @@ Hệ thống tính toán và quản lý lịch ôn tập tối ưu cho mỗi car
 | UI | Hooks | `src/features/study/hooks/useSpacedRepetition.ts` |
 | API | Due cards | `src/app/api/v1/study/due-cards/route.ts` |
 | API | Review | `src/app/api/v1/study/review/route.ts` |
-| Service | Study | `src/server/services/study.service.ts` — `reviewCard()` |
+| Service | Study | `src/server/services/study/study.service.ts` — `reviewCard()` |
 | Lib | Algorithm | `src/features/study/lib/sm2.ts` — pure function |
 | DB | Tables | `CardProgress`, `ReviewHistory` |
 

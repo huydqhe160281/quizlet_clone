@@ -8,7 +8,7 @@ TBD - created by archiving change google-auth-and-email. Update Purpose after ar
 
 ### Requirement: Deterministic App URL Resolution
 
-The system SHALL expose a single server-side base URL via `env.authUrl` in `src/lib/env.ts`, resolved by `resolveAuthUrl()` in strict precedence order without reading env vars outside that module. `resolveAuthUrl` MAY be exported for unit tests.
+The system SHALL expose a single server-side base URL via `env.authUrl` in `src/config/env.ts`, resolved by `resolveAuthUrl()` in strict precedence order without reading env vars outside that module. `resolveAuthUrl` MAY be exported for unit tests.
 
 **Precedence (first non-empty trimmed value wins):**
 
@@ -20,7 +20,7 @@ The system SHALL expose a single server-side base URL via `env.authUrl` in `src/
 6. In `NODE_ENV === 'production'` with steps 1–4 unset, throw at module init (fail-fast)
 
 **Constraint**: MUST  
-**Verification**: Unit test `resolveAuthUrl()` branches in `src/lib/env.test.ts` (or co-located test); manual forgot-password link on Vercel Preview
+**Verification**: Unit test `resolveAuthUrl()` branches in `src/config/env.test.ts` (or co-located test); manual forgot-password link on Vercel Preview
 
 #### Scenario: Explicit AUTH_URL wins
 
@@ -59,7 +59,7 @@ The system SHALL expose a single server-side base URL via `env.authUrl` in `src/
 
 - **GIVEN** none of AUTH_URL, NEXTAUTH_URL, NEXT_PUBLIC_APP_URL, VERCEL_URL are set (or all empty after trim)
 - **AND** `NODE_ENV` is `production`
-- **WHEN** `src/lib/env.ts` module initializes
+- **WHEN** `src/config/env.ts` module initializes
 - **THEN** module init throws with a clear missing-URL configuration error
 
 #### Scenario: Empty-string env treated as unset

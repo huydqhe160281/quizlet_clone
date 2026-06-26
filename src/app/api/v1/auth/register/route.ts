@@ -1,8 +1,8 @@
 import { ApiError, withErrorHandler } from '@/lib/api-error';
-import { authRateLimit, getClientIp } from '@/lib/rate-limit';
+import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { registerSchema } from '@/features/auth/schemas/auth.schema';
 import { prisma } from '@/server/db';
-import { hashPassword } from '@/server/password';
+import { hashPassword } from '@/server/auth/password';
 
 export const POST = withErrorHandler(async (req) => {
   const ip = getClientIp(req);

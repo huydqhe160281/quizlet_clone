@@ -32,7 +32,7 @@ import {
   getSet,
   getSets,
   updateSet,
-} from '@/server/services/set.service';
+} from '@/server/services/sets/set.service';
 
 describe('set.service', () => {
   beforeEach(() => {

@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<void> {
   const subject = 'Reset your Flashcards password';

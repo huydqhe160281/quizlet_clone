@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { APP_NAV_ITEMS } from '@/lib/navigation-data';
-import { NAV_ICON_MAP } from '@/lib/navigation-icons';
+import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
+import { NAV_ICON_MAP } from '@/lib/navigation/navigation-icons';
 import { cn } from '@/lib/utils';
 
 export function MobileNav() {

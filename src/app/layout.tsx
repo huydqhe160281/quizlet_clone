@@ -5,7 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
-import { RootJsonLd } from '@/components/seo/RootJsonLd';
+import { RootJsonLd } from '@/components/shared/RootJsonLd';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';

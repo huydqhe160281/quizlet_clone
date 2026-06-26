@@ -3,9 +3,9 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { notFound } from 'next/navigation';
 import { ApiError } from '@/lib/api-error';
-import { requireUserId } from '@/server/auth-utils';
-import { getSet } from '@/server/services/set.service';
-import { getCards } from '@/server/services/card.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { getSet } from '@/server/services/sets/set.service';
+import { getCards } from '@/server/services/sets/card.service';
 import { StudySettingsForm } from '@/features/study/components/StudySettingsForm';
 
 type StudyPageProps = {

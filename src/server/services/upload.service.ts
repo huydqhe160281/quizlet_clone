@@ -5,7 +5,7 @@ import {
   validateUploadRequest,
   type PresignedUrlInput,
 } from '@/features/upload/schemas/upload.schema';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 
 const sanitizeFileName = (fileName: string) =>
   fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);

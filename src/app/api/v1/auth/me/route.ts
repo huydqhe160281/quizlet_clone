@@ -1,4 +1,4 @@
-import { auth } from '@/server/auth';
+import { auth } from '@/server/auth/auth';
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 
 export const GET = withErrorHandler(async () => {

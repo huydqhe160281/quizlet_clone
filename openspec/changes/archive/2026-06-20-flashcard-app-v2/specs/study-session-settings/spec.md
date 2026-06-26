@@ -12,7 +12,7 @@ Trước khi học, người dùng cấu hình mode, random, số thẻ mỗi ro
 | UI | State | `src/stores/study.store.ts`, `src/features/study/lib/round-engine.ts` |
 | API | Sessions | `src/app/api/v1/study/sessions/route.ts` (extended body; pass `input.settings` to `createSession()`) |
 | Schema | Zod | `src/features/study/schemas/study.schema.ts` — extend `createSessionSchema` with `settings?: StudySessionSettings`; add `studySessionSettingsSchema` |
-| Service | Study | `src/server/services/study.service.ts` |
+| Service | Study | `src/server/services/study/study.service.ts` |
 | DB | Column | `StudySession.settings` (JSONB) |
 
 ---

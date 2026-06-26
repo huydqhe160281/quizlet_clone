@@ -1,6 +1,6 @@
 import { extractJsonMiddleware, wrapLanguageModel } from 'ai';
 import { createOllama } from 'ollama-ai-provider-v2';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 
 const LARGE_MODEL_FALLBACKS: Record<string, string> = {
   'gemma3:12b': 'gemma3:27b',

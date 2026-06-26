@@ -13,9 +13,9 @@ export default defineConfig({
       include: [
         'src/features/study/lib/sm2.ts',
         'src/lib/utils/fuzzy.ts',
-        'src/server/services/set.service.ts',
-        'src/server/services/stats.service.ts',
-        'src/server/services/study.service.ts',
+        'src/server/services/sets/set.service.ts',
+        'src/server/services/user/stats.service.ts',
+        'src/server/services/study/study.service.ts',
       ],
       exclude: ['**/*.test.ts', '**/*.d.ts'],
       thresholds: {
@@ -31,19 +31,19 @@ export default defineConfig({
           branches: 80,
           statements: 80,
         },
-        'src/server/services/set.service.ts': {
+        'src/server/services/sets/set.service.ts': {
           lines: 80,
           functions: 80,
           branches: 45,
           statements: 80,
         },
-        'src/server/services/stats.service.ts': {
+        'src/server/services/user/stats.service.ts': {
           lines: 80,
           functions: 80,
           branches: 65,
           statements: 80,
         },
-        'src/server/services/study.service.ts': {
+        'src/server/services/study/study.service.ts': {
           lines: 80,
           functions: 80,
           branches: 65,

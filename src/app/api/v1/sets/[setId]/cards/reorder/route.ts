@@ -1,8 +1,8 @@
 import { withErrorHandler } from '@/lib/api-error';
-import { assertApiRateLimit } from '@/lib/rate-limit-guard';
-import { reorderCardsSchema } from '@/features/cards/schemas/card.schema';
-import { requireUserId } from '@/server/auth-utils';
-import { reorderCards } from '@/server/services/card.service';
+import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
+import { reorderCardsSchema } from '@/features/sets/cards/schemas/card.schema';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { reorderCards } from '@/server/services/sets/card.service';
 
 export const POST = withErrorHandler(async (req, { params }) => {
   assertApiRateLimit(req);

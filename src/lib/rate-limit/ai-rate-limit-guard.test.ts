@@ -5,11 +5,11 @@ const aiGenerateRateLimitMock = vi.hoisted(() => ({
   check: vi.fn(() => false),
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/rate-limit/rate-limit', () => ({
   aiGenerateRateLimit: aiGenerateRateLimitMock,
 }));
 
-import { assertAiGenerateRateLimit } from '@/lib/ai-rate-limit-guard';
+import { assertAiGenerateRateLimit } from '@/lib/rate-limit/ai-rate-limit-guard';
 
 describe('ai-rate-limit-guard', () => {
   beforeEach(() => {

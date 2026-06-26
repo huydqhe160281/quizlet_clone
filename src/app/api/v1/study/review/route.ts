@@ -1,8 +1,8 @@
 import { ApiError, withErrorHandler } from '@/lib/api-error';
-import { reviewRateLimit } from '@/lib/rate-limit';
+import { reviewRateLimit } from '@/lib/rate-limit/rate-limit';
 import { reviewSchema } from '@/features/study/schemas/study.schema';
-import { requireUserId } from '@/server/auth-utils';
-import { reviewCard } from '@/server/services/study.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { reviewCard } from '@/server/services/study/study.service';
 
 export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();

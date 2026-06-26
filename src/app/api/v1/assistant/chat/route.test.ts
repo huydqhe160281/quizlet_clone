@@ -8,15 +8,15 @@ const streamAssistantChatMock = vi.hoisted(() =>
 );
 const rateLimitMock = vi.hoisted(() => ({ check: vi.fn(() => false) }));
 
-vi.mock('@/server/auth', () => ({ auth: authMock }));
-vi.mock('@/server/services/assistant.service', () => ({
+vi.mock('@/server/auth/auth', () => ({ auth: authMock }));
+vi.mock('@/server/services/ai/assistant.service', () => ({
   streamAssistantChat: streamAssistantChatMock,
   toCoreMessages: (messages: Array<{ role: string; content: string }>) => messages,
 }));
-vi.mock('@/server/services/user-context.service', () => ({
+vi.mock('@/server/services/user/user-context.service', () => ({
   getGuideUserContext: vi.fn(),
 }));
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/rate-limit/rate-limit', () => ({
   assistantGuestRateLimit: rateLimitMock,
   getClientIp: vi.fn(() => '127.0.0.1'),
 }));

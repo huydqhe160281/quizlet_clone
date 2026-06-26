@@ -1,4 +1,4 @@
-import { auth } from '@/server/auth';
+import { auth } from '@/server/auth/auth';
 import { ApiError } from '@/lib/api-error';
 
 export async function requireUserId(): Promise<string> {

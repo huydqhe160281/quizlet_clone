@@ -9,7 +9,7 @@ import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { generateLearnOptions } from '@/features/study/lib/test-generator';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
-import type { StudyCard } from '@/stores/study.store';
+import type { StudyCard } from '@/features/study/store';
 
 type LearnModeProps = {
   setId: string;
@@ -68,7 +68,7 @@ export function LearnMode({ setId }: LearnModeProps) {
     setAnswer('');
   };
 
-  const handleAnswer = async (option: string) => {
+  const handleAnswer = (option: string) => {
     if (!currentCard || selected) {
       return;
     }
@@ -86,12 +86,12 @@ export function LearnMode({ setId }: LearnModeProps) {
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
 
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
-    await study.recordAnswer(currentCard.cardId, isCorrect);
+    study.recordAnswer(currentCard.cardId, isCorrect);
 
     setRoundEndedThisStep(roundEnded);
   };
 
-  const handleWrittenAnswer = async () => {
+  const handleWrittenAnswer = () => {
     if (!currentCard || selected || !answer.trim()) {
       return;
     }
@@ -109,7 +109,7 @@ export function LearnMode({ setId }: LearnModeProps) {
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
 
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
-    await study.recordAnswer(currentCard.cardId, isCorrect);
+    study.recordAnswer(currentCard.cardId, isCorrect);
 
     setRoundEndedThisStep(roundEnded);
   };

@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 import { ApiError, withErrorHandler } from '@/lib/api-error';
-import { authRateLimit, getClientIp } from '@/lib/rate-limit';
+import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { forgotPasswordSchema } from '@/features/auth/schemas/auth.schema';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 import { prisma } from '@/server/db';
-import { sendPasswordResetEmail } from '@/server/email';
+import { sendPasswordResetEmail } from '@/server/auth/email';
 
 export const POST = withErrorHandler(async (req) => {
   const ip = getClientIp(req);

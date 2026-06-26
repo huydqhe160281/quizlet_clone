@@ -4,7 +4,7 @@ import {
   buildAiFlashcardOutputSchema,
   trimAiFlashcardOutput,
 } from '@/features/sets/schemas/ai-generate.schema';
-import { resolveOllamaBaseUrl, resolveOllamaModel } from '@/lib/ollama-env';
+import { resolveOllamaBaseUrl, resolveOllamaModel } from '@/config/ollama-env';
 
 describe('ai-generate.schema', () => {
   it('Scenario: Invalid card count above max', () => {

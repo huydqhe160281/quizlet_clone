@@ -11,8 +11,8 @@ Người dùng có thể đăng ký, đăng nhập bằng Email/Password hoặc 
 | UI | Components | `src/features/auth/components/` — LoginForm, RegisterForm, GoogleButton |
 | API | Route Handlers | `src/app/api/auth/[...nextauth]/route.ts` (login, OAuth callbacks) |
 | API | Custom endpoints | `src/app/api/v1/auth/register/route.ts`, `forgot-password/route.ts`, `reset-password/route.ts` |
-| Service | Auth | `src/server/auth.ts` — NextAuth config, providers |
-| Service | Password | `hashPassword()`, `verifyPassword()` in `src/server/auth.ts` |
+| Service | Auth | `src/server/auth/auth.ts` — NextAuth config, providers |
+| Service | Password | `hashPassword()`, `verifyPassword()` in `src/server/auth/auth.ts` |
 | Middleware | Edge | `src/middleware.ts` — session guard, protected routes |
 | DB | Schema | `prisma/schema.prisma` — User, Account, Session, VerificationToken |
 | Validation | Schemas | `src/features/auth/schemas/auth.schema.ts` — loginSchema, registerSchema |

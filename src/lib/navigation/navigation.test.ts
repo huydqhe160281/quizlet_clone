@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { APP_NAV_ITEMS } from '@/lib/navigation-data';
+import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
 
 describe('APP_NAV_ITEMS', () => {
   it('exports five primary navigation entries', () => {

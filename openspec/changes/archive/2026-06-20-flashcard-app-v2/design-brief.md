@@ -184,11 +184,11 @@ No backfill required. Legacy sessions (`settings` null) use a **display-only** f
 **Files to be UPDATED**:
 - `prisma/schema.prisma` — `StudySession.settings`
 - `src/features/study/schemas/study.schema.ts` — settings schema
-- `src/server/services/study.service.ts` — accept settings, optional shuffle control
+- `src/server/services/study/study.service.ts` — accept settings, optional shuffle control
 - `src/stores/study.store.ts` — round engine integration
 - `src/features/study/hooks/useStudySession.ts`
 - `src/features/auth/components/LoginForm.tsx`, `ForgotPasswordForm.tsx`
-- `src/server/auth.config.ts`, `src/server/auth.ts`
+- `src/server/auth/auth.config.ts`, `src/server/auth/auth.ts`
 - `src/app/api/v1/auth/forgot-password/route.ts`
 - `package.json` — `"dev": "next dev -p 3000"`
 - `README.md` — Resend setup, Remember me, import format docs

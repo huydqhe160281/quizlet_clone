@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hashPassword, isResetTokenExpired, verifyPassword } from '@/server/password';
+import { hashPassword, isResetTokenExpired, verifyPassword } from '@/server/auth/password';
 
 describe('password helpers', () => {
   it('test_register_email_valid: hashes password with bcrypt', async () => {

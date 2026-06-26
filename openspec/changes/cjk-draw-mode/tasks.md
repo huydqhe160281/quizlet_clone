@@ -52,7 +52,7 @@ type: z.enum(['new-word']).nullable().optional()
 **Files**:
 - `src/app/api/v1/sets/[setId]/cards/route.ts` (POST)
 - `src/app/api/v1/sets/[setId]/cards/[cardId]/route.ts` (PATCH)
-- `src/server/services/card.service.ts` — pass `type` through in create/update data objects
+- `src/server/services/sets/card.service.ts` — pass `type` through in create/update data objects
 **Specs**: REQ-001.4
 **AC**: `PATCH .../cards/[id]` with `{ type: "new-word" }` returns updated card; response includes `type` field
 
@@ -235,7 +235,7 @@ export default async function DrawStudyPage({ params }: PageProps) {
 ## Phase 3: Study Settings Integration
 
 ### T-013 — study.service.ts: Filter cards for DRAW + ApiError
-**File**: `src/server/services/study.service.ts`
+**File**: `src/server/services/study/study.service.ts`
 
 When `mode === 'DRAW'`, filter card pool:
 ```ts
@@ -334,7 +334,7 @@ it('studyModeSchema accepts DRAW', () => {
 **Specs**: REQ-009.1
 
 ### T-020 — study.service DRAW mode unit tests
-**File**: `src/server/services/study.service.test.ts`
+**File**: `src/server/services/study/study.service.test.ts`
 - Test: DRAW mode creates session with only type='new-word' cards
 - Test: DRAW mode with 0 new-word cards throws ApiError with status 422 and code 'DRAW_NO_CARDS'
 **Specs**: REQ-009.2

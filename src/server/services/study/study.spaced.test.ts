@@ -13,7 +13,7 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
-import { getDueCards } from '@/server/services/study.service';
+import { getDueCards } from '@/server/services/study/study.service';
 
 describe('study spaced repetition queries', () => {
   beforeEach(() => {

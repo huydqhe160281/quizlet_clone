@@ -8,7 +8,7 @@ import { SessionComplete } from '@/features/study/components/shared/SessionCompl
 import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
-import type { StudyCard } from '@/stores/study.store';
+import type { StudyCard } from '@/features/study/store';
 
 type WriteModeProps = {
   setId: string;
@@ -56,7 +56,7 @@ export function WriteMode({ setId }: WriteModeProps) {
     setSubmitted(false);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!currentCard || submitted) {
       return;
     }
@@ -74,7 +74,7 @@ export function WriteMode({ setId }: WriteModeProps) {
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
 
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
-    await study.recordAnswer(currentCard.cardId, isCorrect);
+    study.recordAnswer(currentCard.cardId, isCorrect);
 
     setRoundEndedThisStep(roundEnded);
   };

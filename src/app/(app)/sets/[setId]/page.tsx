@@ -4,9 +4,9 @@ import { getQueryClient } from '@/lib/query-client';
 import { SetDetailClient } from '@/features/sets/components/SetDetailClient';
 import { setKeys } from '@/features/sets/query-keys';
 import { ApiError } from '@/lib/api-error';
-import { requireUserId } from '@/server/auth-utils';
-import { getCards } from '@/server/services/card.service';
-import { getSet } from '@/server/services/set.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { getCards } from '@/server/services/sets/card.service';
+import { getSet } from '@/server/services/sets/set.service';
 
 type SetDetailPageProps = {
   params: Promise<{ setId: string }>;

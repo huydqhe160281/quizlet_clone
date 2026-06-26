@@ -11,7 +11,7 @@ Người dùng có thể học một bộ Flashcard qua 4 chế độ: Flashcard
 | UI | Components | `src/features/study/components/flashcard/`, `/learn/`, `/write/`, `/test/` |
 | UI | State | `src/stores/study.store.ts` — Zustand (currentIndex, mode, sessionId) |
 | API | Sessions | `src/app/api/v1/study/sessions/route.ts`, `/[sessionId]/route.ts` |
-| Service | Study | `src/server/services/study.service.ts` |
+| Service | Study | `src/server/services/study/study.service.ts` |
 | Lib | Fuzzy | `src/lib/utils/fuzzy.ts` — Jaro-Winkler similarity |
 | DB | Tables | `StudySession`, `SessionCard` |
 

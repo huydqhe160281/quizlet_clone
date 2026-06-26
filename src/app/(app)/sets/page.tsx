@@ -2,8 +2,8 @@ import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { getQueryClient } from '@/lib/query-client';
 import { SetsListClient } from '@/features/sets/components/SetsListClient';
 import { setKeys } from '@/features/sets/query-keys';
-import { requireUserId } from '@/server/auth-utils';
-import { getSets } from '@/server/services/set.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { getSets } from '@/server/services/sets/set.service';
 
 export default async function SetsPage() {
   const userId = await requireUserId();

@@ -51,6 +51,9 @@ type StudyState = {
   roundResults: RoundResult[]; // per-round summaries
   correctInRound: number;
 
+  // Buffered answers — flushed to server on complete/unmount/unload
+  pendingAnswers: Array<{ cardId: string; isCorrect: boolean }>;
+
   // Actions
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -63,6 +66,9 @@ type StudyState = {
   }) => void;
   /** Record an answer for a cardId. Returns true if the round just completed. */
   recordRoundAnswer: (cardId: string, isCorrect: boolean) => boolean;
+  /** Buffer an answer locally — flushed to server in batch. */
+  addPendingAnswer: (cardId: string, isCorrect: boolean) => void;
+  clearPendingAnswers: () => void;
   nextCard: () => void;
   prevCard: () => void;
   incrementCorrect: () => void;
@@ -88,6 +94,7 @@ const initialState = {
   roundIndex: 0,
   roundResults: [] as RoundResult[],
   correctInRound: 0,
+  pendingAnswers: [] as Array<{ cardId: string; isCorrect: boolean }>,
 };
 
 export const useStudyStore = create<StudyState>((set, get) => ({
@@ -165,6 +172,13 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
     return roundComplete;
   },
+
+  addPendingAnswer: (cardId, isCorrect) => {
+    set((state) => ({
+      pendingAnswers: [...state.pendingAnswers, { cardId, isCorrect }],
+    }));
+  },
+  clearPendingAnswers: () => set({ pendingAnswers: [] }),
 
   nextCard: () => {
     const { currentIndex, currentRound } = get();
