@@ -36,6 +36,10 @@ export const apiRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests:
 export const uploadRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 10 });
 export const reviewRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 200 });
 export const aiGenerateRateLimit = createRateLimiter({ intervalMs: 3_600_000, maxRequests: 10 });
+export const assistantGuestRateLimit = createRateLimiter({
+  intervalMs: 3_600_000,
+  maxRequests: 20,
+});
 
 export function getClientIp(req: Request): string {
   const forwarded = req.headers.get('x-forwarded-for');

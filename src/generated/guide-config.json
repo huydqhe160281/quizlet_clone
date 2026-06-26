@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "generatedAt": "2026-06-26T08:19:29.788Z",
+  "site": {
+    "name": "Flashcards",
+    "locale": "vi"
+  },
+  "menus": [
+    {
+      "id": "dashboard",
+      "label": "Dashboard",
+      "href": "/dashboard",
+      "description": "Menu Dashboard"
+    },
+    {
+      "id": "sets",
+      "label": "My Sets",
+      "href": "/sets",
+      "description": "Menu My Sets"
+    },
+    {
+      "id": "study",
+      "label": "Study",
+      "href": "/study",
+      "description": "Menu Study"
+    },
+    {
+      "id": "search",
+      "label": "Search",
+      "href": "/search",
+      "description": "Menu Search"
+    },
+    {
+      "id": "library",
+      "label": "Library",
+      "href": "/library",
+      "description": "Menu Library"
+    }
+  ],
+  "routes": [
+    {
+      "path": "/",
+      "title": "Home",
+      "auth": "public"
+    },
+    {
+      "path": "/dashboard",
+      "title": "Dashboard",
+      "auth": "required"
+    },
+    {
+      "path": "/forgot-password",
+      "title": "Forgot Password",
+      "auth": "guest-only"
+    },
+    {
+      "path": "/library",
+      "title": "Library",
+      "auth": "public"
+    },
+    {
+      "path": "/login",
+      "title": "Login",
+      "auth": "guest-only"
+    },
+    {
+      "path": "/register",
+      "title": "Register",
+      "auth": "guest-only"
+    },
+    {
+      "path": "/reset-password",
+      "title": "Reset Password",
+      "auth": "guest-only"
+    },
+    {
+      "path": "/search",
+      "title": "Search",
+      "auth": "required"
+    },
+    {
+      "path": "/sets",
+      "title": "Sets",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]",
+      "title": "setId",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/draw",
+      "title": "Draw",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/edit",
+      "title": "Edit",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/flashcard",
+      "title": "Flashcard",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/learn",
+      "title": "Learn",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/study",
+      "title": "Study",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/test",
+      "title": "Test",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/[setId]/write",
+      "title": "Write",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/import",
+      "title": "Import",
+      "auth": "required"
+    },
+    {
+      "path": "/sets/new",
+      "title": "New",
+      "auth": "required"
+    },
+    {
+      "path": "/shared/[setId]",
+      "title": "setId",
+      "auth": "public"
+    },
+    {
+      "path": "/study",
+      "title": "Study",
+      "auth": "required"
+    }
+  ],
+  "flows": [
+    {
+      "id": "first-set",
+      "title": "Tạo bộ thẻ đầu tiên",
+      "steps": [
+        "Đăng nhập hoặc đăng ký tài khoản",
+        "Vào My Sets (/sets)",
+        "Chọn Tạo bộ thẻ mới (/sets/new)",
+        "Nhập tên bộ thẻ và thêm thẻ (front/back)",
+        "Lưu bộ thẻ",
+        "Vào Study (/study) hoặc mở bộ thẻ → chọn chế độ học"
+      ]
+    }
+  ],
+  "faq": [
+    {
+      "q": "Tôi mới đăng ký, nên bắt đầu học như thế nào?",
+      "a": "Vào Dashboard để xem tổng quan, sau đó tạo bộ thẻ đầu tiên tại My Sets → Tạo bộ thẻ mới, rồi bắt đầu học qua Study."
+    },
+    {
+      "q": "Làm sao để tạo bộ thẻ đầu tiên?",
+      "a": "Vào My Sets (/sets), bấm tạo bộ thẻ mới (/sets/new) hoặc dùng AI Generate nếu có."
+    },
+    {
+      "q": "Các chế độ học khác nhau thế nào?",
+      "a": "Mỗi bộ thẻ hỗ trợ Flashcards, Learn, Write, Test và Draw (CJK). Vào trang bộ thẻ → Study để chọn mode."
+    }
+  ],
+  "guideTargets": [
+    {
+      "id": "nav-dashboard",
+      "selector": "[data-guide=nav-dashboard]",
+      "label": "Dashboard"
+    },
+    {
+      "id": "nav-sets",
+      "selector": "[data-guide=nav-sets]",
+      "label": "My Sets"
+    },
+    {
+      "id": "nav-study",
+      "selector": "[data-guide=nav-study]",
+      "label": "Study"
+    },
+    {
+      "id": "nav-search",
+      "selector": "[data-guide=nav-search]",
+      "label": "Search"
+    },
+    {
+      "id": "nav-library",
+      "selector": "[data-guide=nav-library]",
+      "label": "Library"
+    }
+  ]
+}

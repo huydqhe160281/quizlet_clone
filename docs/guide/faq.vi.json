@@ -1,0 +1,14 @@
+[
+  {
+    "q": "Tôi mới đăng ký, nên bắt đầu học như thế nào?",
+    "a": "Vào Dashboard để xem tổng quan, sau đó tạo bộ thẻ đầu tiên tại My Sets → Tạo bộ thẻ mới, rồi bắt đầu học qua Study."
+  },
+  {
+    "q": "Làm sao để tạo bộ thẻ đầu tiên?",
+    "a": "Vào My Sets (/sets), bấm tạo bộ thẻ mới (/sets/new) hoặc dùng AI Generate nếu có."
+  },
+  {
+    "q": "Các chế độ học khác nhau thế nào?",
+    "a": "Mỗi bộ thẻ hỗ trợ Flashcards, Learn, Write, Test và Draw (CJK). Vào trang bộ thẻ → Study để chọn mode."
+  }
+]

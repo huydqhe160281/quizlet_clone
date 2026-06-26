@@ -34,6 +34,17 @@ export function getOllamaModel(cardCount?: number) {
   });
 }
 
+export function getOllamaChatModel() {
+  const headers = env.ollamaApiKey ? { Authorization: `Bearer ${env.ollamaApiKey}` } : undefined;
+
+  const ollama = createOllama({
+    baseURL: env.ollamaBaseUrl,
+    ...(headers ? { headers } : {}),
+  });
+
+  return ollama(env.ollamaModel);
+}
+
 export function getOllamaGenerateOptions(cardCount?: number) {
   const targetCards = cardCount ?? 120;
 

@@ -52,16 +52,27 @@ OLLAMA_MODEL=llama3
 
 In **production**, both variables are required. Point `OLLAMA_BASE_URL` at your Ollama Cloud or self-hosted endpoint reachable from Vercel.
 
+### AI Guide Assistant (Chat Box)
+
+The floating guide chat uses the same Ollama configuration. Site knowledge is generated at build time:
+
+```bash
+npm run generate:guide        # Regenerate src/generated/guide-config.json
+npm run generate:guide:check  # CI: fail if committed config is stale
+```
+
+Hand-authored flows/FAQ live under `docs/guide/`. See [docs/guide/README.md](docs/guide/README.md).
+
 ## Scripts
 
-| Command           | Description                     |
-| ----------------- | ------------------------------- |
-| `pnpm dev`        | Dev server                      |
-| `pnpm build`      | Production build                |
-| `pnpm test`       | Unit/integration tests (Vitest) |
-| `pnpm test:e2e`   | Playwright E2E tests            |
-| `pnpm db:migrate` | Prisma migrations               |
-| `pnpm db:studio`  | Prisma Studio                   |
+| Command           | Description                                    |
+| ----------------- | ---------------------------------------------- |
+| `pnpm dev`        | Dev server                                     |
+| `pnpm build`      | Production build (runs `generate:guide` first) |
+| `pnpm test`       | Unit/integration tests (Vitest)                |
+| `pnpm test:e2e`   | Playwright E2E tests                           |
+| `pnpm db:migrate` | Prisma migrations                              |
+| `pnpm db:studio`  | Prisma Studio                                  |
 
 ## Features
 

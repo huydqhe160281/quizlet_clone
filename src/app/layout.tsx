@@ -9,6 +9,7 @@ import { RootJsonLd } from '@/components/seo/RootJsonLd';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { GuideProviders } from '@/features/guide/components/GuideProviders';
 import { createRootMetadata } from '@/lib/seo/metadata';
 import { siteConfig } from '@/lib/seo/site-config';
 
@@ -48,7 +49,9 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthSessionProvider>
-              <ErrorBoundary>{children}</ErrorBoundary>
+              <ErrorBoundary>
+                <GuideProviders>{children}</GuideProviders>
+              </ErrorBoundary>
             </AuthSessionProvider>
           </QueryProvider>
           <Toaster />

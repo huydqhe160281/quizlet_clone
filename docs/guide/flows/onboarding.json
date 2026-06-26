@@ -1,0 +1,12 @@
+{
+  "id": "first-set",
+  "title": "Tạo bộ thẻ đầu tiên",
+  "steps": [
+    "Đăng nhập hoặc đăng ký tài khoản",
+    "Vào My Sets (/sets)",
+    "Chọn Tạo bộ thẻ mới (/sets/new)",
+    "Nhập tên bộ thẻ và thêm thẻ (front/back)",
+    "Lưu bộ thẻ",
+    "Vào Study (/study) hoặc mở bộ thẻ → chọn chế độ học"
+  ]
+}

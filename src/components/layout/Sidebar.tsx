@@ -2,16 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Home, Layers, Library, Search, Sparkles } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
+import { APP_NAV_ITEMS } from '@/lib/navigation-data';
+import { NAV_ICON_MAP } from '@/lib/navigation-icons';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home },
-  { href: '/sets', label: 'My Sets', icon: Layers },
-  { href: '/study', label: 'Study', icon: Sparkles },
-  { href: '/search', label: 'Search', icon: Search },
-  { href: '/library', label: 'Library', icon: Library },
-];
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -25,12 +19,14 @@ export function Sidebar() {
         </span>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-4">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {APP_NAV_ITEMS.map(({ href, label, icon, guideTargetId }) => {
+          const Icon = NAV_ICON_MAP[icon];
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
               href={href}
+              data-guide={guideTargetId}
               className={cn(
                 'group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all hover:pl-4',
                 active
