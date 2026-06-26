@@ -43,6 +43,19 @@ export const recordAnswerSchema = z.object({
   isCorrect: z.boolean(),
 });
 
+export const batchAnswerItemSchema = z.object({
+  cardId: z.string().cuid(),
+  isCorrect: z.boolean(),
+});
+
+export const batchAnswersSchema = z.object({
+  answers: z.array(batchAnswerItemSchema).min(1),
+});
+
+export const completeSessionWithAnswersSchema = completeSessionSchema.extend({
+  answers: z.array(batchAnswerItemSchema).optional(),
+});
+
 export const reviewSchema = z.object({
   cardId: z.string().cuid(),
   grade: z.enum(['AGAIN', 'HARD', 'GOOD', 'EASY']),

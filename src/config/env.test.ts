@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { resolveAuthUrl } from '../env';
+import { resolveAuthUrl } from './env';
 
 describe('resolveAuthUrl', () => {
   const originalEnv = process.env;

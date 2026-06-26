@@ -1,7 +1,7 @@
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { resetPasswordSchema } from '@/features/auth/schemas/auth.schema';
 import { prisma } from '@/server/db';
-import { hashPassword, isResetTokenExpired } from '@/server/password';
+import { hashPassword, isResetTokenExpired } from '@/server/auth/password';
 
 export const POST = withErrorHandler(async (req) => {
   const body = await req.json();

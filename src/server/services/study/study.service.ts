@@ -2,7 +2,7 @@ import type { Grade, StudyMode } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { calculateSm2, gradeToSm2 } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
-import { recordReviewStats } from '@/server/services/stats.service';
+import { recordReviewStats } from '@/server/services/user/stats.service';
 import type { StudySessionSettings } from '@/features/study/schemas/study.schema';
 const shuffle = <T>(items: T[]): T[] => {
   const copy = [...items];
@@ -115,6 +115,25 @@ export async function recordSessionAnswer(
     where: { id: sessionCard.id },
     data: { isCorrect, answeredAt: new Date() },
   });
+}
+
+export async function recordSessionAnswersBatch(
+  sessionId: string,
+  userId: string,
+  answers: Array<{ cardId: string; isCorrect: boolean }>
+) {
+  await getOwnedSession(sessionId, userId);
+
+  const now = new Date();
+  // Use a single transaction to update all session cards in one DB round-trip
+  await prisma.$transaction(
+    answers.map(({ cardId, isCorrect }) =>
+      prisma.sessionCard.updateMany({
+        where: { sessionId, cardId },
+        data: { isCorrect, answeredAt: now },
+      })
+    )
+  );
 }
 
 export async function completeSession(sessionId: string, userId: string, correctCount: number) {

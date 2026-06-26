@@ -5,7 +5,7 @@
 ### NextAuth.js Configuration
 
 ```typescript
-// src/server/auth.ts
+// src/server/auth/auth.ts
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
@@ -130,7 +130,7 @@ export async function POST(req: Request) {
 **Nguyên tắc**: Luôn kiểm tra ownership trước mọi mutation.
 
 ```typescript
-// src/server/services/set.service.ts
+// src/server/services/sets/set.service.ts
 
 export async function updateSet(userId: string, setId: string, data: UpdateSetInput) {
   // 1. Fetch set

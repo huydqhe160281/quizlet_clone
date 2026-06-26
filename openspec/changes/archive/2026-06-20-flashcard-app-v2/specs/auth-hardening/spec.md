@@ -10,8 +10,8 @@ Forgot-password hoạt động rõ ràng trong dev (link hiển thị) và gửi
 | UI | Login | `src/features/auth/components/LoginForm.tsx` |
 | UI | Forgot | `src/features/auth/components/ForgotPasswordForm.tsx` |
 | API | Forgot | `src/app/api/v1/auth/forgot-password/route.ts` |
-| API | NextAuth | `src/app/api/auth/[...nextauth]/route.ts`, `src/server/auth.ts` |
-| Config | Session | `src/server/auth.config.ts` |
+| API | NextAuth | `src/app/api/auth/[...nextauth]/route.ts`, `src/server/auth/auth.ts` |
+| Config | Session | `src/server/auth/auth.config.ts` |
 | Email | Resend | `src/server/email.ts` |
 
 ---
@@ -64,7 +64,7 @@ The system SHALL support optional "Remember me" on login: 30-day session when ch
 ---
 
 ### Requirement: Session Cookie Configuration
-The system SHALL set httpOnly, SameSite=Lax, and **explicit maxAge** on the session token cookie, matching the JWT session `maxAge` value. NOTE: The current V1 `auth.config.ts` (`src/server/auth.config.ts`) is missing `maxAge` in `cookies.sessionToken.options` — this MUST be added as part of V2.
+The system SHALL set httpOnly, SameSite=Lax, and **explicit maxAge** on the session token cookie, matching the JWT session `maxAge` value. NOTE: The current V1 `auth.config.ts` (`src/server/auth/auth.config.ts`) is missing `maxAge` in `cookies.sessionToken.options` — this MUST be added as part of V2.
 **Constraint**: MUST
 **Verification**: Existing `tests/security/cookie.test.ts` updated for maxAge; manual inspection of `auth.config.ts` cookie options
 
@@ -76,7 +76,7 @@ The system SHALL set httpOnly, SameSite=Lax, and **explicit maxAge** on the sess
 #### Scenario: Typed Env Guard for NODE_ENV
 - **GIVEN** `auth.config.ts` and `forgot-password/route.ts` need to check production status
 - **WHEN** any production guard is implemented
-- **THEN** MUST use `env.nodeEnv` (typed env accessor from `@/lib/env`) instead of raw `process.env.NODE_ENV` — the existing V1 usage of raw `process.env.NODE_ENV` at line 20 of `auth.config.ts` MUST be migrated in the same PR
+- **THEN** MUST use `env.nodeEnv` (typed env accessor from `@/config/env`) instead of raw `process.env.NODE_ENV` — the existing V1 usage of raw `process.env.NODE_ENV` at line 20 of `auth.config.ts` MUST be migrated in the same PR
 
 ---
 

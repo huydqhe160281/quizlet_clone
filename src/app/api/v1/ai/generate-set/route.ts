@@ -1,8 +1,8 @@
 import { withErrorHandler } from '@/lib/api-error';
-import { assertAiGenerateRateLimit } from '@/lib/ai-rate-limit-guard';
+import { assertAiGenerateRateLimit } from '@/lib/rate-limit/ai-rate-limit-guard';
 import { aiGenerateInputSchema } from '@/features/sets/schemas/ai-generate.schema';
-import { requireUserId } from '@/server/auth-utils';
-import { generateAiSet } from '@/server/services/ai-set.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { generateAiSet } from '@/server/services/ai/ai-set.service';
 
 export const maxDuration = 120;
 

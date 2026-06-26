@@ -1,7 +1,7 @@
 import { ApiError, withErrorHandler } from '@/lib/api-error';
-import { uploadRateLimit, getClientIp } from '@/lib/rate-limit';
+import { uploadRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { presignedUrlSchema } from '@/features/upload/schemas/upload.schema';
-import { requireUserId } from '@/server/auth-utils';
+import { requireUserId } from '@/server/auth/auth-utils';
 import { generatePresignedUrl } from '@/server/services/upload.service';
 
 export const POST = withErrorHandler(async (req) => {

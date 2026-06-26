@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { LoginForm } from '@/features/auth/components/LoginForm';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 
 export default function LoginPage() {
   return (

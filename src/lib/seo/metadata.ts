@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 import { siteConfig } from '@/lib/seo/site-config';
 
 export const getSiteUrl = (): string => env.authUrl;

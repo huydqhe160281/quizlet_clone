@@ -3,10 +3,10 @@ import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { loginSchema } from '@/features/auth/schemas/auth.schema';
-import { env } from '@/lib/env';
-import { authConfig } from '@/server/auth.config';
+import { env } from '@/config/env';
+import { authConfig } from '@/server/auth/auth.config';
 import { prisma } from '@/server/db';
-import { verifyPassword } from '@/server/password';
+import { verifyPassword } from '@/server/auth/password';
 
 const googleProvider =
   env.googleClientId && env.googleClientSecret

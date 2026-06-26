@@ -10,7 +10,7 @@ import { SessionComplete } from '@/features/study/components/shared/SessionCompl
 import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
-import type { StudyCard } from '@/stores/study.store';
+import type { StudyCard } from '@/features/study/store';
 
 type FlashcardModeProps = {
   setId: string;
@@ -43,7 +43,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
 
     // Flashcard records as "correct" (reviewed) to advance round engine
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, true);
-    await study.recordAnswer(currentCard.cardId, true);
+    study.recordAnswer(currentCard.cardId, true);
 
     if (roundEnded) {
       if (study.isComplete) {

@@ -1,12 +1,12 @@
 import { withErrorHandler, ApiError } from '@/lib/api-error';
-import { assistantGuestRateLimit, getClientIp } from '@/lib/rate-limit';
+import { assistantGuestRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import {
   assistantChatRequestSchema,
   isUserMessageTooLongError,
 } from '@/features/guide/schemas/assistant-chat.schema';
-import { auth } from '@/server/auth';
-import { streamAssistantChat, toCoreMessages } from '@/server/services/assistant.service';
-import { getGuideUserContext } from '@/server/services/user-context.service';
+import { auth } from '@/server/auth/auth';
+import { streamAssistantChat, toCoreMessages } from '@/server/services/ai/assistant.service';
+import { getGuideUserContext } from '@/server/services/user/user-context.service';
 
 export const maxDuration = 60;
 

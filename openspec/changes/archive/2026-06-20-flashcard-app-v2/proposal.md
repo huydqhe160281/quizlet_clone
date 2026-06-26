@@ -63,8 +63,8 @@ Without V2, retention suffers: power users abandon the app for Anki/Quizlet impo
 - **Affected areas**:
   - `src/features/sets/` — import UI + hooks
   - `src/features/study/` — settings screen, round engine, MC mode entry
-  - `src/server/services/study.service.ts`, `set.service.ts`, new `import.service.ts`
-  - `src/server/auth.config.ts`, `src/server/email.ts`, login/forgot UI
+  - `src/server/services/study/study.service.ts`, `set.service.ts`, new `import.service.ts`
+  - `src/server/auth/auth.config.ts`, `src/server/email.ts`, login/forgot UI
   - `prisma/schema.prisma` — optional `StudySession.settings Json?`
   - `tests/e2e/` — import flow, study settings, auth persistence
 - **Risk Level**: MEDIUM

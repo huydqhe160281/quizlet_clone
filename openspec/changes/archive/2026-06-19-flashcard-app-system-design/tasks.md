@@ -34,7 +34,7 @@
 - [x] **Write unit test**: `test_register_email_valid()` — verify bcrypt hash, user creation
 - [x] **Write unit test**: `test_register_duplicate_email()` — verify 400 response
 - [x] **Write unit test**: `test_reset_token_expiry()` — verify expired token rejected
-- [x] Create `src/server/auth.ts` — NextAuth config (Google + Credentials), JWT strategy, httpOnly cookie
+- [x] Create `src/server/auth/auth.ts` — NextAuth config (Google + Credentials), JWT strategy, httpOnly cookie
 - [x] Create Zod schemas: `loginSchema`, `registerSchema`, `forgotPasswordSchema` in `src/features/auth/schemas/`
 - [x] Create `src/lib/api-error.ts` — ApiError class + withErrorHandler wrapper
 - [x] Create `src/lib/rate-limit.ts` — LRU-based rate limiter (authRateLimit: 5/min, apiRateLimit: 100/min)
@@ -62,14 +62,14 @@
 
 ## Phase 3: FlashcardSet & Card Management
 **Objective**: CRUD đầy đủ cho Sets/Cards, media upload, tags, folders.
-**Boundaries**: `src/app/(app)/sets/`, `src/app/api/v1/sets/`, `/folders/`, `/tags/`, `/upload/`, `src/features/sets/`, `src/features/cards/`, `src/server/services/set.service.ts`, `card.service.ts`, `upload.service.ts`
+**Boundaries**: `src/app/(app)/sets/`, `src/app/api/v1/sets/`, `/folders/`, `/tags/`, `/upload/`, `src/features/sets/`, `src/features/cards/`, `src/server/services/sets/set.service.ts`, `card.service.ts`, `upload.service.ts`
 
 - [x] **Write integration test**: `test_create_set_valid()`, `test_update_set_forbidden()` (different user)
 - [x] **Write integration test**: `test_duplicate_public_set()`
 - [x] **Write integration test**: `test_upload_presigned_url_file_size_exceeded()`
 - [x] Prisma migration: `pnpm prisma migrate dev --name sets_cards` — add FlashcardSet, Flashcard, Tag, SetTag, Folder, FolderSet
-- [x] Create `src/server/services/set.service.ts` — getSet, getSets, createSet, updateSet, deleteSet, duplicateSet (with ownership check)
-- [x] Create `src/server/services/card.service.ts` — getCards, createCard, updateCard, deleteCard, reorderCards
+- [x] Create `src/server/services/sets/set.service.ts` — getSet, getSets, createSet, updateSet, deleteSet, duplicateSet (with ownership check)
+- [x] Create `src/server/services/sets/card.service.ts` — getCards, createCard, updateCard, deleteCard, reorderCards
 - [x] Create `src/server/services/upload.service.ts` — generatePresignedUrl (validate MIME + size)
 - [x] Create all API route handlers under `src/app/api/v1/sets/` (CRUD + duplicate)
 - [x] Create API route handlers under `src/app/api/v1/sets/[setId]/cards/` (CRUD + reorder)
@@ -89,13 +89,13 @@
 
 ## Phase 4: Study Modes
 **Objective**: 4 study modes với UX mượt.
-**Boundaries**: `src/app/(app)/sets/[setId]/flashcard/`, `/learn/`, `/write/`, `/test/`, `src/features/study/components/`, `src/server/services/study.service.ts`, `src/lib/utils/fuzzy.ts`, `StudySession`, `SessionCard` tables
+**Boundaries**: `src/app/(app)/sets/[setId]/flashcard/`, `/learn/`, `/write/`, `/test/`, `src/features/study/components/`, `src/server/services/study/study.service.ts`, `src/lib/utils/fuzzy.ts`, `StudySession`, `SessionCard` tables
 
 - [x] **Write unit test**: `test_fuzzy_match_exact()`, `test_fuzzy_match_typo()`, `test_fuzzy_match_wrong()`
 - [x] **Write integration test**: `test_study_session_created()`, `test_study_session_completed()`
 - [x] Prisma migration: `pnpm prisma migrate dev --name study_sessions`
 - [x] Create `src/lib/utils/fuzzy.ts` — Jaro-Winkler similarity function (threshold 0.85)
-- [x] Create `src/server/services/study.service.ts` — createSession, completeSession, getSessionCards
+- [x] Create `src/server/services/study/study.service.ts` — createSession, completeSession, getSessionCards
 - [x] Create API route handlers: `src/app/api/v1/study/sessions/`
 - [x] Create `src/stores/study.store.ts` — Zustand store for study session state
 - [x] Create FlashcardViewer component — CSS 3D flip + Framer Motion spring

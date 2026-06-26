@@ -1,5 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
-import { env } from '@/lib/env';
+import { env } from '@/config/env';
 
 const SESSION_MAX_AGE_REMEMBER = 30 * 24 * 60 * 60; // 30 days
 const SESSION_MAX_AGE_DEFAULT = 24 * 60 * 60; // 24 hours

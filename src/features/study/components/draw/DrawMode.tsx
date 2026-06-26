@@ -7,7 +7,7 @@ import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { HanziWriterCanvas } from '@/features/study/components/draw/HanziWriterCanvas';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { HINT_DISPLAY_MS } from '@/features/study/lib/draw-config';
-import type { StudyCard } from '@/stores/study.store';
+import type { StudyCard } from '@/features/study/store';
 
 type DrawModeProps = {
   setId: string;
@@ -53,10 +53,10 @@ export function DrawMode({ setId }: DrawModeProps) {
   };
 
   const handleSkip = () => {
-    void handleComplete(false);
+    handleComplete(false);
   };
 
-  const handleComplete = async (isCorrect: boolean) => {
+  const handleComplete = (isCorrect: boolean) => {
     if (!currentCard || awaitingAdvance) {
       return;
     }
@@ -66,7 +66,7 @@ export function DrawMode({ setId }: DrawModeProps) {
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
 
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
-    await study.recordAnswer(currentCard.cardId, isCorrect);
+    study.recordAnswer(currentCard.cardId, isCorrect);
 
     setRoundEndedThisStep(roundEnded);
     setHint(`${currentCard.back} — ${currentCard.front}`);
@@ -129,7 +129,7 @@ export function DrawMode({ setId }: DrawModeProps) {
       <HanziWriterCanvas
         character={currentCard.front}
         back={currentCard.back}
-        onComplete={(isCorrect) => void handleComplete(isCorrect)}
+        onComplete={(isCorrect) => handleComplete(isCorrect)}
         onSkip={handleSkip}
       />
       {hint && <p className="text-center text-sm text-muted-foreground">{hint}</p>}

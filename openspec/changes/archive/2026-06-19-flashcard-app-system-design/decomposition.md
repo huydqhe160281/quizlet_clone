@@ -52,7 +52,7 @@ FlashcardSet & Card CRUD    Media Upload (Supabase Storage)
   - `prisma/schema.prisma` (base User, Account, Session tables)
   - `prisma/migrations/20240101_init/`
   - `src/server/db.ts` (Prisma singleton)
-  - `src/server/auth.ts` (NextAuth config)
+  - `src/server/auth/auth.ts` (NextAuth config)
   - `src/app/layout.tsx`, `src/app/globals.css`
   - `src/components/ui/` (shadcn/ui setup)
   - `.env.local`, `vercel.json`
@@ -77,7 +77,7 @@ FlashcardSet & Card CRUD    Media Upload (Supabase Storage)
   - `src/app/api/v1/sets/` — Route handlers
   - `src/app/api/v1/folders/`, `src/app/api/v1/tags/`
   - `src/features/sets/`, `src/features/cards/`
-  - `src/server/services/set.service.ts`, `src/server/services/card.service.ts`
+  - `src/server/services/sets/set.service.ts`, `src/server/services/sets/card.service.ts`
   - `src/app/api/v1/upload/presigned-url/` — Media upload
   - `src/server/services/upload.service.ts`
 - **Dependencies**: Phase 1, Phase 2
@@ -89,7 +89,7 @@ FlashcardSet & Card CRUD    Media Upload (Supabase Storage)
   - `src/app/(app)/sets/[setId]/flashcard/`, `/learn/`, `/write/`, `/test/`
   - `src/app/api/v1/study/sessions/` — Route handlers
   - `src/features/study/components/` — FlashcardViewer, LearnMode, WriteMode, TestMode
-  - `src/server/services/study.service.ts`
+  - `src/server/services/study/study.service.ts`
   - `src/lib/utils/fuzzy.ts` — Fuzzy matching for Write mode
 - **Dependencies**: Phase 1, Phase 2, Phase 3
 
@@ -100,7 +100,7 @@ FlashcardSet & Card CRUD    Media Upload (Supabase Storage)
   - `src/features/study/lib/sm2.ts` — Pure SM-2 function
   - `src/app/api/v1/study/due-cards/`, `/review/`
   - `src/app/(app)/study/` — SM-2 study page
-  - `src/server/services/study.service.ts` (extend)
+  - `src/server/services/study/study.service.ts` (extend)
   - `src/features/study/hooks/useSpacedRepetition.ts`
 - **Dependencies**: Phase 1, Phase 2, Phase 3, Phase 4
 

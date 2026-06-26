@@ -11,13 +11,13 @@ vi.mock('@/server/db', () => ({
   prisma: prismaMock,
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
+vi.mock('@/lib/rate-limit/rate-limit', () => ({
   authRateLimit: { check: vi.fn(() => false) },
   getClientIp: vi.fn(() => '127.0.0.1'),
 }));
 
-vi.mock('@/server/password', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/server/password')>();
+vi.mock('@/server/auth/password', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/server/auth/password')>();
   return {
     ...actual,
     hashPassword: vi.fn(async (password: string) => `$2a$hashed:${password}`),

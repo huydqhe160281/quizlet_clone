@@ -9,7 +9,7 @@ import { StudyProgress } from '@/features/study/components/shared/StudyProgress'
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { generateTestQuestions, type TestQuestion } from '@/features/study/lib/test-generator';
-import type { StudyCard } from '@/stores/study.store';
+import type { StudyCard } from '@/features/study/store';
 
 type TestModeProps = {
   setId: string;
@@ -67,14 +67,14 @@ export function TestMode({ setId }: TestModeProps) {
     setAnswered(false);
   };
 
-  const recordResult = async (cardId: string, isCorrect: boolean) => {
+  const recordResult = (cardId: string, isCorrect: boolean) => {
     // Save info of the round before recording answer (as it increments/resets store state)
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
 
     const roundEnded = study.recordRoundAnswer(cardId, isCorrect);
-    await study.recordAnswer(cardId, isCorrect);
+    study.recordAnswer(cardId, isCorrect);
 
     setRoundEndedThisStep(roundEnded);
     setAnswered(true);
@@ -140,7 +140,7 @@ export function TestMode({ setId }: TestModeProps) {
               disabled={answered}
               onClick={() => {
                 const isCorrect = option === currentQuestion.correctBack;
-                void recordResult(currentQuestion.cardId, isCorrect);
+                recordResult(currentQuestion.cardId, isCorrect);
                 setFeedback(
                   isCorrect ? 'Correct!' : `Incorrect. Answer: ${currentQuestion.correctBack}`
                 );
@@ -161,7 +161,7 @@ export function TestMode({ setId }: TestModeProps) {
               disabled={answered}
               onClick={() => {
                 const isCorrect = currentQuestion.isPairCorrect;
-                void recordResult(currentQuestion.cardId, isCorrect);
+                recordResult(currentQuestion.cardId, isCorrect);
                 setFeedback(isCorrect ? 'Correct!' : 'Incorrect pairing.');
               }}
             >
@@ -172,7 +172,7 @@ export function TestMode({ setId }: TestModeProps) {
               disabled={answered}
               onClick={() => {
                 const isCorrect = !currentQuestion.isPairCorrect;
-                void recordResult(currentQuestion.cardId, isCorrect);
+                recordResult(currentQuestion.cardId, isCorrect);
                 setFeedback(isCorrect ? 'Correct!' : 'Incorrect pairing.');
               }}
             >
@@ -196,7 +196,7 @@ export function TestMode({ setId }: TestModeProps) {
               disabled={!typingAnswer.trim()}
               onClick={() => {
                 const isCorrect = fuzzyMatch(typingAnswer, currentQuestion.back);
-                void recordResult(currentQuestion.cardId, isCorrect);
+                recordResult(currentQuestion.cardId, isCorrect);
                 setFeedback(isCorrect ? 'Correct!' : `Incorrect. Answer: ${currentQuestion.back}`);
               }}
             >

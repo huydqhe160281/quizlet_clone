@@ -1,12 +1,12 @@
 import { withErrorHandler } from '@/lib/api-error';
-import { assertApiRateLimit } from '@/lib/rate-limit-guard';
-import { requireUserId } from '@/server/auth-utils';
+import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
+import { requireUserId } from '@/server/auth/auth-utils';
 import {
   importCsv,
   importJson,
   importCsvToExisting,
   importJsonToExisting,
-} from '@/server/services/import.service';
+} from '@/server/services/sets/import.service';
 
 export const POST = withErrorHandler(async (req) => {
   assertApiRateLimit(req);

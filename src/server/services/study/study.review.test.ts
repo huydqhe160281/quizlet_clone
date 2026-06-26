@@ -8,11 +8,11 @@ const prismaMock = vi.hoisted(() => ({
 
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 
-vi.mock('@/server/services/stats.service', () => ({
+vi.mock('@/server/services/user/stats.service', () => ({
   recordReviewStats: vi.fn(),
 }));
 
-import { reviewCard } from '@/server/services/study.service';
+import { reviewCard } from '@/server/services/study/study.service';
 
 describe('study spaced repetition review', () => {
   beforeEach(() => {

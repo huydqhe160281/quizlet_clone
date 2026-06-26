@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { calculateStreakAfterReview } from '@/server/services/stats.service';
+import { calculateStreakAfterReview } from '@/server/services/user/stats.service';
 
 const prismaMock = vi.hoisted(() => ({
   userStats: {
@@ -24,7 +24,7 @@ import {
   getStats,
   recordReviewStats,
   updateStreak,
-} from '@/server/services/stats.service';
+} from '@/server/services/user/stats.service';
 
 describe('stats streak calculation', () => {
   const today = new Date('2026-06-17T12:00:00.000Z');

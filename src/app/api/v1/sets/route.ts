@@ -1,8 +1,8 @@
 import { withErrorHandler } from '@/lib/api-error';
-import { assertApiRateLimit } from '@/lib/rate-limit-guard';
+import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { createSetSchema, listSetsQuerySchema } from '@/features/sets/schemas/set.schema';
-import { requireUserId } from '@/server/auth-utils';
-import { createSet, getSets } from '@/server/services/set.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { createSet, getSets } from '@/server/services/sets/set.service';
 
 export const GET = withErrorHandler(async (req) => {
   const userId = await requireUserId();

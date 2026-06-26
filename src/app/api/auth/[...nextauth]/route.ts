@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { handlers } from '@/server/auth';
-import { authRateLimit, getClientIp } from '@/lib/rate-limit';
+import { handlers } from '@/server/auth/auth';
+import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 
 export async function GET(req: NextRequest) {
   return handlers.GET(req);

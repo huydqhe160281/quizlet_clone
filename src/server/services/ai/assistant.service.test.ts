@@ -26,7 +26,7 @@ vi.mock('@/server/ai/ollama', () => ({
   getOllamaChatModel: vi.fn(() => 'mock-model'),
 }));
 
-import { streamAssistantChat } from '@/server/services/assistant.service';
+import { streamAssistantChat } from '@/server/services/ai/assistant.service';
 
 describe('assistant.service', () => {
   beforeEach(() => {

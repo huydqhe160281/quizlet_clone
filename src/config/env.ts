@@ -3,7 +3,7 @@ import {
   resolveOllamaBaseUrl,
   resolveOllamaLargeModel,
   resolveOllamaModel,
-} from '@/lib/ollama-env';
+} from '@/config/ollama-env';
 
 const required = (key: string): string => {
   const value = process.env[key];

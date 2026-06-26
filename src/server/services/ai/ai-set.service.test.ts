@@ -29,7 +29,7 @@ vi.mock('@/server/ai/ollama', () => ({
 }));
 
 import { revalidateTag } from 'next/cache';
-import { generateAiSet } from '@/server/services/ai-set.service';
+import { generateAiSet } from '@/server/services/ai/ai-set.service';
 
 const validInput = {
   prompt: 'Create 5 Japanese family vocabulary words',

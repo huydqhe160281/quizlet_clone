@@ -1,8 +1,8 @@
 import { withErrorHandler } from '@/lib/api-error';
-import { assertApiRateLimit } from '@/lib/rate-limit-guard';
+import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { createSessionSchema } from '@/features/study/schemas/study.schema';
-import { requireUserId } from '@/server/auth-utils';
-import { createSession } from '@/server/services/study.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { createSession } from '@/server/services/study/study.service';
 
 export const POST = withErrorHandler(async (req) => {
   assertApiRateLimit(req);

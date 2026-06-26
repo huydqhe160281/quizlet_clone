@@ -1,7 +1,7 @@
 import { ApiError } from '@/lib/api-error';
 import { revalidateTag } from 'next/cache';
 import type { Visibility } from '@prisma/client';
-import type { CreateCardInput, UpdateCardInput } from '@/features/cards/schemas/card.schema';
+import type { CreateCardInput, UpdateCardInput } from '@/features/sets/cards/schemas/card.schema';
 import { prisma } from '@/server/db';
 
 const getOwnedSet = async (setId: string, userId: string) => {

@@ -1,5 +1,5 @@
 import { ApiError } from '@/lib/api-error';
-import { apiRateLimit, getClientIp } from '@/lib/rate-limit';
+import { apiRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 
 export function assertApiRateLimit(req: Request) {
   const ip = getClientIp(req);

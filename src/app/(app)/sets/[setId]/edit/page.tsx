@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { SetForm } from '@/features/sets/components/SetForm';
 import { ApiError } from '@/lib/api-error';
-import { requireUserId } from '@/server/auth-utils';
-import { getSet } from '@/server/services/set.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { getSet } from '@/server/services/sets/set.service';
 
 type EditSetPageProps = {
   params: Promise<{ setId: string }>;

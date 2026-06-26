@@ -5,11 +5,11 @@ const generateAiSetMock = vi.hoisted(() => vi.fn());
 const requireUserIdMock = vi.hoisted(() => vi.fn());
 const assertAiGenerateRateLimitMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/server/services/ai-set.service', () => ({
+vi.mock('@/server/services/ai/ai-set.service', () => ({
   generateAiSet: generateAiSetMock,
 }));
 
-vi.mock('@/server/auth-utils', () => ({
+vi.mock('@/server/auth/auth-utils', () => ({
   requireUserId: requireUserIdMock,
 }));
 

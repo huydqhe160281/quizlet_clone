@@ -25,7 +25,7 @@ import {
   createSession,
   getSessionCards,
   recordSessionAnswer,
-} from '@/server/services/study.service';
+} from '@/server/services/study/study.service';
 
 describe('study.service', () => {
   beforeEach(() => {

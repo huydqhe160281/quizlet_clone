@@ -1,5 +1,5 @@
 import { ApiError } from '@/lib/api-error';
-import { aiGenerateRateLimit } from '@/lib/rate-limit';
+import { aiGenerateRateLimit } from '@/lib/rate-limit/rate-limit';
 
 export function assertAiGenerateRateLimit(userId: string) {
   if (aiGenerateRateLimit.check(`ai-gen:${userId}`)) {

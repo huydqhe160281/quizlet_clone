@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { requireUserId } from '@/server/auth-utils';
+import { requireUserId } from '@/server/auth/auth-utils';
 import { ImportSetWizard } from '@/features/sets/components/ImportSetWizard';
 
 export default async function ImportSetPage() {

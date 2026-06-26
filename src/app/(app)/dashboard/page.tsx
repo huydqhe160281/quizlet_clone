@@ -1,5 +1,5 @@
-import { requireUserId } from '@/server/auth-utils';
-import { getActivity, getRecentSessions, getStats } from '@/server/services/stats.service';
+import { requireUserId } from '@/server/auth/auth-utils';
+import { getActivity, getRecentSessions, getStats } from '@/server/services/user/stats.service';
 import { DashboardClient } from '@/features/dashboard/components/DashboardClient';
 
 export default async function DashboardPage() {

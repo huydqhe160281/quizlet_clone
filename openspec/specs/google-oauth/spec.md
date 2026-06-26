@@ -8,10 +8,10 @@ TBD - created by archiving change google-auth-and-email. Update Purpose after ar
 
 ### Requirement: Google Provider Registration
 
-The system SHALL register `GoogleProvider` in `src/server/auth.ts` when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are non-empty.
+The system SHALL register `GoogleProvider` in `src/server/auth/auth.ts` when both `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are non-empty.
 
 **Constraint**: MUST  
-**Verification**: Inspect `src/server/auth.ts`; integration test with mocked OAuth when feasible
+**Verification**: Inspect `src/server/auth/auth.ts`; integration test with mocked OAuth when feasible
 
 #### Scenario: Provider active with credentials
 
