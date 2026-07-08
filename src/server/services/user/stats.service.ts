@@ -10,6 +10,50 @@ const dayDiff = (a: Date, b: Date) => {
   return Math.floor((startOfUtcDay(a).getTime() - startOfUtcDay(b).getTime()) / msPerDay);
 };
 
+/** Streak visible to user: 0 if more than 1 calendar day since last study. */
+export function getEffectiveStreak(
+  currentStreak: number,
+  lastStudiedDate: Date | null,
+  now = new Date()
+): number {
+  if (!lastStudiedDate || currentStreak <= 0) {
+    return 0;
+  }
+  const gap = dayDiff(startOfUtcDay(now), lastStudiedDate);
+  if (gap <= 1) {
+    return currentStreak;
+  }
+  return 0;
+}
+
+function computeNextStreak(
+  currentStreak: number,
+  longestStreak: number,
+  lastStudiedDate: Date | null,
+  studiedAt: Date
+) {
+  const today = startOfUtcDay(studiedAt);
+
+  if (lastStudiedDate && dayDiff(today, lastStudiedDate) === 0) {
+    return {
+      currentStreak,
+      longestStreak,
+      lastStudiedDate,
+      changed: false,
+    };
+  }
+
+  const gap = lastStudiedDate ? dayDiff(today, lastStudiedDate) : null;
+  const nextStreak = gap === 1 ? currentStreak + 1 : 1;
+
+  return {
+    currentStreak: nextStreak,
+    longestStreak: Math.max(longestStreak, nextStreak),
+    lastStudiedDate: today,
+    changed: true,
+  };
+}
+
 export async function ensureUserStats(userId: string) {
   const existing = await prisma.userStats.findUnique({ where: { userId } });
   if (existing) {
@@ -29,30 +73,68 @@ export async function ensureUserStats(userId: string) {
   }
 }
 
+/** Record study activity once per UTC day (session start, review, etc.). */
+export async function recordDailyStudyActivity(userId: string, studiedAt = new Date()) {
+  const stats = await ensureUserStats(userId);
+  const next = computeNextStreak(
+    stats.currentStreak,
+    stats.longestStreak,
+    stats.lastStudiedDate,
+    studiedAt
+  );
+
+  if (!next.changed) {
+    return { stats, changed: false as const };
+  }
+
+  const updated = await prisma.userStats.update({
+    where: { userId },
+    data: {
+      currentStreak: next.currentStreak,
+      longestStreak: next.longestStreak,
+      lastStudiedDate: next.lastStudiedDate,
+    },
+  });
+
+  return { stats: updated, changed: true as const };
+}
+
 export async function updateStreak(userId: string, studiedAt = new Date()) {
   const stats = await ensureUserStats(userId);
-  const today = startOfUtcDay(studiedAt);
-
-  let currentStreak = stats.currentStreak;
-  let longestStreak = stats.longestStreak;
-  let lastStudiedDate = stats.lastStudiedDate;
-
-  if (!lastStudiedDate || dayDiff(today, lastStudiedDate) !== 0) {
-    const gap = lastStudiedDate ? dayDiff(today, lastStudiedDate) : null;
-    currentStreak = gap === 1 ? stats.currentStreak + 1 : 1;
-    longestStreak = Math.max(stats.longestStreak, currentStreak);
-    lastStudiedDate = today;
-  }
+  const next = computeNextStreak(
+    stats.currentStreak,
+    stats.longestStreak,
+    stats.lastStudiedDate,
+    studiedAt
+  );
 
   return prisma.userStats.update({
     where: { userId },
     data: {
-      currentStreak,
-      longestStreak,
-      lastStudiedDate,
+      currentStreak: next.currentStreak,
+      longestStreak: next.longestStreak,
+      lastStudiedDate: next.lastStudiedDate,
       totalReviews: { increment: 1 },
     },
   });
+}
+
+export async function getStreakSnapshot(userId: string) {
+  const stats = await ensureUserStats(userId);
+  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+
+  if (currentStreak === 0 && stats.currentStreak > 0) {
+    await prisma.userStats.update({
+      where: { userId },
+      data: { currentStreak: 0 },
+    });
+  }
+
+  return {
+    currentStreak,
+    longestStreak: stats.longestStreak,
+    lastStudiedDate: stats.lastStudiedDate?.toISOString() ?? null,
+  };
 }
 
 export async function recordReviewStats(userId: string, isCorrect: boolean) {
@@ -67,6 +149,7 @@ export async function recordReviewStats(userId: string, isCorrect: boolean) {
 
 export async function getStats(userId: string) {
   const stats = await ensureUserStats(userId);
+  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
   const [totalSets, totalCards, dueCount] = await Promise.all([
     prisma.flashcardSet.count({ where: { userId } }),
     prisma.flashcard.count({ where: { set: { userId } } }),
@@ -78,7 +161,7 @@ export async function getStats(userId: string) {
   const accuracy = stats.totalReviews > 0 ? stats.totalCorrect / stats.totalReviews : 0;
 
   return {
-    currentStreak: stats.currentStreak,
+    currentStreak,
     longestStreak: stats.longestStreak,
     totalReviews: stats.totalReviews,
     totalCorrect: stats.totalCorrect,
@@ -126,15 +209,10 @@ export function calculateStreakAfterReview(
   lastStudiedDate: Date | null,
   studiedAt: Date
 ) {
-  const today = startOfUtcDay(studiedAt);
-  if (lastStudiedDate && dayDiff(today, lastStudiedDate) === 0) {
-    return { currentStreak, longestStreak };
-  }
-  const gap = lastStudiedDate ? dayDiff(today, lastStudiedDate) : null;
-  const nextStreak = gap === 1 ? currentStreak + 1 : 1;
+  const next = computeNextStreak(currentStreak, longestStreak, lastStudiedDate, studiedAt);
   return {
-    currentStreak: nextStreak,
-    longestStreak: Math.max(longestStreak, nextStreak),
+    currentStreak: next.currentStreak,
+    longestStreak: next.longestStreak,
   };
 }
 

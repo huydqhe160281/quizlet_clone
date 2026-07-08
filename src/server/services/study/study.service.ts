@@ -2,7 +2,11 @@ import type { Grade, StudyMode } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { calculateSm2, gradeToSm2 } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
-import { recordReviewStats } from '@/server/services/user/stats.service';
+import {
+  getEffectiveStreak,
+  recordDailyStudyActivity,
+  recordReviewStats,
+} from '@/server/services/user/stats.service';
 import type { StudySessionSettings } from '@/features/study/schemas/study.schema';
 const shuffle = <T>(items: T[]): T[] => {
   const copy = [...items];
@@ -65,7 +69,10 @@ export async function createSession(
   const shouldShuffle = settings ? settings.randomize : true;
   const cards = shouldShuffle ? shuffle(poolCards) : [...poolCards];
 
-  return prisma.studySession.create({
+  const { stats, changed } = await recordDailyStudyActivity(userId);
+  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+
+  const session = await prisma.studySession.create({
     data: {
       userId,
       setId,
@@ -83,6 +90,15 @@ export async function createSession(
       },
     },
   });
+
+  return {
+    session,
+    streak: {
+      currentStreak,
+      longestStreak: stats.longestStreak,
+      changed,
+    },
+  };
 }
 
 export async function getSessionCards(sessionId: string, userId: string) {

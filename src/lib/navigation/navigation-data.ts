@@ -1,3 +1,6 @@
+/** Toggle global Study nav (/study). Set-level study routes stay available. */
+export const STUDY_NAV_ENABLED = false;
+
 export type AppNavItemId = 'dashboard' | 'sets' | 'study' | 'search' | 'library';
 
 export type NavIconKey = 'home' | 'layers' | 'sparkles' | 'search' | 'library';
@@ -28,14 +31,18 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
     guideTargetId: 'nav-sets',
     icon: 'layers',
   },
-  {
-    id: 'study',
-    href: '/study',
-    label: 'Study',
-    mobileLabel: 'Study',
-    guideTargetId: 'nav-study',
-    icon: 'sparkles',
-  },
+  ...(STUDY_NAV_ENABLED
+    ? [
+        {
+          id: 'study' as const,
+          href: '/study',
+          label: 'Study',
+          mobileLabel: 'Study',
+          guideTargetId: 'nav-study',
+          icon: 'sparkles' as const,
+        },
+      ]
+    : []),
   {
     id: 'search',
     href: '/search',

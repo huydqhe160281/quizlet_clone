@@ -21,13 +21,7 @@ export default async function ImportSetPage() {
           </Link>
         </Button>
       </div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Import flashcard set</h1>
-        <p className="text-muted-foreground mt-1">
-          Import cards from a CSV file or paste JSON to create a new set instantly.
-        </p>
-      </div>
-      <ImportSetWizard />
+      <ImportSetWizard variant="page" />
     </main>
   );
 }

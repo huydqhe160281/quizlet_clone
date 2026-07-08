@@ -1,4 +1,5 @@
 import { parse as parseCsv } from 'papaparse';
+import { revalidateTag } from 'next/cache';
 import { ApiError } from '@/lib/api-error';
 import { prisma } from '@/server/db';
 import {
@@ -20,6 +21,13 @@ export type ImportResult = {
 };
 
 type RawCard = { front: string; back: string; example?: string };
+
+const invalidateSetCache = (userId: string, visibility: 'PRIVATE' | 'PUBLIC') => {
+  revalidateTag(`sets-${userId}`);
+  if (visibility === 'PUBLIC') {
+    revalidateTag('public-sets');
+  }
+};
 
 // ── CSV Parsing ───────────────────────────────────────────────────────────────
 
@@ -109,6 +117,8 @@ async function createImport(
     },
     select: { id: true, title: true },
   });
+
+  invalidateSetCache(userId, meta.visibility ?? 'PRIVATE');
 
   return { set, cardsCreated: cards.length, skippedRows: 0 };
 }
@@ -223,7 +233,7 @@ async function importToExistingSet(
 
   const existingSet = await prisma.flashcardSet.findFirst({
     where: { id: setId, userId },
-    select: { id: true, title: true, _count: { select: { cards: true } } },
+    select: { id: true, title: true, visibility: true, _count: { select: { cards: true } } },
   });
 
   if (!existingSet) {
@@ -245,6 +255,8 @@ async function importToExistingSet(
       },
     },
   });
+
+  invalidateSetCache(userId, existingSet.visibility);
 
   return {
     set: { id: setId, title: existingSet.title },

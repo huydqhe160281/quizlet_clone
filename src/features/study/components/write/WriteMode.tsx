@@ -7,7 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
+import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
@@ -92,7 +94,7 @@ export function WriteMode({ setId }: WriteModeProps) {
   }
 
   if (study.error) {
-    return <p className="text-sm text-destructive">{study.error}</p>;
+    return <StudySessionError setId={setId} error={study.error} />;
   }
 
   if (showSummary) {
@@ -137,7 +139,7 @@ export function WriteMode({ setId }: WriteModeProps) {
           <Edit3 className="h-3.5 w-3.5 text-amber-500" />
           <span>Gõ đáp án cho thuật ngữ sau</span>
         </div>
-        <p className="text-2xl font-extrabold md:text-3xl">{currentCard.front}</p>
+        <StudyCardText text={currentCard.front} side="front" className="md:text-3xl" />
       </div>
 
       <Textarea

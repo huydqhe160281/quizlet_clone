@@ -9,10 +9,14 @@ const OUTPUT = path.join(ROOT, 'src', 'generated', 'guide-config.json');
 const DOCS_GUIDE = path.join(ROOT, 'docs', 'guide');
 const GUIDE_CONFIG_MAX_BYTES = 51_200;
 
+const STUDY_NAV_ENABLED = false;
+
 const APP_NAV_ITEMS = [
   { id: 'dashboard', href: '/dashboard', label: 'Dashboard', guideTargetId: 'nav-dashboard' },
   { id: 'sets', href: '/sets', label: 'My Sets', guideTargetId: 'nav-sets' },
-  { id: 'study', href: '/study', label: 'Study', guideTargetId: 'nav-study' },
+  ...(STUDY_NAV_ENABLED
+    ? [{ id: 'study', href: '/study', label: 'Study', guideTargetId: 'nav-study' }]
+    : []),
   { id: 'search', href: '/search', label: 'Search', guideTargetId: 'nav-search' },
   { id: 'library', href: '/library', label: 'Library', guideTargetId: 'nav-library' },
 ];

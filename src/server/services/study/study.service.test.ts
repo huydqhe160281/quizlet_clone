@@ -20,6 +20,15 @@ vi.mock('@/server/db', () => ({
   prisma: prismaMock,
 }));
 
+vi.mock('@/server/services/user/stats.service', () => ({
+  getEffectiveStreak: vi.fn((currentStreak: number) => currentStreak),
+  recordDailyStudyActivity: vi.fn().mockResolvedValue({
+    stats: { currentStreak: 1, longestStreak: 1, lastStudiedDate: new Date() },
+    changed: true,
+  }),
+  recordReviewStats: vi.fn(),
+}));
+
 import {
   completeSession,
   createSession,
@@ -49,7 +58,7 @@ describe('study.service', () => {
       mode: 'FLASHCARD',
     });
 
-    const session = await createSession('user-a', 'set-1', 'FLASHCARD');
+    const { session } = await createSession('user-a', 'set-1', 'FLASHCARD');
 
     expect(session.totalCards).toBe(2);
     expect(prismaMock.studySession.create).toHaveBeenCalledWith(

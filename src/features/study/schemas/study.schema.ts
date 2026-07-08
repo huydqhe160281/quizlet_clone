@@ -9,6 +9,8 @@ export const studySessionSettingsSchema = z.object({
   requeueWrong: z.boolean().default(true),
   /** MC-only presentation flag — LEARN mode only */
   presentation: z.enum(['default', 'multiple_choice']).default('multiple_choice'),
+  /** MC prompt side — LEARN mode only */
+  mcDirection: z.enum(['front_to_back', 'back_to_front']).default('front_to_back'),
 });
 
 export type StudySessionSettings = z.infer<typeof studySessionSettingsSchema>;
@@ -18,6 +20,7 @@ export const STUDY_SESSION_SETTINGS_DEFAULTS: StudySessionSettings = {
   cardsPerRound: 10,
   requeueWrong: true,
   presentation: 'multiple_choice',
+  mcDirection: 'front_to_back',
 };
 
 /** Fallback settings for legacy sessions (settings column is null) — mirrors V1 behaviour */

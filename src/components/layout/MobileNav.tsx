@@ -10,8 +10,8 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="glass-nav fixed bottom-0 left-0 right-0 z-50 border-t md:hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="grid grid-cols-5">
+    <nav className="glass-nav fixed inset-x-0 bottom-0 z-50 border-t md:hidden pb-[env(safe-area-inset-bottom)]">
+      <div className="flex w-full">
         {APP_NAV_ITEMS.map(({ href, mobileLabel, icon, guideTargetId }) => {
           const Icon = NAV_ICON_MAP[icon];
           const active = pathname === href || pathname.startsWith(`${href}/`);
@@ -21,7 +21,7 @@ export function MobileNav() {
               href={href}
               data-guide={guideTargetId}
               className={cn(
-                'flex flex-col items-center gap-1 py-2 text-xs transition-colors',
+                'flex min-w-0 flex-1 flex-col items-center gap-1 py-2 text-xs transition-colors',
                 active ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'
               )}
             >

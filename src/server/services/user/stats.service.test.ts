@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { calculateStreakAfterReview } from '@/server/services/user/stats.service';
+import {
+  calculateStreakAfterReview,
+  getEffectiveStreak,
+} from '@/server/services/user/stats.service';
 
 const prismaMock = vi.hoisted(() => ({
   userStats: {
@@ -46,6 +49,16 @@ describe('stats streak calculation', () => {
     const result = calculateStreakAfterReview(3, 7, today, today);
     expect(result.currentStreak).toBe(3);
     expect(result.longestStreak).toBe(7);
+  });
+
+  it('getEffectiveStreak: returns 0 when gap is 2+ days', () => {
+    const lastStudied = new Date('2026-06-14T12:00:00.000Z');
+    const now = new Date('2026-06-17T12:00:00.000Z');
+    expect(getEffectiveStreak(5, lastStudied, now)).toBe(0);
+  });
+
+  it('getEffectiveStreak: keeps streak on yesterday study', () => {
+    expect(getEffectiveStreak(3, yesterday, today)).toBe(3);
   });
 });
 

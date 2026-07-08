@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
+import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { generateTestQuestions, type TestQuestion } from '@/features/study/lib/test-generator';
 import type { StudyCard } from '@/features/study/store';
@@ -100,7 +102,7 @@ export function TestMode({ setId }: TestModeProps) {
   }
 
   if (study.error) {
-    return <p className="text-sm text-destructive">{study.error}</p>;
+    return <StudySessionError setId={setId} error={study.error} />;
   }
 
   if (showSummary) {
@@ -145,14 +147,14 @@ export function TestMode({ setId }: TestModeProps) {
           <FileCheck className="h-3.5 w-3.5 text-rose-500" />
           <span>{QUESTION_TYPE_LABELS[currentQuestion.type]}</span>
         </div>
-        <p className="text-xl font-bold md:text-2xl">{currentQuestion.front}</p>
+        <StudyCardText text={currentQuestion.front} side="front" className="md:text-2xl" />
       </div>
 
       {currentQuestion.type === 'mc' && (
         <div className="grid gap-3">
-          {currentQuestion.options.map((option) => (
+          {currentQuestion.options.map((option, index) => (
             <button
-              key={option}
+              key={`${index}-${option}`}
               type="button"
               disabled={answered}
               onClick={() => {

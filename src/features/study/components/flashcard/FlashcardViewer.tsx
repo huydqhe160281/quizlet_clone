@@ -5,6 +5,7 @@ import { Volume2 } from 'lucide-react';
 import { useState } from 'react';
 import { CardMediaImage } from '@/components/shared/CardMediaImage';
 import { Button } from '@/components/ui/button';
+import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { cn } from '@/lib/utils';
 
 type FlashcardViewerProps = {
@@ -30,6 +31,9 @@ export function FlashcardViewer({
   onSpeakFront,
   onSpeakBack,
 }: FlashcardViewerProps) {
+  const multilineFront = front.includes('\n');
+  const multilineBack = back.includes('\n');
+
   return (
     <button
       type="button"
@@ -66,8 +70,15 @@ export function FlashcardViewer({
             )}
           </div>
 
-          <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-            <p className="text-3xl font-extrabold tracking-tight md:text-4xl">{front}</p>
+          <div
+            className={cn(
+              'flex flex-1 flex-col px-4',
+              multilineFront
+                ? 'items-stretch justify-start overflow-y-auto py-2 text-left'
+                : 'items-center justify-center text-center'
+            )}
+          >
+            <StudyCardText text={front} side="front" />
             {!isFlipped && imageUrl && <CardMediaImage src={imageUrl} alt={front} />}
           </div>
 
@@ -100,10 +111,19 @@ export function FlashcardViewer({
             )}
           </div>
 
-          <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-            <p className="text-xl font-medium leading-relaxed md:text-2xl">{back}</p>
+          <div
+            className={cn(
+              'flex flex-1 flex-col px-4',
+              multilineBack || example
+                ? 'items-stretch justify-start overflow-y-auto py-2 text-left'
+                : 'items-center justify-center text-center'
+            )}
+          >
+            <StudyCardText text={back} side="back" />
             {example && (
-              <p className="mt-4 text-sm font-medium text-primary-foreground/80">{example}</p>
+              <p className="mt-4 whitespace-pre-line text-sm font-medium leading-relaxed text-primary-foreground/80">
+                {example}
+              </p>
             )}
           </div>
 

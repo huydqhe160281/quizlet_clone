@@ -6,6 +6,7 @@ import {
   fetchCards,
   fetchSet,
   fetchSets,
+  isClientFetchError,
   type FlashcardItem,
   type FlashcardSetSummary,
 } from '@/features/sets/api/sets-api';
@@ -26,6 +27,8 @@ export function useSet(setId: string) {
   return useQuery({
     queryKey: setKeys.detail(setId),
     queryFn: () => fetchSet(setId),
+    retry: (failureCount, error) =>
+      !(isClientFetchError(error) && error.status === 404) && failureCount < 1,
   });
 }
 
@@ -33,6 +36,8 @@ export function useCards(setId: string) {
   return useQuery({
     queryKey: setKeys.cards(setId),
     queryFn: () => fetchCards(setId),
+    retry: (failureCount, error) =>
+      !(isClientFetchError(error) && error.status === 404) && failureCount < 1,
   });
 }
 
@@ -41,6 +46,12 @@ export function useSetMutations() {
 
   const invalidateSets = () => {
     void queryClient.invalidateQueries({ queryKey: setKeys.all });
+  };
+
+  const invalidateSetData = (setId: string) => {
+    void queryClient.invalidateQueries({ queryKey: setKeys.all });
+    void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
+    void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
   };
 
   const createSet = useMutation({
@@ -297,5 +308,6 @@ export function useSetMutations() {
     deleteCard,
     deleteCards,
     reorderCards,
+    invalidateSetData,
   };
 }

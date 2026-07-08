@@ -67,13 +67,13 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
         <div>
           <p className="text-xs text-muted-foreground">Front</p>
           <div className="flex items-center gap-2">
-            <p className="text-sm">{card.front}</p>
+            <p className="text-sm whitespace-pre-line">{card.front}</p>
             {card.type === 'new-word' && <Badge variant="secondary">Từ mới</Badge>}
           </div>
         </div>
         <div>
           <p className="text-xs text-muted-foreground">Back</p>
-          <p className="text-sm">{card.back}</p>
+          <p className="text-sm whitespace-pre-line">{card.back}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">

@@ -6,13 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { speakStudyText } from '@/features/study/components/flashcard/FlashcardViewer';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
-import {
-  generateLearnOptions,
-  generateLearnTermOptions,
-} from '@/features/study/lib/test-generator';
+import { resolveLearnMcq } from '@/features/study/lib/test-generator';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
@@ -43,21 +41,27 @@ export function LearnMode({ setId }: LearnModeProps) {
 
   const currentCard = roundCards[study.currentIndex];
   const isMultipleChoice = study.settings?.presentation !== 'default';
+  const mcDirection = study.settings?.mcDirection ?? 'front_to_back';
 
   const cardInputs = useMemo(
     () => study.cards.map((card) => ({ id: card.cardId, front: card.front, back: card.back })),
     [study.cards]
   );
 
-  const options = useMemo(() => {
-    if (!currentCard) {
-      return [];
+  const learnMcq = useMemo(() => {
+    if (!currentCard || !isMultipleChoice) {
+      return null;
     }
-    const current = { id: currentCard.cardId, front: currentCard.front, back: currentCard.back };
-    return isMultipleChoice
-      ? generateLearnTermOptions(cardInputs, current)
-      : generateLearnOptions(cardInputs, current);
-  }, [currentCard, cardInputs, isMultipleChoice]);
+    return resolveLearnMcq(
+      cardInputs,
+      { id: currentCard.cardId, front: currentCard.front, back: currentCard.back },
+      mcDirection
+    );
+  }, [currentCard, cardInputs, isMultipleChoice, mcDirection]);
+
+  const mcPrompt = learnMcq?.prompt ?? currentCard?.front ?? '';
+  const mcCorrectAnswer = learnMcq?.correctAnswer ?? currentCard?.back ?? '';
+  const options = learnMcq?.options ?? [];
 
   const finishIfLast = () => {
     if (roundEndedThisStep) {
@@ -100,14 +104,14 @@ export function LearnMode({ setId }: LearnModeProps) {
       return;
     }
     setSelected(option);
-    const isCorrect = isMultipleChoice ? option === currentCard.front : option === currentCard.back;
+    const isCorrect = isMultipleChoice ? option === mcCorrectAnswer : option === currentCard.back;
     if (isCorrect) {
       setFeedback('Chính xác!');
-      speakStudyText(currentCard.front, 'en-US');
+      speakStudyText(mcPrompt, 'en-US');
     } else {
       setFeedback(
         isMultipleChoice
-          ? `Chưa đúng. Đáp án: ${currentCard.front}`
+          ? `Chưa đúng. Đáp án: ${mcCorrectAnswer}`
           : `Chưa đúng. Đáp án: ${currentCard.back}`
       );
     }
@@ -137,7 +141,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   }
 
   if (study.error) {
-    return <p className="text-sm text-destructive">{study.error}</p>;
+    return <StudySessionError setId={setId} error={study.error} />;
   }
 
   if (showSummary) {
@@ -183,30 +187,38 @@ export function LearnMode({ setId }: LearnModeProps) {
             <HelpCircle className="h-3.5 w-3.5 text-primary" />
             <span>
               {isMultipleChoice
-                ? 'Chọn thuật ngữ đúng cho định nghĩa sau'
+                ? learnMcq?.embedded
+                  ? 'Chọn đáp án đúng'
+                  : mcDirection === 'back_to_front'
+                    ? 'Chọn thuật ngữ đúng cho định nghĩa sau'
+                    : 'Chọn đáp án đúng cho câu hỏi sau'
                 : 'Nhập đáp án cho thuật ngữ sau'}
             </span>
           </div>
           <h2 className="text-xl font-bold leading-relaxed md:text-2xl">
-            {isMultipleChoice ? currentCard.back : currentCard.front}
+            {isMultipleChoice ? mcPrompt : currentCard.front}
           </h2>
           {isMultipleChoice && (
             <button
               type="button"
-              onClick={() => speakStudyText(currentCard.back)}
+              onClick={() => speakStudyText(mcPrompt)}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80"
             >
               <Volume2 className="h-4 w-4" />
-              Nghe định nghĩa
+              {learnMcq?.embedded
+                ? 'Nghe câu hỏi'
+                : mcDirection === 'back_to_front'
+                  ? 'Nghe định nghĩa'
+                  : 'Nghe câu hỏi'}
             </button>
           )}
         </div>
 
         {isMultipleChoice ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {options.map((option) => {
+            {options.map((option, index) => {
               const isSelected = selected === option;
-              const isCorrectOption = option === currentCard.front;
+              const isCorrectOption = option === mcCorrectAnswer;
               let optionClass =
                 'border-border/60 bg-background hover:border-primary/30 hover:bg-primary/5';
 
@@ -223,7 +235,7 @@ export function LearnMode({ setId }: LearnModeProps) {
 
               return (
                 <button
-                  key={option}
+                  key={`${index}-${option}`}
                   type="button"
                   disabled={Boolean(selected)}
                   onClick={() => void handleAnswer(option)}

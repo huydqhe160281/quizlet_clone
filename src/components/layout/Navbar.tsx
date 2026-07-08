@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { StreakBadge } from '@/components/layout/StreakBadge';
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -20,7 +21,8 @@ export function Navbar() {
         <ThemeToggle />
         {status === 'loading' ? null : session?.user ? (
           <>
-            <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+            <StreakBadge />
+            <span className="hidden text-sm font-medium text-muted-foreground md:inline">
               {session.user.email}
             </span>
             <Button

@@ -1,12 +1,4 @@
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { notFound } from 'next/navigation';
-import { ApiError } from '@/lib/api-error';
-import { requireUserId } from '@/server/auth/auth-utils';
-import { getSet } from '@/server/services/sets/set.service';
-import { getCards } from '@/server/services/sets/card.service';
-import { StudySettingsForm } from '@/features/study/components/StudySettingsForm';
+import { redirect } from 'next/navigation';
 
 type StudyPageProps = {
   params: Promise<{ setId: string }>;
@@ -14,43 +6,5 @@ type StudyPageProps = {
 
 export default async function StudyPage({ params }: StudyPageProps) {
   const { setId } = await params;
-  const userId = await requireUserId();
-
-  let set;
-  try {
-    set = await getSet(setId, userId);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
-      notFound();
-    }
-    throw error;
-  }
-
-  const cards = await getCards(setId, userId);
-  const newWordCount = cards.filter((card) => card.type === 'new-word').length;
-
-  return (
-    <main className="container max-w-2xl mx-auto py-8 px-4">
-      <div className="mb-4">
-        <Button variant="ghost" size="sm" asChild className="-ml-3">
-          <Link
-            href={`/sets/${setId}`}
-            className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to set
-          </Link>
-        </Button>
-      </div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-          {set.title}
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Tùy chỉnh chế độ học và cấu hình vòng luyện tập.
-        </p>
-      </div>
-      <StudySettingsForm setId={setId} totalCards={cards.length} newWordCount={newWordCount} />
-    </main>
-  );
+  redirect(`/sets/${setId}?studySettings=1`);
 }

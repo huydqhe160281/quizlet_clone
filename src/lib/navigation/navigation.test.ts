@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
+import { APP_NAV_ITEMS, STUDY_NAV_ENABLED } from '@/lib/navigation/navigation-data';
 
 describe('APP_NAV_ITEMS', () => {
-  it('exports five primary navigation entries', () => {
-    expect(APP_NAV_ITEMS).toHaveLength(5);
-    expect(APP_NAV_ITEMS.map((item) => item.href)).toEqual([
+  it('exports primary navigation entries', () => {
+    const expectedHrefs = [
       '/dashboard',
       '/sets',
-      '/study',
+      ...(STUDY_NAV_ENABLED ? ['/study'] : []),
       '/search',
       '/library',
-    ]);
+    ];
+    expect(APP_NAV_ITEMS).toHaveLength(expectedHrefs.length);
+    expect(APP_NAV_ITEMS.map((item) => item.href)).toEqual(expectedHrefs);
   });
 
   it('assigns unique guideTargetId values', () => {

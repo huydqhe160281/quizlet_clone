@@ -9,6 +9,6 @@ export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();
   const body = await req.json();
   const input = createSessionSchema.parse(body);
-  const session = await createSession(userId, input.setId, input.mode, input.settings);
-  return Response.json({ data: session }, { status: 201 });
+  const { session, streak } = await createSession(userId, input.setId, input.mode, input.settings);
+  return Response.json({ data: session, streak }, { status: 201 });
 });

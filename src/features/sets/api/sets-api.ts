@@ -3,6 +3,20 @@ export type PaginatedResponse<T> = {
   pagination: { nextCursor: string | null; hasMore: boolean };
 };
 
+export class ClientFetchError extends Error {
+  constructor(
+    message: string,
+    public status: number
+  ) {
+    super(message);
+    this.name = 'ClientFetchError';
+  }
+}
+
+export function isClientFetchError(error: unknown): error is ClientFetchError {
+  return error instanceof ClientFetchError;
+}
+
 export type FlashcardSetSummary = {
   id: string;
   title: string;
@@ -34,7 +48,10 @@ export type FlashcardItem = {
 async function parseJson<T>(response: Response): Promise<T> {
   const payload = (await response.json()) as T & { message?: string; error?: string };
   if (!response.ok) {
-    throw new Error(payload.message ?? payload.error ?? 'Request failed');
+    throw new ClientFetchError(
+      payload.message ?? payload.error ?? 'Request failed',
+      response.status
+    );
   }
   return payload;
 }

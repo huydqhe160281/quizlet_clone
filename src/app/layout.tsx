@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import './globals.css';
 import { QueryProvider } from '@/components/providers/query-provider';
+import { LoadingOverlayProvider } from '@/components/providers/loading-overlay-provider';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { RootJsonLd } from '@/components/shared/RootJsonLd';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
@@ -49,9 +50,11 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthSessionProvider>
-              <ErrorBoundary>
-                <GuideProviders>{children}</GuideProviders>
-              </ErrorBoundary>
+              <LoadingOverlayProvider>
+                <ErrorBoundary>
+                  <GuideProviders>{children}</GuideProviders>
+                </ErrorBoundary>
+              </LoadingOverlayProvider>
             </AuthSessionProvider>
           </QueryProvider>
           <Toaster />

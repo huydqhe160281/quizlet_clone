@@ -20,6 +20,7 @@ import {
 } from '@/features/study/components/flashcard/FlashcardViewer';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import type { StudyCard } from '@/features/study/store';
@@ -140,7 +141,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   }
 
   if (study.error) {
-    return <p className="text-sm text-destructive">{study.error}</p>;
+    return <StudySessionError setId={setId} error={study.error} />;
   }
 
   if (showSummary) {

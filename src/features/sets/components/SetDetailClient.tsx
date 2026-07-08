@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { ArrowLeft, Copy, Pencil, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { RedirectingNotice } from '@/components/shared/RedirectingNotice';
 import { CardEditor } from '@/features/sets/cards/components/CardEditor';
 import { StudyLauncher } from '@/features/study/components/StudyLauncher';
 import { useSet, useSetMutations, useCards } from '@/features/sets/hooks/useSets';
@@ -19,10 +20,21 @@ type SetDetailClientProps = {
 export function SetDetailClient({ setId }: SetDetailClientProps) {
   const router = useRouter();
   const [importOpen, setImportOpen] = useState(false);
-  const { data: set, isLoading } = useSet(setId);
-  const { data: cards } = useCards(setId);
+  const { data: set, isLoading, error: setError } = useSet(setId);
+  const { data: cards, error: cardsError } = useCards(setId);
   const { deleteSet, duplicateSet } = useSetMutations();
+  const loadError = setError ?? cardsError;
   const newWordCount = cards?.filter((card) => card.type === 'new-word').length ?? 0;
+
+  if (loadError) {
+    return (
+      <RedirectingNotice
+        error={loadError}
+        fallbackHref="/sets"
+        message="Không tìm thấy bộ thẻ. Đang quay lại…"
+      />
+    );
+  }
 
   if (isLoading || !set) {
     return (
@@ -71,12 +83,12 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
                 Import
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[480px]">
+            <DialogContent className="max-h-[90vh] overflow-x-hidden overflow-y-auto sm:max-w-[620px]">
               <ImportSetWizard
                 setId={setId}
+                variant="embedded"
                 onSuccess={() => {
                   setImportOpen(false);
-                  window.location.reload();
                 }}
               />
             </DialogContent>
@@ -105,7 +117,15 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           </Button>
         </div>
       </div>
-      <StudyLauncher setId={setId} cardCount={set._count.cards} newWordCount={newWordCount} />
+      <Suspense
+        fallback={
+          <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
+            Loading study modes…
+          </div>
+        }
+      >
+        <StudyLauncher setId={setId} cardCount={set._count.cards} newWordCount={newWordCount} />
+      </Suspense>
       <CardEditor setId={setId} />
     </div>
   );

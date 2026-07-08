@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { HanziWriterCanvas } from '@/features/study/components/draw/HanziWriterCanvas';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
@@ -86,7 +87,7 @@ export function DrawMode({ setId }: DrawModeProps) {
   }
 
   if (study.error) {
-    return <p className="text-sm text-destructive">{study.error}</p>;
+    return <StudySessionError setId={setId} error={study.error} />;
   }
 
   if (showSummary) {

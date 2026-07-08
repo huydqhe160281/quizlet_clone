@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { StudyModeValue, StudySessionSettings } from '@/features/study/schemas/study.schema';
 import { studySessionSettingsSchema } from '@/features/study/schemas/study.schema';
+import { notifyStreakUpdated, type StreakUpdatedDetail } from '@/lib/streak/streak-client';
 import { useStudyStore, type StudyCard } from '@/features/study/store';
 
 type SessionCardResponse = {
@@ -67,8 +68,14 @@ export function useStudySession(setId: string, mode: StudyModeValue) {
           }
           return;
         }
-        const { data } = (await response.json()) as { data: SessionResponse };
-        sessionData = data;
+        const payload = (await response.json()) as {
+          data: SessionResponse;
+          streak?: StreakUpdatedDetail;
+        };
+        sessionData = payload.data;
+        if (active && payload.streak) {
+          notifyStreakUpdated(payload.streak);
+        }
       }
 
       const cards: StudyCard[] = sessionData.sessionCards.map((item) => ({
