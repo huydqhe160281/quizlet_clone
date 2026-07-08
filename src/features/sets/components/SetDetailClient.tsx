@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { CardEditor } from '@/features/sets/cards/components/CardEditor';
 import { StudyLauncher } from '@/features/study/components/StudyLauncher';
-import { useSet, useSetMutations } from '@/features/sets/hooks/useSets';
+import { useSet, useSetMutations, useCards } from '@/features/sets/hooks/useSets';
 import { ImportSetWizard } from '@/features/sets/components/ImportSetWizard';
 
 type SetDetailClientProps = {
@@ -20,7 +20,9 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
   const router = useRouter();
   const [importOpen, setImportOpen] = useState(false);
   const { data: set, isLoading } = useSet(setId);
+  const { data: cards } = useCards(setId);
   const { deleteSet, duplicateSet } = useSetMutations();
+  const newWordCount = cards?.filter((card) => card.type === 'new-word').length ?? 0;
 
   if (isLoading || !set) {
     return (
@@ -103,7 +105,7 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           </Button>
         </div>
       </div>
-      <StudyLauncher setId={setId} cardCount={set._count.cards} />
+      <StudyLauncher setId={setId} cardCount={set._count.cards} newWordCount={newWordCount} />
       <CardEditor setId={setId} />
     </div>
   );

@@ -1,18 +1,26 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Check, ChevronRight, FileCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
-import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { generateTestQuestions, type TestQuestion } from '@/features/study/lib/test-generator';
 import type { StudyCard } from '@/features/study/store';
+import { cn } from '@/lib/utils';
 
 type TestModeProps = {
   setId: string;
+};
+
+const QUESTION_TYPE_LABELS: Record<TestQuestion['type'], string> = {
+  mc: 'Trắc nghiệm',
+  tf: 'Đúng / Sai',
+  typing: 'Gõ đáp án',
 };
 
 export function TestMode({ setId }: TestModeProps) {
@@ -21,6 +29,7 @@ export function TestMode({ setId }: TestModeProps) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [typingAnswer, setTypingAnswer] = useState('');
   const [answered, setAnswered] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
 
   const [showSummary, setShowSummary] = useState(false);
   const [roundEndedThisStep, setRoundEndedThisStep] = useState(false);
@@ -28,7 +37,6 @@ export function TestMode({ setId }: TestModeProps) {
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
 
-  // Filter cards to only those in the current round
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
     return study.currentRound
@@ -57,6 +65,7 @@ export function TestMode({ setId }: TestModeProps) {
       setFeedback(null);
       setTypingAnswer('');
       setAnswered(false);
+      setIsCorrectAnswer(null);
       setRoundEndedThisStep(false);
       return;
     }
@@ -65,13 +74,15 @@ export function TestMode({ setId }: TestModeProps) {
     setFeedback(null);
     setTypingAnswer('');
     setAnswered(false);
+    setIsCorrectAnswer(null);
   };
 
-  const recordResult = (cardId: string, isCorrect: boolean) => {
-    // Save info of the round before recording answer (as it increments/resets store state)
+  const recordResult = (cardId: string, isCorrect: boolean, message: string) => {
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
+    setIsCorrectAnswer(isCorrect);
+    setFeedback(message);
 
     const roundEnded = study.recordRoundAnswer(cardId, isCorrect);
     study.recordAnswer(cardId, isCorrect);
@@ -83,7 +94,7 @@ export function TestMode({ setId }: TestModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Starting session…
+        Đang khởi tạo phiên học…
       </div>
     );
   }
@@ -120,63 +131,88 @@ export function TestMode({ setId }: TestModeProps) {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <span>Round {study.roundIndex + 1}</span>
-        <StudyProgress current={questionIndex + 1} total={questions.length} />
-      </div>
-      <div className="glass-panel rounded-2xl p-6 shadow-sm">
-        <p className="text-sm uppercase text-muted-foreground">{currentQuestion.type}</p>
-        <p className="mt-2 text-xl font-semibold">{currentQuestion.front}</p>
+    <StudyModeShell
+      setId={setId}
+      modeLabel="Kiểm tra"
+      progress={{
+        current: questionIndex + 1,
+        total: questions.length,
+        label: 'Tiến trình bài kiểm tra',
+      }}
+    >
+      <div className="glass-panel rounded-3xl border border-border/50 p-6 shadow-sm md:p-8">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <FileCheck className="h-3.5 w-3.5 text-rose-500" />
+          <span>{QUESTION_TYPE_LABELS[currentQuestion.type]}</span>
+        </div>
+        <p className="text-xl font-bold md:text-2xl">{currentQuestion.front}</p>
       </div>
 
       {currentQuestion.type === 'mc' && (
-        <div className="grid gap-2">
+        <div className="grid gap-3">
           {currentQuestion.options.map((option) => (
-            <Button
+            <button
               key={option}
-              variant="outline"
-              className="h-auto whitespace-normal py-3 text-left"
+              type="button"
               disabled={answered}
               onClick={() => {
                 const isCorrect = option === currentQuestion.correctBack;
-                recordResult(currentQuestion.cardId, isCorrect);
-                setFeedback(
-                  isCorrect ? 'Correct!' : `Incorrect. Answer: ${currentQuestion.correctBack}`
+                recordResult(
+                  currentQuestion.cardId,
+                  isCorrect,
+                  isCorrect ? 'Chính xác!' : `Chưa đúng. Đáp án: ${currentQuestion.correctBack}`
                 );
               }}
+              className={cn(
+                'rounded-xl border border-border/60 bg-background p-4 text-left text-sm font-semibold transition-all hover:border-primary/30 hover:bg-primary/5 disabled:opacity-70',
+                answered &&
+                  option === currentQuestion.correctBack &&
+                  'border-emerald-500/40 bg-emerald-500/10'
+              )}
             >
               {option}
-            </Button>
+            </button>
           ))}
         </div>
       )}
 
       {currentQuestion.type === 'tf' && (
-        <div className="space-y-3">
-          <p className="text-center text-lg">{currentQuestion.shownBack}</p>
-          <p className="text-center text-sm text-muted-foreground">Is this pairing correct?</p>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-4">
+          <p className="rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium">
+            {currentQuestion.shownBack}
+          </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Cặp thuật ngữ – định nghĩa này có đúng không?
+          </p>
+          <div className="grid grid-cols-2 gap-3">
             <Button
               disabled={answered}
+              className="rounded-xl font-bold"
               onClick={() => {
                 const isCorrect = currentQuestion.isPairCorrect;
-                recordResult(currentQuestion.cardId, isCorrect);
-                setFeedback(isCorrect ? 'Correct!' : 'Incorrect pairing.');
+                recordResult(
+                  currentQuestion.cardId,
+                  isCorrect,
+                  isCorrect ? 'Chính xác!' : 'Cặp này không đúng.'
+                );
               }}
             >
-              True
+              Đúng
             </Button>
             <Button
               variant="outline"
               disabled={answered}
+              className="rounded-xl font-bold"
               onClick={() => {
                 const isCorrect = !currentQuestion.isPairCorrect;
-                recordResult(currentQuestion.cardId, isCorrect);
-                setFeedback(isCorrect ? 'Correct!' : 'Incorrect pairing.');
+                recordResult(
+                  currentQuestion.cardId,
+                  isCorrect,
+                  isCorrect ? 'Chính xác!' : 'Cặp này không đúng.'
+                );
               }}
             >
-              False
+              Sai
             </Button>
           </div>
         </div>
@@ -187,38 +223,64 @@ export function TestMode({ setId }: TestModeProps) {
           <Input
             value={typingAnswer}
             onChange={(event) => setTypingAnswer(event.target.value)}
-            placeholder="Type your answer…"
+            placeholder="Nhập câu trả lời của bạn…"
             disabled={answered}
+            className="rounded-xl"
           />
           {!answered ? (
             <Button
-              className="w-full"
+              className="w-full rounded-xl font-bold"
               disabled={!typingAnswer.trim()}
               onClick={() => {
                 const isCorrect = fuzzyMatch(typingAnswer, currentQuestion.back);
-                recordResult(currentQuestion.cardId, isCorrect);
-                setFeedback(isCorrect ? 'Correct!' : `Incorrect. Answer: ${currentQuestion.back}`);
+                recordResult(
+                  currentQuestion.cardId,
+                  isCorrect,
+                  isCorrect ? 'Chính xác!' : `Chưa đúng. Đáp án: ${currentQuestion.back}`
+                );
               }}
             >
-              Submit
+              Nộp bài
             </Button>
           ) : null}
         </div>
       )}
 
-      {feedback && (
-        <p
-          className={`text-center text-sm ${feedback.startsWith('Correct') ? 'text-green-600' : 'text-destructive'}`}
-        >
-          {feedback}
-        </p>
-      )}
-
       {answered && (
-        <Button className="w-full" onClick={goNext}>
-          {roundEndedThisStep ? 'Finish round' : 'Next question'}
-        </Button>
+        <div
+          className={cn(
+            'flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between',
+            isCorrectAnswer
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'
+              : 'border-destructive/30 bg-destructive/10 text-destructive'
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                'rounded-full p-2',
+                isCorrectAnswer ? 'bg-emerald-500/15' : 'bg-destructive/15'
+              )}
+            >
+              {isCorrectAnswer ? (
+                <Check className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <X className="h-5 w-5 text-destructive" />
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-bold">
+                {isCorrectAnswer ? 'Tuyệt vời!' : 'Hãy ôn lại câu này.'}
+              </h4>
+              {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
+            </div>
+          </div>
+          <Button type="button" className="shrink-0 font-bold" onClick={goNext}>
+            {roundEndedThisStep ? 'Hoàn thành vòng' : 'Câu tiếp theo'}
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
       )}
-    </div>
+    </StudyModeShell>
   );
 }

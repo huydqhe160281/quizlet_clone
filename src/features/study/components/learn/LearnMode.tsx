@@ -1,15 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Check, ChevronRight, HelpCircle, Volume2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
-import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
+import { speakStudyText } from '@/features/study/components/flashcard/FlashcardViewer';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
-import { generateLearnOptions } from '@/features/study/lib/test-generator';
+import {
+  generateLearnOptions,
+  generateLearnTermOptions,
+} from '@/features/study/lib/test-generator';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import type { StudyCard } from '@/features/study/store';
+import { cn } from '@/lib/utils';
 
 type LearnModeProps = {
   setId: string;
@@ -20,6 +26,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [answer, setAnswer] = useState('');
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
 
   const [showSummary, setShowSummary] = useState(false);
   const [roundEndedThisStep, setRoundEndedThisStep] = useState(false);
@@ -27,7 +34,6 @@ export function LearnMode({ setId }: LearnModeProps) {
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
 
-  // Filter cards to only those in the current round
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
     return study.currentRound
@@ -36,17 +42,22 @@ export function LearnMode({ setId }: LearnModeProps) {
   }, [study.currentRound, study.cards]);
 
   const currentCard = roundCards[study.currentIndex];
+  const isMultipleChoice = study.settings?.presentation !== 'default';
+
+  const cardInputs = useMemo(
+    () => study.cards.map((card) => ({ id: card.cardId, front: card.front, back: card.back })),
+    [study.cards]
+  );
 
   const options = useMemo(() => {
     if (!currentCard) {
       return [];
     }
-    // Generate wrong choices using all cards in the deck
-    return generateLearnOptions(
-      study.cards.map((card) => ({ id: card.cardId, front: card.front, back: card.back })),
-      { id: currentCard.cardId, front: currentCard.front, back: currentCard.back }
-    );
-  }, [currentCard, study.cards]);
+    const current = { id: currentCard.cardId, front: currentCard.front, back: currentCard.back };
+    return isMultipleChoice
+      ? generateLearnTermOptions(cardInputs, current)
+      : generateLearnOptions(cardInputs, current);
+  }, [currentCard, cardInputs, isMultipleChoice]);
 
   const finishIfLast = () => {
     if (roundEndedThisStep) {
@@ -55,17 +66,33 @@ export function LearnMode({ setId }: LearnModeProps) {
       } else {
         setShowSummary(true);
       }
-      setFeedback(null);
-      setSelected(null);
-      setAnswer('');
+      resetQuestionState();
       setRoundEndedThisStep(false);
       return;
     }
 
     study.nextCard();
+    resetQuestionState();
+  };
+
+  const resetQuestionState = () => {
     setFeedback(null);
     setSelected(null);
     setAnswer('');
+    setIsCorrectAnswer(null);
+  };
+
+  const recordAnswer = (isCorrect: boolean) => {
+    if (!currentCard) return;
+
+    setLastRoundIndex(study.roundIndex);
+    setLastRoundTotal(roundCards.length);
+    setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
+    setIsCorrectAnswer(isCorrect);
+
+    const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
+    study.recordAnswer(currentCard.cardId, isCorrect);
+    setRoundEndedThisStep(roundEnded);
   };
 
   const handleAnswer = (option: string) => {
@@ -73,22 +100,18 @@ export function LearnMode({ setId }: LearnModeProps) {
       return;
     }
     setSelected(option);
-    const isCorrect = option === currentCard.back;
+    const isCorrect = isMultipleChoice ? option === currentCard.front : option === currentCard.back;
     if (isCorrect) {
-      setFeedback('Correct!');
+      setFeedback('Chính xác!');
+      speakStudyText(currentCard.front, 'en-US');
     } else {
-      setFeedback(`Incorrect. Answer: ${currentCard.back}`);
+      setFeedback(
+        isMultipleChoice
+          ? `Chưa đúng. Đáp án: ${currentCard.front}`
+          : `Chưa đúng. Đáp án: ${currentCard.back}`
+      );
     }
-
-    // Save info of the round before recording answer (as it increments/resets store state)
-    setLastRoundIndex(study.roundIndex);
-    setLastRoundTotal(roundCards.length);
-    setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
-
-    const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
-    study.recordAnswer(currentCard.cardId, isCorrect);
-
-    setRoundEndedThisStep(roundEnded);
+    recordAnswer(isCorrect);
   };
 
   const handleWrittenAnswer = () => {
@@ -98,26 +121,17 @@ export function LearnMode({ setId }: LearnModeProps) {
     setSelected(answer);
     const isCorrect = fuzzyMatch(answer, currentCard.back);
     if (isCorrect) {
-      setFeedback('Correct!');
+      setFeedback('Chính xác!');
     } else {
-      setFeedback(`Incorrect. Answer: ${currentCard.back}`);
+      setFeedback(`Chưa đúng. Đáp án: ${currentCard.back}`);
     }
-
-    // Save info of the round before recording answer (as it increments/resets store state)
-    setLastRoundIndex(study.roundIndex);
-    setLastRoundTotal(roundCards.length);
-    setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
-
-    const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
-    study.recordAnswer(currentCard.cardId, isCorrect);
-
-    setRoundEndedThisStep(roundEnded);
+    recordAnswer(isCorrect);
   };
 
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Starting session…
+        Đang khởi tạo phiên học…
       </div>
     );
   }
@@ -153,76 +167,141 @@ export function LearnMode({ setId }: LearnModeProps) {
     return null;
   }
 
-  const isMultipleChoice = study.settings?.presentation !== 'default';
-
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <span>Round {study.roundIndex + 1}</span>
-        <StudyProgress current={study.currentIndex + 1} total={roundCards.length} />
-      </div>
-      <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
-        <p className="text-sm text-muted-foreground">
-          {isMultipleChoice ? 'Choose the correct answer' : 'Type the answer'}
-        </p>
-        <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
-      </div>
-
-      {isMultipleChoice ? (
-        <div className="grid gap-2">
-          {options.map((option) => (
-            <Button
-              key={option}
-              variant={selected === option ? 'default' : 'outline'}
-              className="h-auto whitespace-normal py-3 text-left"
-              disabled={Boolean(selected)}
-              onClick={() => {
-                void handleAnswer(option);
-              }}
+    <StudyModeShell
+      setId={setId}
+      modeLabel="Học & Nhớ"
+      progress={{
+        current: study.currentIndex + 1,
+        total: roundCards.length,
+        label: 'Tiến trình trắc nghiệm',
+      }}
+    >
+      <div className="glass-panel space-y-6 rounded-3xl border border-border/50 p-6 shadow-sm md:p-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            <HelpCircle className="h-3.5 w-3.5 text-primary" />
+            <span>
+              {isMultipleChoice
+                ? 'Chọn thuật ngữ đúng cho định nghĩa sau'
+                : 'Nhập đáp án cho thuật ngữ sau'}
+            </span>
+          </div>
+          <h2 className="text-xl font-bold leading-relaxed md:text-2xl">
+            {isMultipleChoice ? currentCard.back : currentCard.front}
+          </h2>
+          {isMultipleChoice && (
+            <button
+              type="button"
+              onClick={() => speakStudyText(currentCard.back)}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80"
             >
-              {option}
-            </Button>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <Textarea
-            value={answer}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey && !selected) {
-                event.preventDefault();
-                void handleWrittenAnswer();
-              }
-            }}
-            placeholder="Type your answer…"
-            rows={3}
-            disabled={Boolean(selected)}
-          />
-          {!selected && (
-            <Button
-              className="w-full"
-              onClick={() => void handleWrittenAnswer()}
-              disabled={!answer.trim()}
-            >
-              Check answer
-            </Button>
+              <Volume2 className="h-4 w-4" />
+              Nghe định nghĩa
+            </button>
           )}
         </div>
-      )}
 
-      {feedback && (
-        <p
-          className={`text-center text-sm ${feedback.startsWith('Correct') ? 'text-green-600' : 'text-destructive'}`}
-        >
-          {feedback}
-        </p>
-      )}
+        {isMultipleChoice ? (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            {options.map((option) => {
+              const isSelected = selected === option;
+              const isCorrectOption = option === currentCard.front;
+              let optionClass =
+                'border-border/60 bg-background hover:border-primary/30 hover:bg-primary/5';
+
+              if (selected) {
+                if (isCorrectOption) {
+                  optionClass =
+                    'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
+                } else if (isSelected) {
+                  optionClass = 'border-destructive/40 bg-destructive/10 text-destructive';
+                } else {
+                  optionClass = 'border-border/40 bg-muted/30 text-muted-foreground opacity-60';
+                }
+              }
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  disabled={Boolean(selected)}
+                  onClick={() => void handleAnswer(option)}
+                  className={cn(
+                    'flex items-center justify-between rounded-xl border p-4 text-left text-sm font-semibold transition-all',
+                    optionClass
+                  )}
+                >
+                  <span>{option}</span>
+                  {selected && isCorrectOption && <Check className="h-4 w-4 shrink-0" />}
+                  {selected && isSelected && !isCorrectOption && <X className="h-4 w-4 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <Textarea
+              value={answer}
+              onChange={(event) => setAnswer(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey && !selected) {
+                  event.preventDefault();
+                  void handleWrittenAnswer();
+                }
+              }}
+              placeholder="Nhập câu trả lời của bạn…"
+              rows={3}
+              disabled={Boolean(selected)}
+            />
+            {!selected && (
+              <Button
+                className="w-full"
+                onClick={() => void handleWrittenAnswer()}
+                disabled={!answer.trim()}
+              >
+                Kiểm tra đáp án
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
       {selected && (
-        <Button className="w-full" onClick={finishIfLast}>
-          {roundEndedThisStep ? 'Finish Round' : 'Next question'}
-        </Button>
+        <div
+          className={cn(
+            'flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between',
+            isCorrectAnswer
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'
+              : 'border-destructive/30 bg-destructive/10 text-destructive'
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                'rounded-full p-2',
+                isCorrectAnswer ? 'bg-emerald-500/15' : 'bg-destructive/15'
+              )}
+            >
+              {isCorrectAnswer ? (
+                <Check className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <X className="h-5 w-5 text-destructive" />
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-bold">
+                {isCorrectAnswer ? 'Tuyệt vời! Bạn trả lời chính xác.' : 'Hãy xem lại câu này.'}
+              </h4>
+              {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
+            </div>
+          </div>
+          <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
+            {roundEndedThisStep ? 'Hoàn thành vòng' : 'Tiếp tục'}
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
       )}
-    </div>
+    </StudyModeShell>
   );
 }

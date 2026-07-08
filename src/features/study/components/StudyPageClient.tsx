@@ -1,13 +1,11 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
 
 const studyLoading = () => (
   <div className="glass-panel animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-    Loading…
+    Đang tải…
   </div>
 );
 
@@ -32,14 +30,6 @@ const DrawMode = dynamic(
   { ssr: false, loading: studyLoading }
 );
 
-const titles: Record<StudyModeValue, string> = {
-  FLASHCARD: 'Flashcards',
-  LEARN: 'Learn',
-  WRITE: 'Write',
-  TEST: 'Test',
-  DRAW: 'Draw',
-};
-
 type StudyPageClientProps = {
   setId: string;
   mode: StudyModeValue;
@@ -54,27 +44,5 @@ export function StudyPageClient({ setId, mode }: StudyPageClientProps) {
     DRAW: DrawMode,
   }[mode];
 
-  return (
-    <div className="space-y-6">
-      <ButtonBack setId={setId} title={titles[mode]} />
-      <ModeComponent setId={setId} />
-    </div>
-  );
-}
-
-function ButtonBack({ setId, title }: { setId: string; title: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <Link
-        href={`/sets/${setId}`}
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to set
-      </Link>
-      <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-        {title}
-      </h1>
-    </div>
-  );
+  return <ModeComponent setId={setId} />;
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Compass, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -37,11 +38,11 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
   const maxPerRound = Math.min(50, totalCards);
 
   const modes: { value: StudyModeValue; label: string; disabled?: boolean }[] = [
-    { value: 'FLASHCARD', label: 'Flashcards' },
-    { value: 'LEARN', label: 'Learn' },
-    { value: 'WRITE', label: 'Write' },
-    { value: 'TEST', label: 'Test' },
-    { value: 'DRAW', label: 'Draw (CJK)', disabled: newWordCount === 0 },
+    { value: 'FLASHCARD', label: 'Thẻ ghi nhớ' },
+    { value: 'LEARN', label: 'Học & Nhớ' },
+    { value: 'WRITE', label: 'Gõ đáp án' },
+    { value: 'TEST', label: 'Kiểm tra' },
+    { value: 'DRAW', label: 'Viết chữ (CJK)', disabled: newWordCount === 0 },
   ];
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
 
     if (!response.ok) {
       const payload = (await response.json()) as { message?: string };
-      setError(payload.message ?? 'Failed to start session');
+      setError(payload.message ?? 'Không thể bắt đầu phiên học');
       return;
     }
 
@@ -74,19 +75,22 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
   };
 
   return (
-    <Card className="glass-panel w-full max-w-lg mx-auto overflow-hidden rounded-2xl border-border/50 shadow-lg">
-      <CardHeader>
-        <CardTitle>Study Settings</CardTitle>
+    <Card className="glass-panel mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border-border/50 shadow-lg">
+      <CardHeader className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Settings2 className="h-5 w-5 text-primary" />
+          <CardTitle>Tùy chỉnh phiên học</CardTitle>
+        </div>
         <CardDescription>
-          Configure your study session — {totalCards} cards available.
+          Chọn chế độ và cấu hình vòng luyện tập — {totalCards} thẻ sẵn sàng.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="study-mode">Study mode</Label>
+          <Label htmlFor="study-mode">Chế độ học</Label>
           <Select value={mode} onValueChange={(value) => setMode(value as StudyModeValue)}>
-            <SelectTrigger id="study-mode">
-              <SelectValue placeholder="Select mode" />
+            <SelectTrigger id="study-mode" className="rounded-xl">
+              <SelectValue placeholder="Chọn chế độ" />
             </SelectTrigger>
             <SelectContent>
               {modes.map((item) => (
@@ -98,14 +102,14 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
           </Select>
           {newWordCount === 0 && (
             <p className="text-xs text-muted-foreground">
-              Không có thẻ &quot;từ mới&quot; trong bộ này
+              Không có thẻ &quot;từ mới&quot; trong bộ này — chế độ Viết chữ bị vô hiệu hóa.
             </p>
           )}
         </div>
 
         {mode === 'LEARN' && (
           <div className="space-y-2">
-            <Label htmlFor="question-style">Question style</Label>
+            <Label htmlFor="question-style">Kiểu câu hỏi</Label>
             <Select
               value={settings.presentation ?? 'multiple_choice'}
               onValueChange={(value) =>
@@ -115,20 +119,20 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
                 }))
               }
             >
-              <SelectTrigger id="question-style">
-                <SelectValue placeholder="Select style" />
+              <SelectTrigger id="question-style" className="rounded-xl">
+                <SelectValue placeholder="Chọn kiểu câu hỏi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="multiple_choice">Multiple Choice (Trắc nghiệm)</SelectItem>
-                <SelectItem value="default">Written (Tự viết/Tự luận)</SelectItem>
+                <SelectItem value="multiple_choice">Trắc nghiệm</SelectItem>
+                <SelectItem value="default">Tự viết / Tự luận</SelectItem>
               </SelectContent>
             </Select>
           </div>
         )}
 
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="cards-per-round-input">Cards per round</Label>
+        <div className="glass-panel space-y-3 rounded-2xl border border-border/50 p-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="cards-per-round-input">Số thẻ mỗi vòng</Label>
             <div className="flex items-center gap-2">
               <input
                 id="cards-per-round-input"
@@ -145,9 +149,9 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
                     }));
                   }
                 }}
-                className="w-16 rounded-md border border-input bg-transparent px-2 py-1 text-right text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                className="w-16 rounded-lg border border-input bg-transparent px-2 py-1 text-right text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
-              <span className="text-sm text-muted-foreground">cards</span>
+              <span className="text-sm text-muted-foreground">thẻ</span>
             </div>
           </div>
           <Slider
@@ -163,39 +167,47 @@ export function StudySettingsForm({ setId, totalCards, newWordCount }: StudySett
               }))
             }
           />
-          <p className="text-xs text-muted-foreground">1–{maxPerRound} cards per round</p>
+          <p className="text-xs text-muted-foreground">1–{maxPerRound} thẻ mỗi vòng</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="randomize"
-            checked={settings.randomize}
-            onCheckedChange={(checked) =>
-              setSettings((current) => ({ ...current, randomize: checked === true }))
-            }
-          />
-          <Label htmlFor="randomize" className="font-normal cursor-pointer">
-            Randomize card order
-          </Label>
-        </div>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="randomize"
+              checked={settings.randomize}
+              onCheckedChange={(checked) =>
+                setSettings((current) => ({ ...current, randomize: checked === true }))
+              }
+            />
+            <Label htmlFor="randomize" className="cursor-pointer font-normal">
+              Xáo trộn thứ tự thẻ
+            </Label>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="requeue-wrong"
-            checked={settings.requeueWrong}
-            onCheckedChange={(checked) =>
-              setSettings((current) => ({ ...current, requeueWrong: checked === true }))
-            }
-          />
-          <Label htmlFor="requeue-wrong" className="font-normal cursor-pointer">
-            Review wrong answers in next round
-          </Label>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="requeue-wrong"
+              checked={settings.requeueWrong}
+              onCheckedChange={(checked) =>
+                setSettings((current) => ({ ...current, requeueWrong: checked === true }))
+              }
+            />
+            <Label htmlFor="requeue-wrong" className="cursor-pointer font-normal">
+              Ôn lại câu sai ở vòng tiếp theo
+            </Label>
+          </div>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <Button id="start-study-btn" className="w-full" onClick={handleStart} disabled={loading}>
-          {loading ? 'Starting…' : 'Start studying'}
+        <Button
+          id="start-study-btn"
+          className="w-full rounded-xl font-bold"
+          onClick={handleStart}
+          disabled={loading}
+        >
+          <Compass className="mr-2 h-4 w-4" />
+          {loading ? 'Đang bắt đầu…' : 'Bắt đầu học'}
         </Button>
       </CardContent>
     </Card>

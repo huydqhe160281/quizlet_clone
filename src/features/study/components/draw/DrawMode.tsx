@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
-import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { HanziWriterCanvas } from '@/features/study/components/draw/HanziWriterCanvas';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { HINT_DISPLAY_MS } from '@/features/study/lib/draw-config';
@@ -80,7 +80,7 @@ export function DrawMode({ setId }: DrawModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Starting session…
+        Đang khởi tạo phiên học…
       </div>
     );
   }
@@ -117,14 +117,20 @@ export function DrawMode({ setId }: DrawModeProps) {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>Round {study.roundIndex + 1}</span>
-        <StudyProgress current={study.currentIndex + 1} total={roundCards.length} />
-      </div>
-      <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
-        <p className="text-sm text-muted-foreground">Vẽ ký tự cho nghĩa</p>
-        <p className="mt-2 text-2xl font-semibold">{currentCard.back}</p>
+    <StudyModeShell
+      setId={setId}
+      modeLabel="Viết chữ (CJK)"
+      progress={{
+        current: study.currentIndex + 1,
+        total: roundCards.length,
+        label: 'Tiến trình luyện viết',
+      }}
+    >
+      <div className="glass-panel rounded-3xl border border-border/50 p-6 text-center shadow-sm md:p-8">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Vẽ ký tự cho định nghĩa
+        </p>
+        <p className="mt-2 text-2xl font-extrabold md:text-3xl">{currentCard.back}</p>
       </div>
       <HanziWriterCanvas
         character={currentCard.front}
@@ -133,6 +139,6 @@ export function DrawMode({ setId }: DrawModeProps) {
         onSkip={handleSkip}
       />
       {hint && <p className="text-center text-sm text-muted-foreground">{hint}</p>}
-    </div>
+    </StudyModeShell>
   );
 }

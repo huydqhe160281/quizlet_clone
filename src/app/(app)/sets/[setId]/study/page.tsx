@@ -43,8 +43,12 @@ export default async function StudyPage({ params }: StudyPageProps) {
         </Button>
       </div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{set.title}</h1>
-        <p className="text-muted-foreground mt-1">Choose your study mode and settings.</p>
+        <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+          {set.title}
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          Tùy chỉnh chế độ học và cấu hình vòng luyện tập.
+        </p>
       </div>
       <StudySettingsForm setId={setId} totalCards={cards.length} newWordCount={newWordCount} />
     </main>

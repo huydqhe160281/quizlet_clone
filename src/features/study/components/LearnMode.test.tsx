@@ -10,6 +10,12 @@ vi.mock('@/features/study/hooks/useStudySession', () => ({
   useStudySession: vi.fn(),
 }));
 
+vi.mock('next/link', () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
 const mockUseStudySession = useStudySession as Mock<typeof useStudySession>;
 
 describe('LearnMode Presentation', () => {
@@ -32,13 +38,10 @@ describe('LearnMode Presentation', () => {
 
     render(<LearnMode setId="test-set" />);
 
-    // Verify it renders the question
-    expect(screen.getAllByText('front1').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('back1')).toBeInTheDocument();
+    expect(screen.getByText('front1')).toBeInTheDocument();
 
-    // Verify that NO text inputs or textareas (for fill-in-the-blank) are rendered
-    const input = screen.queryByRole('textbox');
-    const textarea = screen.queryByPlaceholderText(/answer/i);
-    expect(input).toBeNull();
+    const textarea = screen.queryByPlaceholderText(/câu trả lời/i);
     expect(textarea).toBeNull();
   });
 
@@ -61,11 +64,7 @@ describe('LearnMode Presentation', () => {
 
     render(<LearnMode setId="test-set" />);
 
-    // Verify it renders the question
     expect(screen.getAllByText('front1').length).toBeGreaterThanOrEqual(1);
-
-    // Verify that textarea is rendered
-    const textarea = screen.getByPlaceholderText(/answer/i);
-    expect(textarea).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/câu trả lời/i)).toBeInTheDocument();
   });
 });

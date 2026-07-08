@@ -1,14 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Check, ChevronRight, Edit3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
-import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
+import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import type { StudyCard } from '@/features/study/store';
+import { cn } from '@/lib/utils';
 
 type WriteModeProps = {
   setId: string;
@@ -19,6 +21,7 @@ export function WriteMode({ setId }: WriteModeProps) {
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
 
   const [showSummary, setShowSummary] = useState(false);
   const [roundEndedThisStep, setRoundEndedThisStep] = useState(false);
@@ -26,7 +29,6 @@ export function WriteMode({ setId }: WriteModeProps) {
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
 
-  // Filter cards to only those in the current round
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
     return study.currentRound
@@ -46,6 +48,7 @@ export function WriteMode({ setId }: WriteModeProps) {
       setAnswer('');
       setFeedback(null);
       setSubmitted(false);
+      setIsCorrectAnswer(null);
       setRoundEndedThisStep(false);
       return;
     }
@@ -54,6 +57,7 @@ export function WriteMode({ setId }: WriteModeProps) {
     setAnswer('');
     setFeedback(null);
     setSubmitted(false);
+    setIsCorrectAnswer(null);
   };
 
   const handleSubmit = () => {
@@ -62,13 +66,13 @@ export function WriteMode({ setId }: WriteModeProps) {
     }
     const isCorrect = fuzzyMatch(answer, currentCard.back);
     setSubmitted(true);
+    setIsCorrectAnswer(isCorrect);
     if (isCorrect) {
-      setFeedback('Correct!');
+      setFeedback('Chính xác!');
     } else {
-      setFeedback(`Incorrect. Answer: ${currentCard.back}`);
+      setFeedback(`Chưa đúng. Đáp án: ${currentCard.back}`);
     }
 
-    // Save info of the round before recording answer (as it increments/resets store state)
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
@@ -82,7 +86,7 @@ export function WriteMode({ setId }: WriteModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Starting session…
+        Đang khởi tạo phiên học…
       </div>
     );
   }
@@ -119,40 +123,81 @@ export function WriteMode({ setId }: WriteModeProps) {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <span>Round {study.roundIndex + 1}</span>
-        <StudyProgress current={study.currentIndex + 1} total={roundCards.length} />
+    <StudyModeShell
+      setId={setId}
+      modeLabel="Gõ đáp án"
+      progress={{
+        current: study.currentIndex + 1,
+        total: roundCards.length,
+        label: 'Tiến trình viết',
+      }}
+    >
+      <div className="glass-panel rounded-3xl border border-border/50 p-6 text-center shadow-sm md:p-8">
+        <div className="mb-2 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          <Edit3 className="h-3.5 w-3.5 text-amber-500" />
+          <span>Gõ đáp án cho thuật ngữ sau</span>
+        </div>
+        <p className="text-2xl font-extrabold md:text-3xl">{currentCard.front}</p>
       </div>
-      <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
-        <p className="text-sm text-muted-foreground">Type the answer</p>
-        <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
-      </div>
+
       <Textarea
         value={answer}
         onChange={(event) => setAnswer(event.target.value)}
-        placeholder="Your answer…"
-        rows={3}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.shiftKey && !submitted) {
+            event.preventDefault();
+            void handleSubmit();
+          }
+        }}
+        placeholder="Nhập câu trả lời của bạn…"
+        rows={4}
         disabled={submitted}
+        className="rounded-2xl border-border/60 bg-background/80 text-base"
       />
+
       {!submitted ? (
-        <Button className="w-full" onClick={() => void handleSubmit()} disabled={!answer.trim()}>
-          Check answer
+        <Button
+          className="w-full rounded-xl font-bold"
+          onClick={() => void handleSubmit()}
+          disabled={!answer.trim()}
+        >
+          Kiểm tra đáp án
         </Button>
       ) : (
-        <>
-          {feedback && (
-            <p
-              className={`text-center text-sm ${feedback.startsWith('Correct') ? 'text-green-600' : 'text-destructive'}`}
-            >
-              {feedback}
-            </p>
+        <div
+          className={cn(
+            'flex flex-col gap-4 rounded-2xl border p-5 sm:flex-row sm:items-center sm:justify-between',
+            isCorrectAnswer
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'
+              : 'border-destructive/30 bg-destructive/10 text-destructive'
           )}
-          <Button className="w-full" onClick={finishIfLast}>
-            {roundEndedThisStep ? 'Finish Round' : 'Next'}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className={cn(
+                'rounded-full p-2',
+                isCorrectAnswer ? 'bg-emerald-500/15' : 'bg-destructive/15'
+              )}
+            >
+              {isCorrectAnswer ? (
+                <Check className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <X className="h-5 w-5 text-destructive" />
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-bold">
+                {isCorrectAnswer ? 'Tuyệt vời!' : 'Chưa chính xác.'}
+              </h4>
+              {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
+            </div>
+          </div>
+          <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
+            {roundEndedThisStep ? 'Hoàn thành vòng' : 'Tiếp tục'}
+            <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
-        </>
+        </div>
       )}
-    </div>
+    </StudyModeShell>
   );
 }

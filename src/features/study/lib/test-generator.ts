@@ -69,3 +69,15 @@ export function generateLearnOptions(cards: StudyCardInput[], card: StudyCardInp
   const distractors = pickDistractors(cards, card.id, 3);
   return [...distractors, card.back].sort(() => Math.random() - 0.5);
 }
+
+const pickFrontDistractors = (cards: StudyCardInput[], correctId: string, count: number) => {
+  const pool = cards.filter((item) => item.id !== correctId).map((item) => item.front);
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
+
+/** MC options where the correct answer is the card front (term). */
+export function generateLearnTermOptions(cards: StudyCardInput[], card: StudyCardInput): string[] {
+  const distractors = pickFrontDistractors(cards, card.id, 3);
+  return [...distractors, card.front].sort(() => Math.random() - 0.5);
+}

@@ -3,11 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 
 type RoundSummaryProps = {
-  roundIndex: number; // 0-indexed internally, we show roundIndex + 1
+  roundIndex: number;
   correctCount: number;
   total: number;
   mode: string;
   onNextRound: () => void;
+};
+
+const MODE_LABELS: Record<string, string> = {
+  FLASHCARD: 'Thẻ ghi nhớ',
+  LEARN: 'Học & Nhớ',
+  WRITE: 'Gõ đáp án',
+  TEST: 'Kiểm tra',
+  DRAW: 'Viết chữ',
 };
 
 export function RoundSummary({
@@ -21,38 +29,40 @@ export function RoundSummary({
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
   return (
-    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-2xl border-border/50 text-center shadow-lg">
+    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-3xl border-border/50 text-center shadow-lg">
       <CardHeader>
-        <CardTitle className="text-xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Round {roundIndex + 1} Complete
+        <CardTitle className="text-xl font-extrabold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+          Hoàn thành vòng {roundIndex + 1}
         </CardTitle>
-        <CardDescription>{mode} mode round results</CardDescription>
+        <CardDescription>{MODE_LABELS[mode] ?? mode}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {mode === 'FLASHCARD' ? (
           <div className="py-4">
-            <p className="text-3xl font-extrabold tracking-tight text-foreground">{total}</p>
-            <p className="text-sm text-muted-foreground mt-1">Cards reviewed this round</p>
+            <p className="text-4xl font-extrabold tracking-tight text-foreground">{total}</p>
+            <p className="mt-1 text-sm text-muted-foreground">Thẻ đã ôn trong vòng này</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 py-2">
-            <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <CheckCircle2 className="h-6 w-6 text-emerald-500 mb-1" />
-              <span className="text-2xl font-bold text-emerald-500">{correctCount}</span>
-              <span className="text-xs text-muted-foreground mt-1">Correct</span>
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+              <CheckCircle2 className="mb-1 h-6 w-6 text-emerald-500" />
+              <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                {correctCount}
+              </span>
+              <span className="mt-1 text-xs text-muted-foreground">Đúng</span>
             </div>
-            <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-              <XCircle className="h-6 w-6 text-destructive mb-1" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/10 p-4">
+              <XCircle className="mb-1 h-6 w-6 text-destructive" />
               <span className="text-2xl font-bold text-destructive">{incorrectCount}</span>
-              <span className="text-xs text-muted-foreground mt-1">Incorrect</span>
+              <span className="mt-1 text-xs text-muted-foreground">Sai</span>
             </div>
           </div>
         )}
 
         {mode !== 'FLASHCARD' && (
-          <div className="w-full bg-accent/50 rounded-full h-2">
+          <div className="h-2 w-full rounded-full bg-muted">
             <div
-              className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+              className="h-2 rounded-full bg-primary transition-all duration-500"
               style={{ width: `${scorePercent}%` }}
             />
           </div>
@@ -60,10 +70,10 @@ export function RoundSummary({
 
         <Button
           onClick={onNextRound}
-          className="w-full flex items-center justify-center gap-2"
+          className="flex w-full items-center justify-center gap-2 rounded-xl font-bold"
           id="next-round-btn"
         >
-          Next round <ArrowRight className="h-4 w-4" />
+          Vòng tiếp theo <ArrowRight className="h-4 w-4" />
         </Button>
       </CardContent>
     </Card>
