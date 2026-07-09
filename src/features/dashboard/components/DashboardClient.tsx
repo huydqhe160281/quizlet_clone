@@ -38,18 +38,23 @@ type DashboardClientProps = {
 export function DashboardClient({ stats, activity, sessions }: DashboardClientProps) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+      <div className="flex flex-col gap-2 mb-8">
+        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
           Dashboard
         </h1>
-        <p className="text-muted-foreground">Your study overview and progress.</p>
+        <p className="text-lg text-muted-foreground font-medium">
+          Your study overview and progress.
+        </p>
       </div>
       <DueCardsAlert dueCount={stats.dueToday} />
       <StatsCards stats={stats} />
       <ActivityHeatmap activity={activity} />
-      <div className="glass-panel relative overflow-hidden rounded-2xl p-5 shadow-sm">
-        <div className="absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl pointer-events-none" />
-        <h3 className="mb-5 text-lg font-semibold tracking-tight relative z-10">Recent sessions</h3>
+      <div className="glass-panel relative overflow-hidden rounded-[2rem] p-6 shadow-xl dark:shadow-none mt-8 border-white/20 dark:border-white/5">
+        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <h3 className="mb-6 text-xl font-bold tracking-tight relative z-10 flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          Recent sessions
+        </h3>
         <div className="relative z-10">
           <RecentSessions sessions={sessions} />
         </div>

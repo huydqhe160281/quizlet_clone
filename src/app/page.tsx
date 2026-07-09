@@ -17,9 +17,14 @@ export default function LandingPage() {
       <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
 
       <header className="glass-nav sticky top-0 z-50 mx-auto flex w-full items-center justify-between px-6 py-4">
-        <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-xl font-bold tracking-tight text-transparent">
-          Flashcards
-        </span>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+            <span className="text-primary-foreground font-bold text-xl">F</span>
+          </div>
+          <span className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
+            Flashcards
+          </span>
+        </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
           <Button variant="ghost" asChild className="hidden sm:inline-flex">
@@ -32,20 +37,31 @@ export default function LandingPage() {
       </header>
 
       <section className="relative z-10 mx-auto max-w-6xl px-6 py-32 text-center">
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent sm:text-7xl">
+        <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-6xl font-black tracking-tighter text-transparent sm:text-8xl md:leading-[1.1]">
           Learn smarter with
           <br />
-          <span className="text-primary">spaced repetition</span>
+          <span className="text-primary drop-shadow-[0_0_32px_rgba(var(--primary),0.3)]">
+            spaced repetition
+          </span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
+        <p className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground font-medium sm:text-2xl leading-relaxed">
           Create flashcard sets, study in multiple modes, and review cards at the optimal time —
           inspired by Quizlet, built for performance.
         </p>
         <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-          <Button size="lg" asChild className="h-14 px-8 text-lg shadow-xl shadow-primary/20">
+          <Button
+            size="lg"
+            asChild
+            className="h-14 px-8 text-lg font-bold shadow-xl shadow-primary/30 hover:scale-105 rounded-2xl transition-all duration-300"
+          >
             <Link href="/register">Start learning free</Link>
           </Button>
-          <Button size="lg" variant="outline" asChild className="glass-panel h-14 px-8 text-lg">
+          <Button
+            size="lg"
+            variant="outline"
+            asChild
+            className="glass-panel h-14 px-8 text-lg font-bold rounded-2xl transition-all duration-300 hover:bg-muted/50 hover:scale-105"
+          >
             <Link href="/library">Browse public library</Link>
           </Button>
         </div>
@@ -68,12 +84,14 @@ export default function LandingPage() {
         ].map((feature) => (
           <Card
             key={feature.title}
-            className="glass-panel relative overflow-hidden rounded-2xl border-primary/10 bg-card/40 p-2 shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl hover:border-primary/30"
+            className="glass-panel relative overflow-hidden rounded-[2rem] border-white/20 bg-card/40 p-4 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group"
           >
-            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
+            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl transition-all duration-500 group-hover:bg-primary/30" />
             <CardHeader className="relative z-10">
-              <CardTitle className="text-xl">{feature.title}</CardTitle>
-              <CardDescription className="text-base">{feature.description}</CardDescription>
+              <CardTitle className="text-2xl font-bold">{feature.title}</CardTitle>
+              <CardDescription className="text-base font-medium mt-2">
+                {feature.description}
+              </CardDescription>
             </CardHeader>
             <CardContent />
           </Card>

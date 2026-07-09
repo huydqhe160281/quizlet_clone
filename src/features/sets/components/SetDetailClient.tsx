@@ -6,12 +6,19 @@ import { Suspense, useState } from 'react';
 import { ArrowLeft, Copy, Pencil, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { RedirectingNotice } from '@/components/shared/RedirectingNotice';
 import { CardEditor } from '@/features/sets/cards/components/CardEditor';
 import { StudyLauncher } from '@/features/study/components/StudyLauncher';
 import { useSet, useSetMutations, useCards } from '@/features/sets/hooks/useSets';
 import { ImportSetWizard } from '@/features/sets/components/ImportSetWizard';
+import { SetForm } from '@/features/sets/components/SetForm';
 
 type SetDetailClientProps = {
   setId: string;
@@ -20,6 +27,7 @@ type SetDetailClientProps = {
 export function SetDetailClient({ setId }: SetDetailClientProps) {
   const router = useRouter();
   const [importOpen, setImportOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const { data: set, isLoading, error: setError } = useSet(setId);
   const { data: cards, error: cardsError } = useCards(setId);
   const { deleteSet, duplicateSet } = useSetMutations();
@@ -70,31 +78,58 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/sets/${setId}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditOpen(true)}
+            className="flex-1 sm:flex-none"
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit
           </Button>
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Edit set</DialogTitle>
+              </DialogHeader>
+              <SetForm
+                mode="edit"
+                setId={setId}
+                initial={{
+                  title: set.title,
+                  description: set.description,
+                  language: set.language,
+                  visibility: set.visibility,
+                }}
+                isModal
+                onSuccess={() => setEditOpen(false)}
+                onCancel={() => setEditOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
           <Dialog open={importOpen} onOpenChange={setImportOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                 <Upload className="mr-2 h-4 w-4" />
                 Import
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-x-hidden overflow-y-auto sm:max-w-[620px]">
-              <ImportSetWizard
-                setId={setId}
-                variant="embedded"
-                onSuccess={() => {
-                  setImportOpen(false);
-                }}
-              />
+            <DialogContent className="sm:max-w-[620px] flex flex-col max-h-[90vh] overflow-hidden">
+              <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                <ImportSetWizard
+                  setId={setId}
+                  variant="embedded"
+                  onSuccess={() => {
+                    setImportOpen(false);
+                  }}
+                />
+              </div>
             </DialogContent>
           </Dialog>
           <Button
             variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() =>
               duplicateSet.mutate(setId, {
                 onSuccess: (result) => router.push(`/sets/${result.data.id}`),
@@ -106,6 +141,8 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           </Button>
           <Button
             variant="destructive"
+            size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() => {
               if (window.confirm('Delete this set and all cards?')) {
                 deleteSet.mutate(setId, { onSuccess: () => router.push('/sets') });

@@ -408,7 +408,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
   ) : null;
 
   const formView = (
-    <div className={cn('min-w-0 max-w-full space-y-5 overflow-hidden', isEmbedded && 'pr-6')}>
+    <div className="min-w-0 max-w-full space-y-5 overflow-hidden">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-primary/10 p-2 text-primary">

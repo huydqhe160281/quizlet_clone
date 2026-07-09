@@ -25,10 +25,10 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
         <Link
           key={session.id}
           href={`/sets/${session.set.id}`}
-          className="group flex items-center justify-between rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm p-4 transition-all hover:bg-card/80 hover:shadow-md hover:border-primary/20 relative overflow-hidden"
+          className="group flex items-center justify-between rounded-xl border border-border/40 bg-background/40 p-4 transition-all duration-300 hover:bg-background/60 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 relative overflow-hidden"
         >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/0 transition-all group-hover:bg-primary" />
-          <div className="ml-1">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/0 transition-all duration-300 group-hover:bg-primary" />
+          <div className="ml-1 z-10">
             <p className="font-semibold text-card-foreground group-hover:text-primary transition-colors">
               {session.set.title}
             </p>

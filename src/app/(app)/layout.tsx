@@ -4,7 +4,7 @@ import { MobileNav } from '@/components/layout/MobileNav';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen relative overflow-hidden">
+    <div className="flex min-h-screen relative overflow-clip">
       {/* Ambient background blob */}
       <div className="fixed -top-[500px] -right-[500px] h-[1000px] w-[1000px] rounded-full bg-primary/5 opacity-50 blur-3xl pointer-events-none" />
       <div className="fixed -bottom-[500px] -left-[500px] h-[1000px] w-[1000px] rounded-full bg-primary/5 opacity-50 blur-3xl pointer-events-none" />

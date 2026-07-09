@@ -20,7 +20,7 @@ export function SearchPageClient({ initialData }: { initialData: { data: PublicS
   const [submitted, setSubmitted] = useState('');
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['search-page', submitted || 'all'],
+    queryKey: submitted.length > 0 ? ['search-page', submitted] : ['library', 'newest'],
     queryFn: async () => {
       const url =
         submitted.length > 0

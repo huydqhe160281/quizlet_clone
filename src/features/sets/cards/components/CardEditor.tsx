@@ -50,43 +50,67 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
     <div
       ref={setNodeRef}
       style={style}
-      className="mb-2 flex items-start gap-2 rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm p-3 shadow-sm"
+      className="mb-4 flex items-center gap-3 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-4 shadow-sm transition-all hover:shadow-md hover:border-primary/20"
     >
-      <div className="flex items-center gap-1.5 mt-1.5">
-        <Checkbox checked={selected} onCheckedChange={(checked) => onSelect(!!checked)} />
+      <div className="flex items-center gap-2 text-muted-foreground">
         <button
           type="button"
-          className="text-muted-foreground cursor-grab active:cursor-grabbing"
+          className="cursor-grab active:cursor-grabbing hover:text-foreground transition-colors"
           {...attributes}
           {...listeners}
         >
-          <GripVertical className="h-4 w-4" />
+          <GripVertical className="h-5 w-5" />
         </button>
+        <Checkbox checked={selected} onCheckedChange={(checked) => onSelect(!!checked)} />
       </div>
-      <div className="grid flex-1 gap-2 sm:grid-cols-2">
+
+      {/* Vertical Divider */}
+      <div className="mx-2 hidden h-8 w-px bg-border/60 sm:block" />
+
+      <div className="grid flex-1 gap-6 sm:grid-cols-2">
         <div>
-          <p className="text-xs text-muted-foreground">Front</p>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+            Front
+          </p>
           <div className="flex items-center gap-2">
-            <p className="text-sm whitespace-pre-line">{card.front}</p>
-            {card.type === 'new-word' && <Badge variant="secondary">Từ mới</Badge>}
+            <p className="text-[15px] font-medium leading-relaxed whitespace-pre-line text-foreground/90">
+              {card.front}
+            </p>
+            {card.type === 'new-word' && (
+              <Badge variant="secondary" className="scale-90 text-[10px]">
+                Từ mới
+              </Badge>
+            )}
           </div>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground">Back</p>
-          <p className="text-sm whitespace-pre-line">{card.back}</p>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+            Back
+          </p>
+          <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground/80">
+            {card.back}
+          </p>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={card.type === 'new-word'}
-          onCheckedChange={(checked) => onTypeToggle(card.id, checked === true)}
-          aria-label="Từ mới"
-        />
-        <span className="text-xs text-muted-foreground">Từ mới</span>
+
+      <div className="ml-2 flex items-center gap-3 sm:border-l sm:border-border/60 sm:pl-5">
+        <label className="flex cursor-pointer items-center gap-2 text-muted-foreground transition-colors hover:text-primary">
+          <Checkbox
+            className="rounded-full"
+            checked={card.type === 'new-word'}
+            onCheckedChange={(checked) => onTypeToggle(card.id, checked === true)}
+          />
+          <span className="text-xs font-medium">Từ mới</span>
+        </label>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => onDelete(card.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
-      <Button variant="ghost" size="icon" onClick={() => onDelete(card.id)}>
-        <Trash2 className="h-4 w-4" />
-      </Button>
     </div>
   );
 }

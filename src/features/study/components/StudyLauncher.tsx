@@ -131,13 +131,13 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
             className="rounded-xl shadow-sm"
             onClick={() => openSettings()}
           >
-            <Settings2 className="mr-2 h-4 w-4" />
-            Tùy chỉnh phiên học
+            <Settings2 className="sm:mr-2 h-4 w-4" />
+            <span className="hidden sm:inline">Tùy chỉnh phiên học</span>
           </Button>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {MODES.map((mode) => {
+          {MODES.map((mode, index) => {
             const isDrawDisabled = mode.value === 'DRAW' && newWordCount === 0;
             const disabled = mode.disabled || isDrawDisabled;
             const Icon = mode.icon;
@@ -192,12 +192,13 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
                 onMouseEnter={() => setHoveredMode(mode.value)}
                 onMouseLeave={() => setHoveredMode(null)}
                 className={cn(
-                  'glass-panel group flex items-start gap-4 rounded-2xl border border-border/50 p-5 text-left shadow-sm transition-all hover:shadow-md',
+                  'glass-panel group flex items-start gap-4 rounded-2xl border border-border/50 p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-primary/30 animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',
                   mode.accentClass
                 )}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 {content}
-                <Sparkles className="ml-auto hidden h-4 w-4 shrink-0 text-primary opacity-0 transition-opacity group-hover:opacity-100 sm:block" />
+                <Sparkles className="ml-auto hidden h-4 w-4 shrink-0 text-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:block" />
               </Link>
             );
           })}

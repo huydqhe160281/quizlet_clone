@@ -8,6 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSetMutations } from '@/features/sets/hooks/useSets';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type SetFormProps = {
   mode?: 'create' | 'edit';
@@ -18,9 +25,19 @@ type SetFormProps = {
     language?: string | null;
     visibility?: 'PRIVATE' | 'PUBLIC';
   };
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  isModal?: boolean;
 };
 
-export function SetForm({ mode = 'create', setId, initial }: SetFormProps) {
+export function SetForm({
+  mode = 'create',
+  setId,
+  initial,
+  onSuccess,
+  onCancel,
+  isModal = false,
+}: SetFormProps) {
   const router = useRouter();
   const { createSet, updateSet } = useSetMutations();
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -46,7 +63,10 @@ export function SetForm({ mode = 'create', setId, initial }: SetFormProps) {
       updateSet.mutate(
         { setId, input: payload },
         {
-          onSuccess: () => router.push(`/sets/${setId}`),
+          onSuccess: () => {
+            if (onSuccess) onSuccess();
+            else router.push(`/sets/${setId}`);
+          },
           onError: (err) => setError(err.message),
         }
       );
@@ -54,12 +74,77 @@ export function SetForm({ mode = 'create', setId, initial }: SetFormProps) {
     }
 
     createSet.mutate(payload, {
-      onSuccess: (result) => router.push(`/sets/${result.data.id}`),
+      onSuccess: (result) => {
+        if (onSuccess) onSuccess();
+        router.push(`/sets/${result.data.id}`);
+      },
       onError: (err) => setError(err.message),
     });
   };
 
   const loading = createSet.isPending || updateSet.isPending;
+
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
+        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="language">Language</Label>
+          <Input
+            id="language"
+            placeholder="en, vi…"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="visibility">Visibility</Label>
+          <Select
+            value={visibility}
+            onValueChange={(v) => setVisibility(v as 'PRIVATE' | 'PUBLIC')}
+          >
+            <SelectTrigger id="visibility">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PRIVATE">Private</SelectItem>
+              <SelectItem value="PUBLIC">Public</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => (onCancel ? onCancel() : router.back())}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Saving…' : mode === 'create' ? 'Create set' : 'Save changes'}
+        </Button>
+      </div>
+    </form>
+  );
+
+  if (isModal) {
+    return formContent;
+  }
 
   return (
     <Card className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-lg">
@@ -67,60 +152,7 @@ export function SetForm({ mode = 'create', setId, initial }: SetFormProps) {
         <CardTitle>{mode === 'create' ? 'New flashcard set' : 'Edit set'}</CardTitle>
         <CardDescription>Add metadata for your study material.</CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
-            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="language">Language</Label>
-              <Input
-                id="language"
-                placeholder="en, vi…"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="visibility">Visibility</Label>
-              <select
-                id="visibility"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={visibility}
-                onChange={(e) => setVisibility(e.target.value as 'PRIVATE' | 'PUBLIC')}
-              >
-                <option value="PRIVATE">Private</option>
-                <option value="PUBLIC">Public</option>
-              </select>
-            </div>
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-              disabled={loading}
-            >
-              Back
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving…' : mode === 'create' ? 'Create set' : 'Save changes'}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
+      <CardContent>{formContent}</CardContent>
     </Card>
   );
 }

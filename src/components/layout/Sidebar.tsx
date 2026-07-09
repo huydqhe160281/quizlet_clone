@@ -11,10 +11,12 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="glass-panel hidden w-64 shrink-0 border-r md:flex md:flex-col sticky top-0 h-screen z-30">
-      <div className="flex h-16 items-center gap-2 border-b border-border/50 px-6">
-        <BookOpen className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">
+    <aside className="glass-panel hidden w-64 shrink-0 border-r border-r-border/50 md:flex md:flex-col sticky top-0 h-screen z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+      <div className="flex h-20 items-center gap-3 border-b border-border/50 px-6">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+          <BookOpen className="h-5 w-5 text-primary-foreground" />
+        </div>
+        <span className="text-xl font-extrabold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
           Flashcards
         </span>
       </div>
@@ -28,21 +30,21 @@ export function Sidebar() {
               href={href}
               data-guide={guideTargetId}
               className={cn(
-                'group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all hover:pl-4',
+                'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-300',
                 active
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25 translate-x-1'
+                  : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:translate-x-1'
               )}
             >
               <Icon
                 className={cn(
-                  'h-4 w-4 transition-transform group-hover:scale-110',
-                  active && 'scale-110 text-primary'
+                  'h-5 w-5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3',
+                  active && 'scale-110 text-primary-foreground'
                 )}
               />
               {label}
               {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-primary rounded-r-full shadow-[0_0_8px_rgba(var(--primary),0.6)]" />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
               )}
             </Link>
           );

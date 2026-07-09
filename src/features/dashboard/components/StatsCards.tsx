@@ -26,13 +26,13 @@ const items = (stats: StatsCardsProps['stats']) => [
 
 export function StatsCards({ stats }: StatsCardsProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {items(stats).map(({ label, value, icon: Icon }) => (
         <div
           key={label}
-          className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-5 shadow-sm transition-all hover:shadow-md hover:bg-card/80 overflow-hidden relative"
+          className="glass-panel group rounded-2xl p-4 sm:p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:border-primary/40 overflow-hidden relative"
         >
-          <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-primary/10 blur-2xl transition-all group-hover:bg-primary/20" />
+          <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-primary/10 blur-2xl transition-all duration-500 group-hover:bg-primary/20 group-hover:scale-150" />
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground relative z-10">
             {Icon && <Icon className="h-4 w-4 text-primary/70" />}
             {label}
