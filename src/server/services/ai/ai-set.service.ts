@@ -7,7 +7,9 @@ import {
   trimAiFlashcardOutput,
 } from '@/features/sets/schemas/ai-generate.schema';
 import { ApiError } from '@/lib/api-error';
-import { getOllamaGenerateOptions, getOllamaModel } from '@/server/ai/ollama';
+import { getOllamaGenerateOptions, getOllamaModel, getOllamaLargeModel } from '@/server/ai/ollama';
+import { getZaiModel } from '@/server/ai/zai';
+import { withModelFallback } from '@/server/ai/with-fallback';
 import { prisma } from '@/server/db';
 
 const buildSystemPrompt = (cardCount?: number) =>
@@ -30,15 +32,28 @@ Respond with JSON only using this shape:
 
 export async function generateAiSet(userId: string, input: AiGenerateInput) {
   const outputSchema = buildAiFlashcardOutputSchema(input.cardCount);
+  const prompt = `${buildSystemPrompt(input.cardCount)}\n\nUser input:\n${input.prompt}`;
+  const generateOptions = getOllamaGenerateOptions(input.cardCount);
+
   let generated;
   try {
-    const result = await generateText({
-      model: getOllamaModel(input.cardCount),
-      ...getOllamaGenerateOptions(input.cardCount),
-      // Ollama Cloud supports format=json but not JSON Schema structured outputs.
-      output: Output.json(),
-      prompt: `${buildSystemPrompt(input.cardCount)}\n\nUser input:\n${input.prompt}`,
-    });
+    // Fallback cascade: Ollama primary → Ollama large → Z.ai
+    // Each provider is retried up to 2 times before moving to the next.
+    const result = await withModelFallback(
+      [
+        ['ollama-primary', getOllamaModel(input.cardCount)],
+        ['ollama-large', getOllamaLargeModel(input.cardCount)],
+        ['zai', getZaiModel()],
+      ],
+      (model) =>
+        generateText({
+          model,
+          ...generateOptions,
+          output: Output.json(),
+          prompt,
+        }),
+      2 // max attempts per provider
+    );
 
     const parsed = outputSchema.safeParse(trimAiFlashcardOutput(result.output, input.cardCount));
     if (!parsed.success) {
@@ -47,7 +62,7 @@ export async function generateAiSet(userId: string, input: AiGenerateInput) {
     generated = parsed.data;
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {
-      console.error('[generateAiSet] AI generation failed:', error);
+      console.error('[generateAiSet] All AI providers failed:', error);
     }
     throw new ApiError('AI_GENERATION_FAILED', 'Failed to generate flashcards from AI', 502);
   }

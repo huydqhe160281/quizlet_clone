@@ -39,13 +39,14 @@ export const POST = withErrorHandler(async (req) => {
   const userContext = session?.user?.id ? await getGuideUserContext(session.user.id) : undefined;
 
   try {
-    const result = streamAssistantChat({
+    const result = await streamAssistantChat({
       messages: toCoreMessages(parsed.data.messages),
       userContext,
       pathname: parsed.data.pathname,
       signal: req.signal,
     });
 
+    console.log('result type:', typeof result, result ? Object.keys(result) : null);
     return result.toTextStreamResponse();
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {

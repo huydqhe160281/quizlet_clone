@@ -31,6 +31,8 @@ Open [http://localhost:3000](http://localhost:3000).
 | `OLLAMA_BASE_URL`                           | Ollama API URL (required in production)          |
 | `OLLAMA_MODEL`                              | Ollama model name (required in production)       |
 | `OLLAMA_MODEL_LARGE`                        | Optional larger model for high-card requests     |
+| `ZAI_API_KEY`                               | Z.ai API key (fallback if Ollama fails)          |
+| `ZAI_MODEL`                                 | Z.ai model name (default: `glm-5.2`)             |
 
 ### AI Set Generation (Ollama)
 
@@ -41,13 +43,17 @@ For the **Generate with AI** feature, configure Ollama:
 OLLAMA_BASE_URL=http://localhost:11434/api
 OLLAMA_MODEL=llama3
 # Optional fallback when requesting >50 cards
-# OLLAMA_MODEL_LARGE=gemma3:27b
+# OLLAMA_MODEL_LARGE=gpt-oss:120b
 
 # Ollama Cloud example:
 # OLLAMA_BASE_URL=https://ollama.com/api
-# OLLAMA_MODEL=gemma3:12b
+# OLLAMA_MODEL=gpt-oss:20b
 # OLLAMA_MODEL_LARGE=gpt-oss:120b
 # OLLAMA_API_KEY=your-key
+
+# Z.ai fallback (kicked in after Ollama fails 2× per tier)
+# ZAI_API_KEY=your-key-from-z.ai/manage-apikey/apikey-list
+# ZAI_MODEL=glm-5.2    # default when not set
 ```
 
 In **production**, both variables are required. Point `OLLAMA_BASE_URL` at your Ollama Cloud or self-hosted endpoint reachable from Vercel.

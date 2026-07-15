@@ -35,9 +35,16 @@ export function FlashcardViewer({
   const multilineBack = back.includes('\n');
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onFlip}
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          onFlip();
+        }
+      }}
       className="perspective-1000 mx-auto block w-full max-w-2xl focus:outline-none"
       aria-label={isFlipped ? 'Hiện mặt trước' : 'Hiện mặt sau'}
     >
@@ -130,7 +137,7 @@ export function FlashcardViewer({
           <p className="text-[11px] font-semibold text-primary-foreground/70">Mặt định nghĩa</p>
         </div>
       </motion.div>
-    </button>
+    </div>
   );
 }
 

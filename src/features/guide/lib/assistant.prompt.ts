@@ -12,7 +12,7 @@ export function buildSystemPrompt(
     {
       site: config.site,
       menus: config.menus,
-      routes: config.routes,
+      routes: config.routes.filter((r) => !r.path.includes('[')),
       flows: config.flows,
       faq: config.faq,
     },

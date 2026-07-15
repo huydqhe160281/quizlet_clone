@@ -23,19 +23,31 @@ vi.mock('@/features/guide/lib/load-guide-config', () => ({
 }));
 
 vi.mock('@/server/ai/ollama', () => ({
-  getOllamaChatModel: vi.fn(() => 'mock-model'),
+  getOllamaChatModel: vi.fn(() => 'mock-ollama-model'),
+}));
+
+vi.mock('@/server/ai/zai', () => ({
+  getZaiChatModel: vi.fn(() => 'mock-zai-model'),
 }));
 
 import { streamAssistantChat } from '@/server/services/ai/assistant.service';
 
+// Helper: build a mock stream result where `usage` resolves successfully
+function makeMockStream() {
+  return {
+    usage: Promise.resolve({ totalTokens: 10 }),
+    toTextStreamResponse: vi.fn(),
+  };
+}
+
 describe('assistant.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    streamTextMock.mockReturnValue({ toTextStreamResponse: vi.fn() });
+    streamTextMock.mockReturnValue(makeMockStream());
   });
 
-  it('calls streamText with temperature 0', () => {
-    streamAssistantChat({
+  it('calls streamText with temperature 0', async () => {
+    await streamAssistantChat({
       messages: [{ role: 'user', content: 'Làm sao tạo bộ thẻ?' }],
     });
 
@@ -44,9 +56,9 @@ describe('assistant.service', () => {
     );
   });
 
-  it('forwards abortSignal to streamText', () => {
+  it('forwards abortSignal to streamText', async () => {
     const controller = new AbortController();
-    streamAssistantChat({
+    await streamAssistantChat({
       messages: [{ role: 'user', content: 'hello' }],
       signal: controller.signal,
     });
@@ -54,5 +66,33 @@ describe('assistant.service', () => {
     expect(streamTextMock).toHaveBeenCalledWith(
       expect.objectContaining({ abortSignal: controller.signal })
     );
+  });
+
+  it('falls back to Z.ai when Ollama fails', async () => {
+    // First call (ollama) throws, second call (zai) succeeds
+    streamTextMock
+      .mockReturnValueOnce({
+        usage: Promise.reject(new Error('Not Found')),
+        toTextStreamResponse: vi.fn(),
+      })
+      .mockReturnValueOnce(makeMockStream());
+
+    const result = await streamAssistantChat({
+      messages: [{ role: 'user', content: 'hello' }],
+    });
+
+    expect(streamTextMock).toHaveBeenCalledTimes(2);
+    expect(result).toBeDefined();
+  });
+
+  it('throws when all providers fail', async () => {
+    streamTextMock.mockReturnValue({
+      usage: Promise.reject(new Error('All failed')),
+      toTextStreamResponse: vi.fn(),
+    });
+
+    await expect(
+      streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] })
+    ).rejects.toThrow('All failed');
   });
 });

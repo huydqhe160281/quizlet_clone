@@ -16,7 +16,11 @@ const BOLD = /\*\*([^*]+)\*\*/g;
 
 function isSafeInternalHref(href: string): boolean {
   return (
-    href.startsWith('/') && !href.includes('://') && !href.toLowerCase().startsWith('javascript:')
+    href.startsWith('/') &&
+    !href.includes('://') &&
+    !href.toLowerCase().startsWith('javascript:') &&
+    !href.includes('[') &&
+    !href.includes(']')
   );
 }
 

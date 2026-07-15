@@ -25,7 +25,23 @@ vi.mock('ai', () => ({
 
 vi.mock('@/server/ai/ollama', () => ({
   getOllamaModel: vi.fn(() => 'mock-model'),
+  getOllamaLargeModel: vi.fn(() => undefined),
   getOllamaGenerateOptions: vi.fn(() => ({ temperature: 0 })),
+}));
+
+vi.mock('@/server/ai/zai', () => ({
+  getZaiModel: vi.fn(() => undefined),
+}));
+
+// Stub withModelFallback so it simply calls fn with the first defined model.
+vi.mock('@/server/ai/with-fallback', () => ({
+  withModelFallback: vi.fn(
+    async (models: Array<[string, unknown]>, fn: (m: unknown) => Promise<unknown>) => {
+      const first = models.find(([, m]) => m !== undefined);
+      if (!first) throw new Error('No model available');
+      return fn(first[1]);
+    }
+  ),
 }));
 
 import { revalidateTag } from 'next/cache';

@@ -58,4 +58,7 @@ export const env = {
   ollamaModel: resolveOllamaModel(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_MODEL),
   ollamaLargeModel: resolveOllamaLargeModel(process.env.OLLAMA_MODEL_LARGE),
   ollamaApiKey: resolveOllamaApiKey(process.env.OLLAMA_API_KEY),
+  // Z.ai fallback (OpenAI-compatible, https://api.z.ai/api/paas/v4)
+  zaiApiKey: process.env.ZAI_API_KEY?.trim() || undefined,
+  zaiModel: process.env.ZAI_MODEL?.trim() || 'glm-4.5-flash',
 };

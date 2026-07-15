@@ -1,47 +1,56 @@
-import { extractJsonMiddleware, wrapLanguageModel } from 'ai';
+import { extractJsonMiddleware, wrapLanguageModel, type LanguageModel } from 'ai';
 import { createOllama } from 'ollama-ai-provider-v2';
 import { env } from '@/config/env';
 
 const LARGE_MODEL_FALLBACKS: Record<string, string> = {
-  'gemma3:12b': 'gemma3:27b',
+  'gemma4:31b': 'gpt-oss:120b',
   'gpt-oss:20b': 'gpt-oss:120b',
 };
 
-function resolveModelForCardCount(cardCount?: number) {
-  if (!cardCount || cardCount <= 50) {
-    return env.ollamaModel;
-  }
-
-  if (env.ollamaLargeModel) {
-    return env.ollamaLargeModel;
-  }
-
-  return LARGE_MODEL_FALLBACKS[env.ollamaModel] ?? env.ollamaModel;
-}
-
-export function getOllamaModel(cardCount?: number) {
+function buildOllamaClient() {
   const headers = env.ollamaApiKey ? { Authorization: `Bearer ${env.ollamaApiKey}` } : undefined;
-
-  const ollama = createOllama({
+  return createOllama({
     baseURL: env.ollamaBaseUrl,
     ...(headers ? { headers } : {}),
   });
+}
 
+/**
+ * Returns the primary Ollama model.
+ * For the fallback cascade this always returns env.ollamaModel regardless of
+ * card count — the large-model tier is handled by getOllamaLargeModel.
+ */
+export function getOllamaModel(_cardCount?: number): LanguageModel {
+  const ollama = buildOllamaClient();
   // Cloud models often wrap JSON in markdown fences; middleware strips them before parsing.
   return wrapLanguageModel({
-    model: ollama(resolveModelForCardCount(cardCount)),
+    model: ollama(env.ollamaModel),
     middleware: extractJsonMiddleware(),
   });
 }
 
-export function getOllamaChatModel() {
-  const headers = env.ollamaApiKey ? { Authorization: `Bearer ${env.ollamaApiKey}` } : undefined;
+/**
+ * Returns the "large" Ollama model for high-card-count requests, or undefined
+ * when no separate large model is configured / the large model is the same as
+ * the primary (to avoid a redundant retry tier).
+ */
+export function getOllamaLargeModel(_cardCount?: number): LanguageModel | undefined {
+  const largeModelName = env.ollamaLargeModel ?? LARGE_MODEL_FALLBACKS[env.ollamaModel];
 
-  const ollama = createOllama({
-    baseURL: env.ollamaBaseUrl,
-    ...(headers ? { headers } : {}),
+  // Skip if there is no distinct large model
+  if (!largeModelName || largeModelName === env.ollamaModel) {
+    return undefined;
+  }
+
+  const ollama = buildOllamaClient();
+  return wrapLanguageModel({
+    model: ollama(largeModelName),
+    middleware: extractJsonMiddleware(),
   });
+}
 
+export function getOllamaChatModel(): LanguageModel {
+  const ollama = buildOllamaClient();
   return ollama(env.ollamaModel);
 }
 
