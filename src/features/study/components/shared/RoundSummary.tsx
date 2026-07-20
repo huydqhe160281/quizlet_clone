@@ -29,10 +29,10 @@ export function RoundSummary({
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
   return (
-    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-3xl border-border/50 text-center shadow-lg">
+    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-xl border-border/50 text-center shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl font-extrabold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Hoàn thành vòng {roundIndex + 1}
+          Hoàn tất vòng {roundIndex + 1}
         </CardTitle>
         <CardDescription>{MODE_LABELS[mode] ?? mode}</CardDescription>
       </CardHeader>

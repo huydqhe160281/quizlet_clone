@@ -11,6 +11,7 @@ type StudySettingsModalProps = {
   totalCards: number;
   newWordCount: number;
   initialMode?: StudyModeValue;
+  hideModeSelect?: boolean;
 };
 
 export function StudySettingsModal({
@@ -20,6 +21,7 @@ export function StudySettingsModal({
   totalCards,
   newWordCount,
   initialMode,
+  hideModeSelect = false,
 }: StudySettingsModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -27,7 +29,9 @@ export function StudySettingsModal({
         <DialogHeader>
           <DialogTitle>Tùy chỉnh phiên học</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Chọn chế độ và cấu hình vòng luyện tập — {totalCards} thẻ sẵn sàng.
+            {hideModeSelect
+              ? `Cấu hình vòng luyện tập — ${totalCards} thẻ sẵn sàng.`
+              : `Chọn chế độ và cấu hình vòng luyện tập — ${totalCards} thẻ sẵn sàng.`}
           </p>
         </DialogHeader>
         {open ? (
@@ -37,6 +41,7 @@ export function StudySettingsModal({
             newWordCount={newWordCount}
             variant="modal"
             initialMode={initialMode}
+            hideModeSelect={hideModeSelect}
             onClose={() => onOpenChange(false)}
           />
         ) : null}

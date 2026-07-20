@@ -54,7 +54,7 @@ The system SHALL provide daily review counts for the past 365 days to render a G
 
 - **GIVEN** user reviewed 15 cards yesterday and 0 cards today
 - **WHEN** GET `/api/v1/dashboard/activity`
-- **THEN** response includes `{ date: "yesterday", count: 15 }` and today is omitted (or `count: 0`)
+- **THEN** response includes daily counts for the past 365 days (zero-filled), aggregating spaced-repetition `reviewHistory` and answered `sessionCard` rows
 
 #### Scenario: Performance
 
@@ -66,15 +66,21 @@ The system SHALL provide daily review counts for the past 365 days to render a G
 
 ### Requirement: Recent Sessions
 
-The system SHALL display the 5 most recent study sessions on the Dashboard, showing set name, mode, timestamp, and card count.
+The system SHALL display up to 5 recent study sessions on the Dashboard, **grouped by set + mode** (one row per set/mode: prefer completed, else highest progress, else newest), showing set name, mode, progress percent (`answeredCount / totalCards`), and status. When completed, accuracy (`score` = `correctCount / totalCards`) MAY be shown separately from progress.
 **Constraint**: MUST
-**Verification**: Integration test `dashboard/recent-sessions.test.ts`
+**Verification**: Unit test `stats.service.test.ts` (`getRecentSessions`)
 
 #### Scenario: Recent Sessions List
 
-- **GIVEN** user completed 8 study sessions in the past week
-- **WHEN** GET `/api/v1/dashboard/recent-sessions`
-- **THEN** response returns the 5 most recent sessions ordered by `completedAt DESC`, each containing: `setTitle`, `mode`, `completedAt`, `cardCount`
+- **GIVEN** user finished round 1 of a 10-card LEARN session (7 cards answered if `cardsPerRound=7`, or 10 if one round)
+- **WHEN** Dashboard loads
+- **THEN** Recent sessions shows that session with progress ≈ answered/total (e.g. 70% or 100%), labeled in-progress until `completedAt` is set
+
+#### Scenario: Multiple Incomplete Sessions Same Set
+
+- **GIVEN** user has two in-progress LEARN sessions for the same set (e.g. from Strict Mode remount or restart)
+- **WHEN** Dashboard loads Recent sessions
+- **THEN** only one row is shown for that set+mode (the higher-progress or newer session)
 
 #### Scenario: No Sessions Yet
 

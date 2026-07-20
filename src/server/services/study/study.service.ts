@@ -155,6 +155,8 @@ export async function recordSessionAnswersBatch(
 export async function completeSession(sessionId: string, userId: string, correctCount: number) {
   const session = await getOwnedSession(sessionId, userId);
 
+  // `score` is accuracy at completion (correctCount / totalCards), NOT study progress.
+  // Progress (answered/total) is derived live from SessionCard.answeredAt for the Dashboard.
   const score = session.totalCards > 0 ? correctCount / session.totalCards : 0;
 
   return prisma.studySession.update({

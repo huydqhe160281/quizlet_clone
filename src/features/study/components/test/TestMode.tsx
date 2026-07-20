@@ -12,6 +12,10 @@ import { StudyModeShell } from '@/features/study/components/shared/StudyModeShel
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { generateTestQuestions, type TestQuestion } from '@/features/study/lib/test-generator';
+import {
+  studyContinueLabel,
+  studyProgressWhileFeedback,
+} from '@/features/study/lib/study-continue-label';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
 
@@ -137,12 +141,16 @@ export function TestMode({ setId }: TestModeProps) {
       setId={setId}
       modeLabel="Kiểm tra"
       progress={{
-        current: questionIndex + 1,
-        total: questions.length,
+        ...studyProgressWhileFeedback(
+          roundEndedThisStep,
+          lastRoundTotal,
+          questionIndex,
+          questions.length
+        ),
         label: 'Tiến trình bài kiểm tra',
       }}
     >
-      <div className="glass-panel rounded-3xl border border-border/50 p-6 shadow-sm md:p-8">
+      <div className="glass-panel rounded-xl border border-border/50 p-6 shadow-sm md:p-8">
         <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           <FileCheck className="h-3.5 w-3.5 text-rose-500" />
           <span>{QUESTION_TYPE_LABELS[currentQuestion.type]}</span>
@@ -278,7 +286,7 @@ export function TestMode({ setId }: TestModeProps) {
             </div>
           </div>
           <Button type="button" className="shrink-0 font-bold" onClick={goNext}>
-            {roundEndedThisStep ? 'Hoàn thành vòng' : 'Câu tiếp theo'}
+            {studyContinueLabel(roundEndedThisStep, 'Câu tiếp theo')}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

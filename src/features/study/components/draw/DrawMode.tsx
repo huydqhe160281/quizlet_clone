@@ -8,6 +8,7 @@ import { StudyModeShell } from '@/features/study/components/shared/StudyModeShel
 import { HanziWriterCanvas } from '@/features/study/components/draw/HanziWriterCanvas';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { HINT_DISPLAY_MS } from '@/features/study/lib/draw-config';
+import { studyProgressWhileFeedback } from '@/features/study/lib/study-continue-label';
 import type { StudyCard } from '@/features/study/store';
 
 type DrawModeProps = {
@@ -122,12 +123,16 @@ export function DrawMode({ setId }: DrawModeProps) {
       setId={setId}
       modeLabel="Viết chữ (CJK)"
       progress={{
-        current: study.currentIndex + 1,
-        total: roundCards.length,
+        ...studyProgressWhileFeedback(
+          roundEndedThisStep,
+          lastRoundTotal,
+          study.currentIndex,
+          roundCards.length
+        ),
         label: 'Tiến trình luyện viết',
       }}
     >
-      <div className="glass-panel rounded-3xl border border-border/50 p-6 text-center shadow-sm md:p-8">
+      <div className="glass-panel rounded-xl border border-border/50 p-6 text-center shadow-sm md:p-8">
         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           Vẽ ký tự cho định nghĩa
         </p>

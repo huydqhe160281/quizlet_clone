@@ -11,6 +11,10 @@ import { StudyModeShell } from '@/features/study/components/shared/StudyModeShel
 import { speakStudyText } from '@/features/study/components/flashcard/FlashcardViewer';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { resolveLearnMcq } from '@/features/study/lib/test-generator';
+import {
+  studyContinueLabel,
+  studyProgressWhileFeedback,
+} from '@/features/study/lib/study-continue-label';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
@@ -176,12 +180,16 @@ export function LearnMode({ setId }: LearnModeProps) {
       setId={setId}
       modeLabel="Học & Nhớ"
       progress={{
-        current: study.currentIndex + 1,
-        total: roundCards.length,
+        ...studyProgressWhileFeedback(
+          roundEndedThisStep,
+          lastRoundTotal,
+          study.currentIndex,
+          roundCards.length
+        ),
         label: 'Tiến trình trắc nghiệm',
       }}
     >
-      <div className="glass-panel space-y-6 rounded-3xl border border-border/50 p-6 shadow-sm md:p-8">
+      <div className="glass-panel space-y-6 rounded-xl border border-border/50 p-6 shadow-sm md:p-8">
         <div className="space-y-2">
           <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             <HelpCircle className="h-3.5 w-3.5 text-primary" />
@@ -309,7 +317,7 @@ export function LearnMode({ setId }: LearnModeProps) {
             </div>
           </div>
           <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
-            {roundEndedThisStep ? 'Hoàn thành vòng' : 'Tiếp tục'}
+            {studyContinueLabel(roundEndedThisStep)}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

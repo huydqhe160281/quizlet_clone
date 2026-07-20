@@ -174,33 +174,117 @@ export async function getStats(userId: string) {
 
 export async function getActivity(userId: string, days = 365) {
   const since = new Date();
-  since.setDate(since.getDate() - days);
+  since.setUTCDate(since.getUTCDate() - (days - 1));
+  since.setUTCHours(0, 0, 0, 0);
 
-  const reviews = await prisma.reviewHistory.findMany({
-    where: { userId, reviewedAt: { gte: since } },
-    select: { reviewedAt: true },
-  });
+  const [reviewRows, sessionRows] = await Promise.all([
+    prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
+      SELECT to_char("reviewedAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
+             COUNT(*)::bigint AS count
+      FROM "review_history"
+      WHERE "userId" = ${userId} AND "reviewedAt" >= ${since}
+      GROUP BY 1
+    `,
+    prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
+      SELECT to_char(sc."answeredAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
+             COUNT(*)::bigint AS count
+      FROM "session_cards" sc
+      INNER JOIN "study_sessions" ss ON ss.id = sc."sessionId"
+      WHERE ss."userId" = ${userId}
+        AND sc."answeredAt" IS NOT NULL
+        AND sc."answeredAt" >= ${since}
+      GROUP BY 1
+    `,
+  ]);
 
   const counts = new Map<string, number>();
-  reviews.forEach((review) => {
-    const key = review.reviewedAt.toISOString().slice(0, 10);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  });
+  const bump = (day: string, count: bigint) => {
+    counts.set(day, (counts.get(day) ?? 0) + Number(count));
+  };
 
-  return Array.from(counts.entries())
-    .map(([date, count]) => ({ date, count }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  reviewRows.forEach((row) => bump(row.day, row.count));
+  sessionRows.forEach((row) => bump(row.day, row.count));
+
+  const today = new Date();
+  const endUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
+  const startUtc = endUtc - (days - 1) * 24 * 60 * 60 * 1000;
+
+  return Array.from({ length: days }, (_, index) => {
+    const key = new Date(startUtc + index * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    return { date: key, count: counts.get(key) ?? 0 };
+  });
 }
 
 export async function getRecentSessions(userId: string, limit = 5) {
-  return prisma.studySession.findMany({
-    where: { userId, completedAt: { not: null } },
+  // Fetch extra rows so we can collapse multiple in-progress runs of the same set+mode.
+  const fetchTake = Math.min(50, Math.max(limit * 8, limit));
+
+  const sessions = await prisma.studySession.findMany({
+    where: {
+      userId,
+      OR: [
+        { completedAt: { not: null } },
+        { sessionCards: { some: { answeredAt: { not: null } } } },
+      ],
+    },
     include: {
       set: { select: { id: true, title: true } },
+      _count: {
+        select: {
+          sessionCards: { where: { answeredAt: { not: null } } },
+        },
+      },
     },
     orderBy: { startedAt: 'desc' },
-    take: limit,
+    take: fetchTake,
   });
+
+  const mapped = sessions.map(({ _count, ...session }) => {
+    const answeredCount = _count.sessionCards;
+    const progress = session.totalCards > 0 ? Math.min(1, answeredCount / session.totalCards) : 0;
+    // `score` / `accuracy` = correct/total when completed; null while in progress.
+    const accuracy = session.score;
+    return {
+      ...session,
+      answeredCount,
+      progress,
+      accuracy,
+    };
+  });
+
+  const bySetMode = new Map<string, (typeof mapped)[number]>();
+  for (const session of mapped) {
+    const key = `${session.setId}:${session.mode}`;
+    const previous = bySetMode.get(key);
+    if (!previous) {
+      bySetMode.set(key, session);
+      continue;
+    }
+    bySetMode.set(key, pickPreferredRecentSession(previous, session));
+  }
+
+  return Array.from(bySetMode.values())
+    .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
+    .slice(0, limit);
+}
+
+/** Prefer completed, else higher progress, else more recently started. */
+function pickPreferredRecentSession<
+  T extends {
+    completedAt: Date | null;
+    progress: number;
+    startedAt: Date;
+  },
+>(a: T, b: T): T {
+  const aDone = a.completedAt != null;
+  const bDone = b.completedAt != null;
+  if (aDone !== bDone) {
+    return aDone ? a : b;
+  }
+  if (a.progress !== b.progress) {
+    return a.progress >= b.progress ? a : b;
+  }
+  return a.startedAt >= b.startedAt ? a : b;
 }
 
 export function calculateStreakAfterReview(

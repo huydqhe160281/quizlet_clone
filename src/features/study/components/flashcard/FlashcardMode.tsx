@@ -296,7 +296,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
             <div>
               <h3 className="text-base font-bold">Bạn đã xem hết thẻ trong vòng này!</h3>
               <p className="mt-0.5 text-xs text-primary-foreground/80">
-                Tiếp tục để hoàn thành vòng hoặc quay lại học phần.
+                Bấm tiếp để sang vòng sau, hoặc học hết các vòng để lưu phiên trên Dashboard.
               </p>
             </div>
           </div>
@@ -306,7 +306,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
             className={cn('shrink-0 font-extrabold')}
             onClick={() => void goNext()}
           >
-            {study.currentIndex >= roundCards.length - 1 ? 'Hoàn thành vòng' : 'Tiếp tục'}
+            {study.currentIndex >= roundCards.length - 1 ? 'Vòng tiếp theo' : 'Tiếp tục'}
           </Button>
         </div>
       )}
@@ -320,7 +320,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
           onClick={() => void goNext()}
         >
           <Layers className="mr-2 h-4 w-4" />
-          {study.currentIndex >= roundCards.length - 1 ? 'Kết thúc vòng' : 'Thẻ tiếp theo'}
+          {study.currentIndex >= roundCards.length - 1 ? 'Vòng tiếp theo' : 'Thẻ tiếp theo'}
         </Button>
       </div>
     </StudyModeShell>

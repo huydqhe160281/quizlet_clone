@@ -234,6 +234,7 @@ model StudySession {
   completedAt  DateTime?
   totalCards   Int        @default(0)
   correctCount Int        @default(0)
+  /// Accuracy at completion: correctCount / totalCards. Not study progress (answered/total).
   score        Float?
   settings     Json?
 

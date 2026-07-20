@@ -55,7 +55,7 @@ export function FlashcardViewer({
       >
         <div
           className={cn(
-            'absolute inset-0 flex flex-col justify-between rounded-3xl border border-border/50 bg-card/90 p-6 shadow-lg backface-hidden backdrop-blur-sm'
+            'absolute inset-0 flex flex-col justify-between rounded-xl border border-border/50 bg-card/90 p-6 shadow-lg backface-hidden backdrop-blur-sm'
           )}
         >
           <div className="flex items-center justify-between text-muted-foreground">
@@ -96,7 +96,7 @@ export function FlashcardViewer({
 
         <div
           className={cn(
-            'absolute inset-0 flex flex-col justify-between rounded-3xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-lg backface-hidden rotate-y-180'
+            'absolute inset-0 flex flex-col justify-between rounded-xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-lg backface-hidden rotate-y-180'
           )}
         >
           <div className="flex items-center justify-between text-primary-foreground/70">

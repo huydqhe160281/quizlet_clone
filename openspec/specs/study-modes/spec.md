@@ -142,7 +142,7 @@ The system SHALL create a StudySession record at session start and update it on 
 
 - **GIVEN** user finishes reviewing all cards
 - **WHEN** PATCH `/api/v1/study/sessions/:id` is called with `{ completedAt, correctCount }`
-- **THEN** `score = correctCount / totalCards` is calculated and stored
+- **THEN** `score = correctCount / totalCards` (accuracy at completion) is calculated and stored. This is distinct from Dashboard **progress** (`answeredCount / totalCards`).
 
 ---
 

@@ -26,6 +26,12 @@ The system SHALL define a unified design token set covering color, typography, s
 - **WHEN** `<html>` receives class `dark`
 - **THEN** all semantic color tokens resolve from the `.dark` block with sufficient contrast for text and interactive elements
 
+#### Scenario: Subtle border radius scale
+
+- **GIVEN** `--radius` is defined in `globals.css` (default `0.75rem`)
+- **WHEN** components use Tailwind radius classes
+- **THEN** `sm`/`md`/`lg`/`xl`/`2xl`/`3xl` resolve from that token via `tailwind.config.ts` and stay within ~8–16px (no pill-like panels except intentional `rounded-full`)
+
 ---
 
 ### Requirement: Glass Surface Utilities

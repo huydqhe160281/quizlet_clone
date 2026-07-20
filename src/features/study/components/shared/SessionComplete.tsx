@@ -29,7 +29,7 @@ export function SessionComplete({
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
 
   return (
-    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-3xl border-border/50 text-center shadow-lg">
+    <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-xl border-border/50 text-center shadow-lg">
       <CardHeader className="space-y-3">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Award className="h-10 w-10" />

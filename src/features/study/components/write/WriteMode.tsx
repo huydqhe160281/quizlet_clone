@@ -11,6 +11,10 @@ import { StudySessionError } from '@/features/study/components/shared/StudySessi
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
+import {
+  studyContinueLabel,
+  studyProgressWhileFeedback,
+} from '@/features/study/lib/study-continue-label';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
 
@@ -129,12 +133,16 @@ export function WriteMode({ setId }: WriteModeProps) {
       setId={setId}
       modeLabel="Gõ đáp án"
       progress={{
-        current: study.currentIndex + 1,
-        total: roundCards.length,
+        ...studyProgressWhileFeedback(
+          roundEndedThisStep,
+          lastRoundTotal,
+          study.currentIndex,
+          roundCards.length
+        ),
         label: 'Tiến trình viết',
       }}
     >
-      <div className="glass-panel rounded-3xl border border-border/50 p-6 text-center shadow-sm md:p-8">
+      <div className="glass-panel rounded-xl border border-border/50 p-6 text-center shadow-sm md:p-8">
         <div className="mb-2 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           <Edit3 className="h-3.5 w-3.5 text-amber-500" />
           <span>Gõ đáp án cho thuật ngữ sau</span>
@@ -195,7 +203,7 @@ export function WriteMode({ setId }: WriteModeProps) {
             </div>
           </div>
           <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
-            {roundEndedThisStep ? 'Hoàn thành vòng' : 'Tiếp tục'}
+            {studyContinueLabel(roundEndedThisStep)}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

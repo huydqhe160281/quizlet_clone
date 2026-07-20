@@ -21,11 +21,12 @@ export function VirtualList<T>({
     count: items.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => estimateSize,
-    overscan: 6,
+    overscan: 8,
+    measureElement: (element) => Math.ceil(element.getBoundingClientRect().height),
   });
 
   return (
-    <div ref={parentRef} className={className ?? 'h-[480px] overflow-auto rounded-md border'}>
+    <div ref={parentRef} className={className ?? 'h-[min(70vh,720px)] overflow-auto pr-1'}>
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -38,6 +39,9 @@ export function VirtualList<T>({
           return (
             <div
               key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
+              className="pb-4"
               style={{
                 position: 'absolute',
                 top: 0,

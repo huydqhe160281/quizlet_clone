@@ -2,6 +2,8 @@ import { requireUserId } from '@/server/auth/auth-utils';
 import { getActivity, getRecentSessions, getStats } from '@/server/services/user/stats.service';
 import { DashboardClient } from '@/features/dashboard/components/DashboardClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const userId = await requireUserId();
   const [stats, activity, sessions] = await Promise.all([

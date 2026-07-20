@@ -131,7 +131,7 @@ Closing the modal via Dialog X, Escape, or overlay click without Discard SHALL l
 
 ### Requirement: Glassmorphism consistency
 
-Modal styling SHALL match existing glass-panel design tokens (border, backdrop blur, rounded-2xl).
+Modal styling SHALL match existing glass-panel design tokens (border, backdrop blur, rounded-xl).
 **Constraint**: SHOULD
 **Verification**: Visual review against `SetsListClient` cards.
 

@@ -84,7 +84,7 @@ export default function LandingPage() {
         ].map((feature) => (
           <Card
             key={feature.title}
-            className="glass-panel relative overflow-hidden rounded-[2rem] border-white/20 bg-card/40 p-4 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group"
+            className="glass-panel relative overflow-hidden rounded-xl border-white/20 bg-card/40 p-4 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group"
           >
             <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl transition-all duration-500 group-hover:bg-primary/30" />
             <CardHeader className="relative z-10">

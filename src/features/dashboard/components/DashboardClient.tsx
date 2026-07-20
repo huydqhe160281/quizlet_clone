@@ -28,31 +28,38 @@ type DashboardClientProps = {
   sessions: Array<{
     id: string;
     mode: string;
+    /** Accuracy at completion — not progress. */
     score: number | null;
+    accuracy?: number | null;
     totalCards: number;
     correctCount: number;
+    answeredCount?: number;
+    progress?: number;
+    completedAt: string | Date | null;
     set: { id: string; title: string };
   }>;
 };
 
 export function DashboardClient({ stats, activity, sessions }: DashboardClientProps) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 mb-8">
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-transparent">
+    <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div className="mb-2 flex flex-col gap-2">
+        <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
           Dashboard
         </h1>
-        <p className="text-lg text-muted-foreground font-medium">
+        <p className="text-lg font-medium text-muted-foreground">
           Your study overview and progress.
         </p>
       </div>
+
       <DueCardsAlert dueCount={stats.dueToday} />
       <StatsCards stats={stats} />
       <ActivityHeatmap activity={activity} />
-      <div className="glass-panel relative overflow-hidden rounded-[2rem] p-6 shadow-xl dark:shadow-none mt-8 border-white/20 dark:border-white/5">
-        <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-        <h3 className="mb-6 text-xl font-bold tracking-tight relative z-10 flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+
+      <div className="glass-panel relative overflow-hidden rounded-xl border-white/20 p-5 shadow-sm dark:border-white/5 dark:shadow-none">
+        <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <h3 className="relative z-10 mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <span className="h-2 w-2 rounded-full bg-primary" />
           Recent sessions
         </h3>
         <div className="relative z-10">

@@ -15,7 +15,9 @@ const prismaMock = vi.hoisted(() => ({
   flashcard: { count: vi.fn() },
   cardProgress: { count: vi.fn() },
   reviewHistory: { findMany: vi.fn() },
+  sessionCard: { findMany: vi.fn() },
   studySession: { findMany: vi.fn() },
+  $queryRaw: vi.fn(),
 }));
 
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
@@ -93,16 +95,19 @@ describe('dashboard stats service', () => {
   });
 
   it('test_activity_heatmap_performance: aggregates review history quickly', async () => {
-    const reviews = Array.from({ length: 500 }, (_, index) => ({
-      reviewedAt: new Date(Date.UTC(2026, 0, 1 + (index % 365))),
-    }));
-    prismaMock.reviewHistory.findMany.mockResolvedValue(reviews);
+    prismaMock.$queryRaw
+      .mockResolvedValueOnce([{ day: '2026-01-01', count: BigInt(3) }])
+      .mockResolvedValueOnce([]);
 
     const started = performance.now();
     const activity = await getActivity('user-a', 365);
     const elapsed = performance.now() - started;
 
-    expect(activity.length).toBeGreaterThan(0);
+    expect(activity.length).toBe(365);
+    expect(activity.every((day) => typeof day.count === 'number')).toBe(true);
+    expect(activity[0]?.date < activity[activity.length - 1]?.date).toBe(true);
+    expect(activity.some((day) => day.count === 0)).toBe(true);
+    expect(activity.some((day) => day.count === 3)).toBe(true);
     expect(elapsed).toBeLessThan(200);
   });
 
@@ -142,11 +147,82 @@ describe('dashboard stats service', () => {
 
   it('test_get_recent_sessions: returns completed sessions', async () => {
     prismaMock.studySession.findMany.mockResolvedValue([
-      { id: 's1', set: { id: 'set-1', title: 'Vocab' } },
+      {
+        id: 's1',
+        setId: 'set-1',
+        mode: 'LEARN',
+        totalCards: 10,
+        correctCount: 7,
+        score: null,
+        startedAt: new Date('2026-06-17T12:00:00.000Z'),
+        completedAt: null,
+        set: { id: 'set-1', title: 'Vocab' },
+        _count: { sessionCards: 7 },
+      },
     ]);
 
     const sessions = await getRecentSessions('user-a', 3);
     expect(sessions).toHaveLength(1);
+    expect(sessions[0]?.answeredCount).toBe(7);
+    expect(sessions[0]?.progress).toBe(0.7);
+    expect(sessions[0]?.accuracy).toBeNull();
+    expect(prismaMock.studySession.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId: 'user-a',
+        }),
+        orderBy: { startedAt: 'desc' },
+        take: 24,
+      })
+    );
+  });
+
+  it('test_get_recent_sessions: groups by set and mode', async () => {
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        id: 's-new',
+        setId: 'set-1',
+        mode: 'LEARN',
+        totalCards: 10,
+        correctCount: 0,
+        score: null,
+        startedAt: new Date('2026-06-18T12:00:00.000Z'),
+        completedAt: null,
+        set: { id: 'set-1', title: 'Vocab' },
+        _count: { sessionCards: 2 },
+      },
+      {
+        id: 's-old',
+        setId: 'set-1',
+        mode: 'LEARN',
+        totalCards: 10,
+        correctCount: 0,
+        score: null,
+        startedAt: new Date('2026-06-17T12:00:00.000Z'),
+        completedAt: null,
+        set: { id: 'set-1', title: 'Vocab' },
+        _count: { sessionCards: 7 },
+      },
+      {
+        id: 's-other',
+        setId: 'set-2',
+        mode: 'LEARN',
+        totalCards: 5,
+        correctCount: 4,
+        score: 0.8,
+        startedAt: new Date('2026-06-16T12:00:00.000Z'),
+        completedAt: new Date('2026-06-16T12:30:00.000Z'),
+        set: { id: 'set-2', title: 'Kanji' },
+        _count: { sessionCards: 5 },
+      },
+    ]);
+
+    const sessions = await getRecentSessions('user-a', 5);
+    expect(sessions).toHaveLength(2);
+    expect(sessions[0]?.id).toBe('s-old');
+    expect(sessions[0]?.progress).toBe(0.7);
+    expect(sessions[1]?.id).toBe('s-other');
+    expect(sessions[1]?.accuracy).toBe(0.8);
   });
 
   it('test_get_dashboard_stats_unauthorized: rejects missing user id', async () => {

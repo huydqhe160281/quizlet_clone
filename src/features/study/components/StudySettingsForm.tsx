@@ -17,7 +17,8 @@ import {
 } from '@/components/ui/select';
 import type { StudyModeValue, StudySessionSettings } from '@/features/study/schemas/study.schema';
 import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
-import { notifyStreakUpdated, type StreakUpdatedDetail } from '@/lib/streak/streak-client';
+import { createStudySessionOnce } from '@/features/study/lib/create-session-once';
+import { notifyStreakUpdated } from '@/lib/streak/streak-client';
 
 type StudySettingsFormProps = {
   setId: string;
@@ -26,6 +27,8 @@ type StudySettingsFormProps = {
   newWordCount: number;
   variant?: 'page' | 'modal';
   initialMode?: StudyModeValue;
+  /** When true, mode is locked (chosen from launcher cards) and the mode select is hidden. */
+  hideModeSelect?: boolean;
   onClose?: () => void;
 };
 
@@ -35,6 +38,7 @@ export function StudySettingsForm({
   newWordCount,
   variant = 'page',
   initialMode = 'FLASHCARD',
+  hideModeSelect = false,
   onClose,
 }: StudySettingsFormProps) {
   const router = useRouter();
@@ -72,57 +76,58 @@ export function StudySettingsForm({
   }, [mode, newWordCount]);
 
   const handleStart = async () => {
+    if (loading) return;
     setLoading(true);
     setError(null);
 
-    const response = await fetch('/api/v1/study/sessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ setId, mode, settings }),
-    });
-
-    setLoading(false);
-
-    if (!response.ok) {
-      const payload = (await response.json()) as { message?: string };
-      setError(payload.message ?? 'Không thể bắt đầu phiên học');
-      return;
+    try {
+      const payload = await createStudySessionOnce(setId, mode, settings);
+      if (payload.streak) {
+        notifyStreakUpdated(payload.streak);
+      }
+      onClose?.();
+      const modeParam = mode.toLowerCase();
+      router.push(`/sets/${setId}/${modeParam}?sessionId=${payload.data.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể bắt đầu phiên học');
+    } finally {
+      setLoading(false);
     }
-
-    const payload = (await response.json()) as {
-      data: { id: string };
-      streak?: StreakUpdatedDetail;
-    };
-    if (payload.streak) {
-      notifyStreakUpdated(payload.streak);
-    }
-    onClose?.();
-    const modeParam = mode.toLowerCase();
-    router.push(`/sets/${setId}/${modeParam}?sessionId=${payload.data.id}`);
   };
 
   const formFields = (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="study-mode">Chế độ học</Label>
-        <Select value={mode} onValueChange={(value) => setMode(value as StudyModeValue)}>
-          <SelectTrigger id="study-mode" className="rounded-xl">
-            <SelectValue placeholder="Chọn chế độ" />
-          </SelectTrigger>
-          <SelectContent>
-            {modes.map((item) => (
-              <SelectItem key={item.value} value={item.value} disabled={item.disabled}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {newWordCount === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Không có thẻ &quot;từ mới&quot; trong bộ này — chế độ Viết chữ bị vô hiệu hóa.
-          </p>
-        )}
-      </div>
+      {!hideModeSelect && (
+        <div className="space-y-2">
+          <Label htmlFor="study-mode">Chế độ học</Label>
+          <Select value={mode} onValueChange={(value) => setMode(value as StudyModeValue)}>
+            <SelectTrigger id="study-mode" className="rounded-xl">
+              <SelectValue placeholder="Chọn chế độ" />
+            </SelectTrigger>
+            <SelectContent>
+              {modes.map((item) => (
+                <SelectItem key={item.value} value={item.value} disabled={item.disabled}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {newWordCount === 0 && (
+            <p className="text-xs text-muted-foreground">
+              Không có thẻ &quot;từ mới&quot; trong bộ này — chế độ Viết chữ bị vô hiệu hóa.
+            </p>
+          )}
+        </div>
+      )}
+
+      {hideModeSelect && (
+        <p className="text-sm text-muted-foreground">
+          Chế độ:{' '}
+          <span className="font-semibold text-foreground">
+            {modes.find((item) => item.value === mode)?.label ?? mode}
+          </span>
+        </p>
+      )}
 
       {mode === 'LEARN' && (
         <>

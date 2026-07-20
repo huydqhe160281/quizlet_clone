@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -93,22 +92,31 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
   const [hoveredMode, setHoveredMode] = useState<StudyModeValue | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [initialMode, setInitialMode] = useState<StudyModeValue>('FLASHCARD');
+  const [hideModeSelect, setHideModeSelect] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('studySettings') === '1') {
+      setHideModeSelect(false);
+      setInitialMode('FLASHCARD');
       setSettingsOpen(true);
       router.replace(`/sets/${setId}`, { scroll: false });
     }
   }, [router, searchParams, setId]);
 
-  const openSettings = (mode: StudyModeValue = 'FLASHCARD') => {
-    setInitialMode(mode);
+  const openSettings = (mode?: StudyModeValue) => {
+    if (mode) {
+      setInitialMode(mode);
+      setHideModeSelect(true);
+    } else {
+      setInitialMode('FLASHCARD');
+      setHideModeSelect(false);
+    }
     setSettingsOpen(true);
   };
 
   if (cardCount === 0) {
     return (
-      <Card className="glass-panel overflow-hidden rounded-2xl border-border/50">
+      <Card className="glass-panel overflow-hidden rounded-xl border-border/50">
         <CardHeader>
           <CardTitle>Luyện tập</CardTitle>
           <CardDescription>Thêm ít nhất một thẻ trước khi bắt đầu học.</CardDescription>
@@ -131,7 +139,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
             className="rounded-xl shadow-sm"
             onClick={() => openSettings()}
           >
-            <Settings2 className="sm:mr-2 h-4 w-4" />
+            <Settings2 className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Tùy chỉnh phiên học</span>
           </Button>
         </div>
@@ -178,7 +186,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
               return (
                 <div
                   key={mode.value}
-                  className="glass-panel flex cursor-not-allowed items-start gap-4 rounded-2xl border border-border/50 p-5 opacity-60"
+                  className="glass-panel flex cursor-not-allowed items-start gap-4 rounded-xl border border-border/50 p-5 opacity-60"
                 >
                   {content}
                 </div>
@@ -186,20 +194,21 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
             }
 
             return (
-              <Link
+              <button
                 key={mode.value}
-                href={`/sets/${setId}/${mode.href}`}
+                type="button"
+                onClick={() => openSettings(mode.value)}
                 onMouseEnter={() => setHoveredMode(mode.value)}
                 onMouseLeave={() => setHoveredMode(null)}
                 className={cn(
-                  'glass-panel group flex items-start gap-4 rounded-2xl border border-border/50 p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-primary/30 animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',
+                  'glass-panel group flex items-start gap-4 rounded-xl border border-border/50 p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',
                   mode.accentClass
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {content}
                 <Sparkles className="ml-auto hidden h-4 w-4 shrink-0 text-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:block" />
-              </Link>
+              </button>
             );
           })}
         </div>
@@ -212,6 +221,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
         totalCards={cardCount}
         newWordCount={newWordCount}
         initialMode={initialMode}
+        hideModeSelect={hideModeSelect}
       />
     </>
   );
