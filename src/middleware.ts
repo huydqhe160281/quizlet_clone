@@ -21,12 +21,6 @@ export default auth((req) => {
     return Response.redirect(loginUrl);
   }
 
-  const isAuthPageOrRoot = pathname === '/' || pathname === '/login' || pathname === '/register';
-  if (isAuthPageOrRoot && req.auth) {
-    const dashboardUrl = new URL('/dashboard', req.nextUrl.origin);
-    return Response.redirect(dashboardUrl);
-  }
-
   // Cookie is kept in sync with DB via login-sync + preference PATCH (ADR-002).
   const plan = planRequestLocale({
     cookieLocale: req.cookies.get(APP_LOCALE_COOKIE)?.value,

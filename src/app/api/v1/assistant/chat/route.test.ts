@@ -6,7 +6,9 @@ const streamAssistantChatMock = vi.hoisted(() =>
     toTextStreamResponse: vi.fn(() => new Response('ok', { status: 200 })),
   }))
 );
-const rateLimitMock = vi.hoisted(() => ({ check: vi.fn(() => false) }));
+const rateLimitMock = vi.hoisted(() => ({
+  check: vi.fn(async () => ({ limited: false, retryAfterSec: 60 })),
+}));
 
 vi.mock('@/server/auth/auth', () => ({ auth: authMock }));
 vi.mock('@/server/services/ai/assistant.service', () => ({
@@ -15,6 +17,9 @@ vi.mock('@/server/services/ai/assistant.service', () => ({
 }));
 vi.mock('@/server/services/user/user-context.service', () => ({
   getGuideUserContext: vi.fn(),
+}));
+vi.mock('@/lib/i18n/getRequestLocale', () => ({
+  getRequestLocale: vi.fn(async () => 'vi'),
 }));
 vi.mock('@/lib/rate-limit/rate-limit', () => ({
   assistantGuestRateLimit: rateLimitMock,
@@ -27,7 +32,7 @@ describe('assistant chat route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     authMock.mockResolvedValue(null);
-    rateLimitMock.check.mockReturnValue(false);
+    rateLimitMock.check.mockResolvedValue({ limited: false, retryAfterSec: 60 });
     streamAssistantChatMock.mockReturnValue({
       toTextStreamResponse: vi.fn(() => new Response('ok', { status: 200 })),
     });
@@ -59,7 +64,7 @@ describe('assistant chat route', () => {
   });
 
   it('returns 429 when guest rate limited', async () => {
-    rateLimitMock.check.mockReturnValue(true);
+    rateLimitMock.check.mockResolvedValue({ limited: true, retryAfterSec: 60 });
     const req = new Request('http://localhost/api/v1/assistant/chat', {
       method: 'POST',
       body: JSON.stringify({

@@ -1,5 +1,7 @@
 {
-  "app": { "name": "QuizFree" },
+  "app": {
+    "name": "QuizFree"
+  },
   "greeting": "Xin chào {name}",
   "seo": {
     "title": "QuizFree — Học tập & ôn thi miễn phí",
@@ -7,7 +9,9 @@
     "libraryTitle": "Thư viện công khai",
     "libraryDescription": "Khám phá và sao chép các bộ thẻ ghi nhớ công khai từ cộng đồng QuizFree. Học tập và ôn thi miễn phí.",
     "searchTitle": "Tìm kiếm bộ thẻ",
-    "searchDescription": "Tìm kiếm bộ thẻ ghi nhớ công khai trên QuizFree."
+    "searchDescription": "Tìm kiếm bộ thẻ ghi nhớ công khai trên QuizFree.",
+    "sharedSetDefaultDescription": "Xem và học bộ thẻ \"{title}\" trên {appName} — học tập và ôn thi miễn phí.",
+    "sharedSetNotFoundTitle": "Bộ thẻ không tìm thấy"
   },
   "nav": {
     "dashboard": "Bảng điều khiển",
@@ -30,7 +34,7 @@
   },
   "landing": {
     "headlineBefore": "Học thông minh hơn với",
-    "headlineAccent": "lặp lại ngắt quãng",
+    "headlineAccent": "Lặp lại ngắt quãng",
     "subtitle": "Tạo bộ thẻ, học nhiều chế độ, và ôn đúng lúc — lấy cảm hứng từ Quizlet, tối ưu hiệu năng.",
     "ctaStart": "Học miễn phí ngay",
     "ctaLibrary": "Xem thư viện công khai",
@@ -91,7 +95,7 @@
       "frontToBack": "Câu hỏi (mặt trước) → chọn đáp án (mặt sau)",
       "backToFront": "Câu hỏi (mặt sau) → chọn thuật ngữ (mặt trước)",
       "cardsPerRound": "Số thẻ mỗi vòng",
-      "cardsUnit": "thẻ",
+      "cardsUnit": "Thẻ",
       "cardsRange": "1–{max} thẻ mỗi vòng",
       "randomize": "Xáo trộn thứ tự thẻ",
       "requeueWrong": "Ôn lại câu sai ở vòng tiếp theo",

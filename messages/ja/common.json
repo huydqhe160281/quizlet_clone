@@ -7,7 +7,9 @@
     "libraryTitle": "公開ライブラリ",
     "libraryDescription": "QuizFree コミュニティの公開フラッシュカードセットを見つけて複製。無料で学習・試験対策。",
     "searchTitle": "セットを検索",
-    "searchDescription": "QuizFree の公開フラッシュカードセットを検索します。"
+    "searchDescription": "QuizFree の公開フラッシュカードセットを検索します。",
+    "sharedSetDefaultDescription": "{appName} で「{title}」を学習しましょう — 無料で学習・試験対策。",
+    "sharedSetNotFoundTitle": "フラッシュカードセットが見つかりません"
   },
   "nav": {
     "dashboard": "ダッシュボード",

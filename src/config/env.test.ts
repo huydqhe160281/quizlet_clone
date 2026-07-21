@@ -66,7 +66,7 @@ describe('resolveAuthUrl', () => {
     delete process.env.NEXTAUTH_URL;
     delete process.env.NEXT_PUBLIC_APP_URL;
     delete process.env.VERCEL_URL;
-    process.env.NODE_ENV = 'development';
+    Object.assign(process.env, { NODE_ENV: 'development' });
 
     expect(resolveAuthUrl()).toBe('http://localhost:3000');
   });
@@ -76,7 +76,7 @@ describe('resolveAuthUrl', () => {
     delete process.env.NEXTAUTH_URL;
     delete process.env.NEXT_PUBLIC_APP_URL;
     delete process.env.VERCEL_URL;
-    process.env.NODE_ENV = 'production';
+    Object.assign(process.env, { NODE_ENV: 'production' });
 
     expect(() => resolveAuthUrl()).toThrowError(/Missing required environment variable/);
   });

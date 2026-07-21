@@ -4,16 +4,20 @@ const prismaMock = vi.hoisted(() => ({
   flashcardSet: {
     findUnique: vi.fn(),
   },
+  $transaction: vi.fn(),
   studySession: {
     create: vi.fn(),
     findFirst: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
   sessionCard: {
     findMany: vi.fn(),
     findFirst: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
+    count: vi.fn(),
   },
 }));
 
@@ -36,6 +40,7 @@ import {
   getOwnedSessionForStudy,
   getSessionCards,
   recordSessionAnswer,
+  recordSessionAnswersBatch,
 } from '@/server/services/study/study.service';
 import { recordDailyStudyActivity } from '@/server/services/user/stats.service';
 
@@ -43,6 +48,12 @@ describe('study.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.studySession.findFirst.mockResolvedValue(null);
+    prismaMock.$transaction.mockImplementation(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return (arg as (tx: typeof prismaMock) => unknown)(prismaMock);
+      }
+      return Promise.all(arg as Promise<unknown>[]);
+    });
   });
 
   it('test_study_session_created: creates session with session cards', async () => {
@@ -132,33 +143,57 @@ describe('study.service', () => {
     expect(prismaMock.studySession.create).toHaveBeenCalled();
   });
 
-  it('test_study_session_completed: stores score from correct count', async () => {
-    prismaMock.studySession.findUnique.mockResolvedValue({
-      id: 'session-1',
-      userId: 'user-a',
-      totalCards: 4,
-    });
+  it('test_study_session_completed: derives score from persisted answers', async () => {
+    prismaMock.studySession.findUnique
+      .mockResolvedValueOnce({
+        id: 'session-1',
+        userId: 'user-a',
+        totalCards: 4,
+        completedAt: null,
+      })
+      .mockResolvedValueOnce({
+        id: 'session-1',
+        userId: 'user-a',
+        totalCards: 4,
+        correctCount: 2,
+        score: 0.5,
+        completedAt: new Date(),
+      });
+    prismaMock.sessionCard.count.mockResolvedValue(2);
+    prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
+    prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
 
-    prismaMock.studySession.update.mockResolvedValue({
-      id: 'session-1',
-      correctCount: 3,
-      score: 0.75,
-      completedAt: new Date(),
-    });
+    const { session, streak } = await completeSession('session-1', 'user-a', [
+      { cardId: 'card-1', isCorrect: false },
+    ]);
 
-    const { session, streak } = await completeSession('session-1', 'user-a', 3);
-
-    expect(session.score).toBe(0.75);
+    expect(session.score).toBe(0.5);
     expect(streak.currentStreak).toBe(1);
     expect(recordDailyStudyActivity).toHaveBeenCalledWith('user-a');
-    expect(prismaMock.studySession.update).toHaveBeenCalledWith(
+    expect(prismaMock.studySession.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
+        where: { id: 'session-1', completedAt: null },
         data: expect.objectContaining({
-          correctCount: 3,
-          score: 0.75,
+          correctCount: 2,
+          score: 0.5,
         }),
       })
     );
+  });
+
+  it('recordSessionAnswersBatch: no-op for completed sessions', async () => {
+    prismaMock.studySession.findUnique.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-a',
+      completedAt: new Date(),
+    });
+    const result = await recordSessionAnswersBatch('session-1', 'user-a', [
+      { cardId: 'card-1', isCorrect: true },
+    ]);
+
+    expect(result).toEqual({ recorded: 0 });
+    expect(prismaMock.sessionCard.updateMany).not.toHaveBeenCalled();
   });
 
   it('test_resume_session_records_daily_streak: loads owned session and records activity', async () => {

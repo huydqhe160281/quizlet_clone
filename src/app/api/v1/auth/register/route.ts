@@ -6,8 +6,11 @@ import { hashPassword } from '@/server/auth/password';
 
 export const POST = withErrorHandler(async (req) => {
   const ip = getClientIp(req);
-  if (authRateLimit.check(`register:${ip}`)) {
-    throw new ApiError('RATE_LIMITED', 'Too many requests', 429);
+  const decision = await authRateLimit.check(`register:${ip}`);
+  if (decision.limited) {
+    throw new ApiError('RATE_LIMITED', 'Too many requests', 429, {
+      retryAfter: decision.retryAfterSec,
+    });
   }
 
   const body = await req.json();

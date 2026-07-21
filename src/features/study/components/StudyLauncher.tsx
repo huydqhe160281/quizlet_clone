@@ -128,6 +128,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
             variant="outline"
             size="sm"
             className="rounded-xl shadow-sm"
+            aria-label={t('study.customizeSession')}
             onClick={() => openSettings()}
           >
             <Settings2 className="h-4 w-4 sm:mr-2" />
@@ -135,7 +136,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {MODES.map((mode, index) => {
             const isDrawDisabled = mode.value === 'DRAW' && newWordCount === 0;
             const disabled = mode.disabled || isDrawDisabled;

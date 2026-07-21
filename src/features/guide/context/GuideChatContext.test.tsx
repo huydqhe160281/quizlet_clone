@@ -1,10 +1,11 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
+import { fireEvent, screen, waitFor, cleanup } from '@testing-library/react';
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest';
 import { useState } from 'react';
 import { GuideChatProvider, useGuideChat } from '@/features/guide/context/GuideChatContext';
+import { renderWithLocale } from '@/test/render-with-locale';
 
 function SessionHarness() {
   const [showPanel, setShowPanel] = useState(true);
@@ -51,7 +52,7 @@ describe('GuideChat session', () => {
   });
 
   it('keeps messages when panel consumer unmounts', async () => {
-    render(
+    renderWithLocale(
       <GuideChatProvider>
         <SessionHarness />
       </GuideChatProvider>

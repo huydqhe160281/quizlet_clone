@@ -6,8 +6,11 @@ import { generatePresignedUrl } from '@/server/services/upload.service';
 
 export const POST = withErrorHandler(async (req) => {
   const ip = getClientIp(req);
-  if (uploadRateLimit.check(`upload:${ip}`)) {
-    throw new ApiError('RATE_LIMITED', 'Too many upload requests', 429);
+  const decision = await uploadRateLimit.check(`upload:${ip}`);
+  if (decision.limited) {
+    throw new ApiError('RATE_LIMITED', 'Too many upload requests', 429, {
+      retryAfter: decision.retryAfterSec,
+    });
   }
 
   const userId = await requireUserId();

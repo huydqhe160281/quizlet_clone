@@ -11,7 +11,7 @@ export const GET = withErrorHandler(async () => {
 });
 
 export const POST = withErrorHandler(async (req) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const userId = await requireUserId();
   const body = await req.json();
   const { name } = createFolderSchema.parse(body);

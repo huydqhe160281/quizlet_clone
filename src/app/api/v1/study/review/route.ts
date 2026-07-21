@@ -6,8 +6,11 @@ import { reviewCard } from '@/server/services/study/study.service';
 
 export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();
-  if (reviewRateLimit.check(`review:${userId}`)) {
-    throw new ApiError('RATE_LIMITED', 'Too many review submissions', 429, { retryAfter: 60 });
+  const decision = await reviewRateLimit.check(`review:${userId}`);
+  if (decision.limited) {
+    throw new ApiError('RATE_LIMITED', 'Too many review submissions', 429, {
+      retryAfter: decision.retryAfterSec,
+    });
   }
 
   const body = await req.json();

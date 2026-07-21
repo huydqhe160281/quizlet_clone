@@ -16,13 +16,82 @@ const libraryInclude = {
   tags: { include: { tag: true } },
 } as const;
 
-const paginate = <T extends { id: string }>(items: T[], limit: number) => {
-  const hasMore = items.length > limit;
-  const data = hasMore ? items.slice(0, -1) : items;
+type SearchCursorPayload = {
+  v: 1;
+  kind: 'search';
+  rank: number;
+  createdAt: string;
+  id: string;
+};
+
+type NewestCursorPayload = {
+  v: 1;
+  kind: 'newest';
+  createdAt: string;
+  id: string;
+};
+
+type MostStudiedCursorPayload = {
+  v: 1;
+  kind: 'most_studied';
+  studyCount: number;
+  id: string;
+};
+
+type TrendingCursorPayload = {
+  v: 1;
+  kind: 'trending';
+  studyCount: number;
+  lastStartedAt: string;
+  id: string;
+};
+
+const encodeCursor = (
+  payload:
+    | SearchCursorPayload
+    | NewestCursorPayload
+    | MostStudiedCursorPayload
+    | TrendingCursorPayload
+) => Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+
+function decodeCursor<T extends { v: 1; kind: string }>(
+  cursor: string,
+  expectedKind: T['kind']
+): T {
+  try {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as T;
+    if (parsed?.v !== 1 || parsed?.kind !== expectedKind) {
+      throw new Error('Invalid cursor shape');
+    }
+    return parsed;
+  } catch {
+    throw new ApiError('VALIDATION_ERROR', 'Invalid cursor', 400);
+  }
+}
+
+function parseCursorDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new ApiError('VALIDATION_ERROR', 'Invalid cursor', 400);
+  }
+  return date;
+}
+
+const asNumber = (value: unknown): number => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (Number.isNaN(parsed)) {
+    throw new ApiError('INTERNAL_ERROR', 'Invalid ranking value', 500);
+  }
+  return parsed;
+};
+
+const paginateRows = <T>(rows: T[], limit: number, toCursor: (row: T) => string) => {
+  const hasMore = rows.length > limit;
+  const data = hasMore ? rows.slice(0, limit) : rows;
   return {
     data,
     pagination: {
-      nextCursor: hasMore ? (data[data.length - 1]?.id ?? null) : null,
+      nextCursor: hasMore ? toCursor(data[data.length - 1] as T) : null,
       hasMore,
     },
   };
@@ -47,6 +116,7 @@ async function hydrateSetsByIds(ids: string[], userId?: string | null) {
 
 export async function searchPublicSets(query: SearchQuery, userId?: string | null) {
   const limit = query.limit + 1;
+  const rankExpr = Prisma.sql`ts_rank(search_vector, plainto_tsquery('english', ${query.q}))`;
   const languageFilter = query.language
     ? Prisma.sql`AND language = ${query.language}`
     : Prisma.empty;
@@ -59,19 +129,28 @@ export async function searchPublicSets(query: SearchQuery, userId?: string | nul
   const visibilityFilter = userId
     ? Prisma.sql`(visibility = 'PUBLIC'::"Visibility" OR "userId" = ${userId})`
     : Prisma.sql`visibility = 'PUBLIC'::"Visibility"`;
-  const cursorFilter = query.cursor
-    ? Prisma.sql`AND (
-        "createdAt" < (SELECT "createdAt" FROM flashcard_sets WHERE id = ${query.cursor})
-        OR (
-          "createdAt" = (SELECT "createdAt" FROM flashcard_sets WHERE id = ${query.cursor})
-          AND id < ${query.cursor}
-        )
-      )`
-    : Prisma.empty;
+
+  const cursor = query.cursor ? decodeCursor<SearchCursorPayload>(query.cursor, 'search') : null;
+  const cursorCreatedAt = cursor ? parseCursorDate(cursor.createdAt) : null;
+  const cursorFilter =
+    cursor && cursorCreatedAt
+      ? Prisma.sql`AND (
+          ${rankExpr} < ${cursor.rank}
+          OR (
+            ${rankExpr} = ${cursor.rank}
+            AND (
+              "createdAt" < ${cursorCreatedAt}
+              OR ("createdAt" = ${cursorCreatedAt} AND id < ${cursor.id})
+            )
+          )
+        )`
+      : Prisma.empty;
 
   // Prefer FTS (GIN). Prefix title match; include own sets when authenticated (spec).
-  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-    SELECT id
+  const rows = await prisma.$queryRaw<
+    Array<{ id: string; createdAt: Date; rank: unknown }>
+  >(Prisma.sql`
+    SELECT id, "createdAt", ${rankExpr} AS rank
     FROM flashcard_sets fs
     WHERE ${visibilityFilter}
       AND (
@@ -81,56 +160,95 @@ export async function searchPublicSets(query: SearchQuery, userId?: string | nul
       ${languageFilter}
       ${tagFilter}
       ${cursorFilter}
-    ORDER BY ts_rank(search_vector, plainto_tsquery('english', ${query.q})) DESC, "createdAt" DESC, id DESC
+    ORDER BY ${rankExpr} DESC, "createdAt" DESC, id DESC
     LIMIT ${limit}
   `);
 
+  const page = paginateRows(rows, query.limit, (row) =>
+    encodeCursor({
+      v: 1,
+      kind: 'search',
+      rank: asNumber(row.rank),
+      createdAt: row.createdAt.toISOString(),
+      id: row.id,
+    })
+  );
   const hydrated = await hydrateSetsByIds(
-    rows.map((row) => row.id),
+    page.data.map((row) => row.id),
     userId
   );
-  return paginate(hydrated, query.limit);
+  return { data: hydrated, pagination: page.pagination };
 }
 
 export async function getPublicLibrary(query: LibraryQuery) {
   const take = query.limit + 1;
-  const where = {
-    visibility: 'PUBLIC' as const,
-    ...(query.language ? { language: query.language } : {}),
-    ...(query.tagId ? { tags: { some: { tagId: query.tagId } } } : {}),
-  };
+  const languageFilter = query.language
+    ? Prisma.sql`AND fs.language = ${query.language}`
+    : Prisma.empty;
+  const tagFilter = query.tagId
+    ? Prisma.sql`AND EXISTS (
+        SELECT 1 FROM set_tags st
+        WHERE st."setId" = fs.id AND st."tagId" = ${query.tagId}
+      )`
+    : Prisma.empty;
 
   if (query.sort === 'most_studied') {
-    const sets = await prisma.flashcardSet.findMany({
-      where,
-      include: libraryInclude,
-      orderBy: { studySessions: { _count: 'desc' } },
-      take,
-      ...(query.cursor ? { skip: 1, cursor: { id: query.cursor } } : {}),
-    });
-    return paginate(sets, query.limit);
+    const cursor = query.cursor
+      ? decodeCursor<MostStudiedCursorPayload>(query.cursor, 'most_studied')
+      : null;
+    const cursorFilter = cursor
+      ? Prisma.sql`HAVING COUNT(ss.id) < ${cursor.studyCount}
+          OR (COUNT(ss.id) = ${cursor.studyCount} AND fs.id < ${cursor.id})`
+      : Prisma.empty;
+
+    const rows = await prisma.$queryRaw<Array<{ id: string; study_count: unknown }>>(Prisma.sql`
+      SELECT fs.id, COUNT(ss.id)::int AS study_count
+      FROM flashcard_sets fs
+      LEFT JOIN study_sessions ss ON ss."setId" = fs.id
+      WHERE fs.visibility = 'PUBLIC'::"Visibility"
+        ${languageFilter}
+        ${tagFilter}
+      GROUP BY fs.id
+      ${cursorFilter}
+      ORDER BY study_count DESC, fs.id DESC
+      LIMIT ${take}
+    `);
+
+    const page = paginateRows(rows, query.limit, (row) =>
+      encodeCursor({
+        v: 1,
+        kind: 'most_studied',
+        studyCount: asNumber(row.study_count),
+        id: row.id,
+      })
+    );
+    const hydrated = await hydrateSetsByIds(page.data.map((row) => row.id));
+    return { data: hydrated, pagination: page.pagination };
   }
 
   if (query.sort === 'trending') {
-    // Ranked window does not yet support keyset cursor; stop after first page.
-    if (query.cursor) {
-      return { data: [], pagination: { nextCursor: null, hasMore: false } };
-    }
-
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
+    const cursor = query.cursor
+      ? decodeCursor<TrendingCursorPayload>(query.cursor, 'trending')
+      : null;
+    const cursorLastStartedAt = cursor ? parseCursorDate(cursor.lastStartedAt) : null;
+    const cursorFilter =
+      cursor && cursorLastStartedAt
+        ? Prisma.sql`HAVING COUNT(ss.id) < ${cursor.studyCount}
+            OR (
+              COUNT(ss.id) = ${cursor.studyCount}
+              AND (
+                MAX(ss."startedAt") < ${cursorLastStartedAt}
+                OR (MAX(ss."startedAt") = ${cursorLastStartedAt} AND fs.id < ${cursor.id})
+              )
+            )`
+        : Prisma.empty;
 
-    const languageFilter = query.language
-      ? Prisma.sql`AND fs.language = ${query.language}`
-      : Prisma.empty;
-    const tagFilter = query.tagId
-      ? Prisma.sql`AND EXISTS (
-          SELECT 1 FROM set_tags st
-          WHERE st."setId" = fs.id AND st."tagId" = ${query.tagId}
-        )`
-      : Prisma.empty;
-    const ranked = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
-      SELECT fs.id
+    const ranked = await prisma.$queryRaw<
+      Array<{ id: string; study_count: unknown; last_started_at: Date }>
+    >(Prisma.sql`
+      SELECT fs.id, COUNT(ss.id)::int AS study_count, MAX(ss."startedAt") AS last_started_at
       FROM flashcard_sets fs
       INNER JOIN study_sessions ss
         ON ss."setId" = fs.id AND ss."startedAt" >= ${weekAgo}
@@ -138,23 +256,55 @@ export async function getPublicLibrary(query: LibraryQuery) {
         ${languageFilter}
         ${tagFilter}
       GROUP BY fs.id
-      ORDER BY COUNT(ss.id) DESC, MAX(ss."startedAt") DESC, fs.id DESC
+      ${cursorFilter}
+      ORDER BY study_count DESC, last_started_at DESC, fs.id DESC
       LIMIT ${take}
     `);
 
-    const hydrated = await hydrateSetsByIds(ranked.map((row) => row.id));
-    return paginate(hydrated, query.limit);
+    const page = paginateRows(ranked, query.limit, (row) =>
+      encodeCursor({
+        v: 1,
+        kind: 'trending',
+        studyCount: asNumber(row.study_count),
+        lastStartedAt: row.last_started_at.toISOString(),
+        id: row.id,
+      })
+    );
+    const hydrated = await hydrateSetsByIds(page.data.map((row) => row.id));
+    return { data: hydrated, pagination: page.pagination };
   }
 
-  const sets = await prisma.flashcardSet.findMany({
-    where,
-    include: libraryInclude,
-    orderBy: { createdAt: 'desc' },
-    take,
-    ...(query.cursor ? { skip: 1, cursor: { id: query.cursor } } : {}),
-  });
+  const cursor = query.cursor ? decodeCursor<NewestCursorPayload>(query.cursor, 'newest') : null;
+  const cursorCreatedAt = cursor ? parseCursorDate(cursor.createdAt) : null;
+  const cursorFilter =
+    cursor && cursorCreatedAt
+      ? Prisma.sql`AND (
+          fs."createdAt" < ${cursorCreatedAt}
+          OR (fs."createdAt" = ${cursorCreatedAt} AND fs.id < ${cursor.id})
+        )`
+      : Prisma.empty;
 
-  return paginate(sets, query.limit);
+  const rows = await prisma.$queryRaw<Array<{ id: string; createdAt: Date }>>(Prisma.sql`
+    SELECT fs.id, fs."createdAt"
+    FROM flashcard_sets fs
+    WHERE fs.visibility = 'PUBLIC'::"Visibility"
+      ${languageFilter}
+      ${tagFilter}
+      ${cursorFilter}
+    ORDER BY fs."createdAt" DESC, fs.id DESC
+    LIMIT ${take}
+  `);
+
+  const page = paginateRows(rows, query.limit, (row) =>
+    encodeCursor({
+      v: 1,
+      kind: 'newest',
+      createdAt: row.createdAt.toISOString(),
+      id: row.id,
+    })
+  );
+  const hydrated = await hydrateSetsByIds(page.data.map((row) => row.id));
+  return { data: hydrated, pagination: page.pagination };
 }
 
 export async function getPublicSetPreview(setId: string) {

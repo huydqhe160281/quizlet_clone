@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { hashPassword, isResetTokenExpired, verifyPassword } from '@/server/auth/password';
+import {
+  hashPassword,
+  hashResetToken,
+  isResetTokenExpired,
+  verifyPassword,
+} from '@/server/auth/password';
 
 describe('password helpers', () => {
   it('test_register_email_valid: hashes password with bcrypt', async () => {
@@ -14,5 +19,12 @@ describe('password helpers', () => {
     const now = new Date('2026-06-17T00:00:00.000Z');
     expect(isResetTokenExpired(expired, now)).toBe(true);
     expect(isResetTokenExpired(new Date('2030-01-01T00:00:00.000Z'), now)).toBe(false);
+  });
+
+  it('hashes reset tokens with SHA-256', () => {
+    const token = 'sample-reset-token';
+    expect(hashResetToken(token)).toHaveLength(64);
+    expect(hashResetToken(token)).toBe(hashResetToken(token));
+    expect(hashResetToken(token)).not.toBe(token);
   });
 });

@@ -85,11 +85,13 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
             className="group relative flex items-center justify-between overflow-hidden rounded-xl border border-border/40 bg-background/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background/60 hover:shadow-md"
           >
             <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary/0 transition-all duration-300 group-hover:bg-primary" />
-            <div className="z-10 ml-1 min-w-0">
+            <div className="z-10 ml-1 min-w-0 flex-1 pr-2">
               <p className="truncate font-semibold text-card-foreground transition-colors group-hover:text-primary">
                 {session.set.title}
               </p>
-              <p className="text-sm text-muted-foreground">{details}</p>
+              <p className="text-sm text-muted-foreground line-clamp-1 sm:line-clamp-none">
+                {details}
+              </p>
             </div>
             <Badge
               variant={isComplete ? 'secondary' : 'outline'}

@@ -12,7 +12,7 @@ export function MobileNav() {
   const t = useTranslations();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden pb-[env(safe-area-inset-bottom)] p-3 pointer-events-none">
+    <nav className="fixed inset-x-0 bottom-0 z-50 sm:hidden pb-[env(safe-area-inset-bottom)] p-3 pointer-events-none">
       <div className="flex w-full justify-around rounded-2xl glass-panel p-2 shadow-2xl border-white/20 pointer-events-auto">
         {APP_NAV_ITEMS.map(({ href, mobileLabelKey, icon, guideTargetId }) => {
           const Icon = NAV_ICON_MAP[icon];

@@ -8,7 +8,7 @@ export const maxDuration = 120;
 
 export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();
-  assertAiGenerateRateLimit(userId);
+  await assertAiGenerateRateLimit(userId);
   const body = await req.json();
   const input = aiGenerateInputSchema.parse(body);
   const set = await generateAiSet(userId, input);

@@ -77,15 +77,16 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
             {set.language && <Badge variant="outline">{set.language}</Badge>}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setEditOpen(true)}
-            className="flex-1 sm:flex-none"
+            className="gap-1.5"
+            aria-label={t('ui.edit')}
           >
-            <Pencil className="mr-2 h-4 w-4" />
-            {t('ui.edit')}
+            <Pencil className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('ui.edit')}</span>
           </Button>
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DialogContent className="sm:max-w-[500px]">
@@ -109,9 +110,9 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           </Dialog>
           <Dialog open={importOpen} onOpenChange={setImportOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                <Upload className="mr-2 h-4 w-4" />
-                {t('ui.import')}
+              <Button variant="outline" size="sm" className="gap-1.5" aria-label={t('ui.import')}>
+                <Upload className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('ui.import')}</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[620px] flex flex-col max-h-[90vh] overflow-hidden">
@@ -129,29 +130,34 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 sm:flex-none"
+            className="gap-1.5"
+            aria-label={t('ui.duplicate')}
             onClick={() =>
               duplicateSet.mutate(setId, {
                 onSuccess: (result) => router.push(`/sets/${result.data.id}`),
               })
             }
           >
-            <Copy className="mr-2 h-4 w-4" />
-            {t('ui.duplicate')}
+            <Copy className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('ui.duplicate')}</span>
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="flex-1 sm:flex-none"
-            onClick={() => {
-              if (window.confirm(t('setsPage.deleteConfirm'))) {
-                deleteSet.mutate(setId, { onSuccess: () => router.push('/sets') });
-              }
-            }}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t('ui.delete')}
-          </Button>
+          {/* Visually separated destructive action */}
+          <div className="ml-auto sm:ml-0">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-1.5"
+              aria-label={t('ui.delete')}
+              onClick={() => {
+                if (window.confirm(t('setsPage.deleteConfirm'))) {
+                  deleteSet.mutate(setId, { onSuccess: () => router.push('/sets') });
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('ui.delete')}</span>
+            </Button>
+          </div>
         </div>
       </div>
       <Suspense

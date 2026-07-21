@@ -1,5 +1,7 @@
 {
-  "app": { "name": "QuizFree" },
+  "app": {
+    "name": "QuizFree"
+  },
   "greeting": "Hello {name}",
   "seo": {
     "title": "QuizFree — Free study & exam practice",
@@ -7,7 +9,9 @@
     "libraryTitle": "Public library",
     "libraryDescription": "Discover and duplicate public flashcard sets from the QuizFree community. Free study and exam practice.",
     "searchTitle": "Search flashcard sets",
-    "searchDescription": "Search public flashcard sets on QuizFree."
+    "searchDescription": "Search public flashcard sets on QuizFree.",
+    "sharedSetDefaultDescription": "View and study \"{title}\" on {appName} — free learning and exam practice.",
+    "sharedSetNotFoundTitle": "Flashcard set not found"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -30,7 +34,7 @@
   },
   "landing": {
     "headlineBefore": "Learn smarter with",
-    "headlineAccent": "spaced repetition",
+    "headlineAccent": "Spaced repetition",
     "subtitle": "Create flashcard sets, study in multiple modes, and review cards at the optimal time — inspired by Quizlet, built for performance.",
     "ctaStart": "Start learning free",
     "ctaLibrary": "Browse public library",
@@ -91,7 +95,7 @@
       "frontToBack": "Question (front) → pick answer (back)",
       "backToFront": "Question (back) → pick term (front)",
       "cardsPerRound": "Cards per round",
-      "cardsUnit": "cards",
+      "cardsUnit": "Cards",
       "cardsRange": "1–{max} cards per round",
       "randomize": "Shuffle card order",
       "requeueWrong": "Retry wrong answers next round",

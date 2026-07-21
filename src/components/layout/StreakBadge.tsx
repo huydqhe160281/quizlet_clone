@@ -67,7 +67,7 @@ export function StreakBadge({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border border-orange-500/25 bg-orange-500/10 px-3 py-1.5 text-sm font-bold text-orange-600 shadow-sm dark:text-orange-400',
+        'inline-flex items-center justify-center gap-1.5 rounded-full border border-orange-500/25 bg-orange-500/10 px-3 h-8 sm:h-9 text-sm font-bold text-orange-600 shadow-sm dark:text-orange-400',
         className
       )}
       title={t('dashboardPage.streakTitle', { record: streak.longestStreak })}

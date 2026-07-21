@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +49,7 @@ function buildHeatmapDays(activity: Array<{ date: string; count: number }>): Act
 }
 
 function getMonthLabels(days: ActivityDay[], weekCount: number, locale: string) {
-  const labelsByWeek = new Map<number, string>();
+  const labelsByWeek = new Map<number, { mobile: string; desktop: string }>();
   let lastMonth = -1;
 
   for (let weekIndex = 0; weekIndex < weekCount; weekIndex += 1) {
@@ -57,17 +57,20 @@ function getMonthLabels(days: ActivityDay[], weekCount: number, locale: string) 
     const sample = weekDays.find((day) => !day.future) ?? weekDays[0];
     if (!sample) continue;
 
-    const month = parseUtcDate(sample.date).getUTCMonth();
+    const dateObj = parseUtcDate(sample.date);
+    const month = dateObj.getUTCMonth();
     if (month === lastMonth) continue;
 
     lastMonth = month;
-    labelsByWeek.set(
-      weekIndex,
-      parseUtcDate(sample.date).toLocaleString(locale, {
-        month: 'short',
-        timeZone: 'UTC',
-      })
-    );
+    const yearStr = dateObj.getUTCFullYear().toString();
+    const isFirstOrJan = labelsByWeek.size === 0 || month === 0;
+
+    const mobileLabel = `${month + 1}${isFirstOrJan ? `/${yearStr.slice(2)}` : ''}`;
+    const desktopLabel =
+      dateObj.toLocaleString(locale, { month: 'short', timeZone: 'UTC' }) +
+      (isFirstOrJan ? ` ${yearStr}` : '');
+
+    labelsByWeek.set(weekIndex, { mobile: mobileLabel, desktop: desktopLabel });
   }
 
   return labelsByWeek;
@@ -90,6 +93,14 @@ function cellToneClass(day: ActivityDay, max: number) {
 export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    }
+  }, []);
+
   const days = useMemo(() => buildHeatmapDays(activity), [activity]);
   const weekCount = days.length / 7;
   const monthLabels = useMemo(
@@ -128,29 +139,16 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
       </div>
 
       <div className="relative z-10 space-y-1">
-        <div className="flex">
-          <div className="w-8 shrink-0" aria-hidden />
-          <div
-            className="grid min-w-0 flex-1"
-            style={{ gridTemplateColumns: `repeat(${weekCount}, minmax(0, 1fr))` }}
-          >
-            {Array.from({ length: weekCount }, (_, weekIndex) => (
-              <div
-                key={`month-${weekIndex}`}
-                className="truncate text-[10px] leading-none text-muted-foreground"
-              >
-                {monthLabels.get(weekIndex) ?? ''}
-              </div>
-            ))}
-          </div>
-        </div>
-
+        {/* Scrollable heatmap: month labels + grid scroll together */}
         <div className="flex items-stretch gap-1.5">
+          {/* Day-of-week labels — outside scroll so they stay pinned */}
           <div
             className="grid w-8 shrink-0 gap-[3px] text-[10px] leading-none text-muted-foreground"
-            style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
+            style={{ gridTemplateRows: 'repeat(8, minmax(0, 1fr))' }}
             aria-hidden
           >
+            {/* Empty top cell to align with month row */}
+            <span />
             {dayLabels.map((label, index) => (
               <span key={`day-${index}`} className="flex items-center justify-end pr-0.5">
                 {label}
@@ -158,33 +156,64 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
             ))}
           </div>
 
-          <div
-            className="grid min-w-0 flex-1 gap-[3px]"
-            style={{
-              gridTemplateColumns: `repeat(${weekCount}, minmax(0, 1fr))`,
-              gridTemplateRows: 'repeat(7, auto)',
-              gridAutoFlow: 'column',
-            }}
-            role="img"
-            aria-label={t('dashboardPage.heatmapAria')}
-          >
-            {days.map((item) => (
+          {/* Scroll wrapper for month row + grid */}
+          <div className="overflow-x-auto scrollbar-hide flex-1 min-w-0" ref={scrollRef}>
+            <div className="flex flex-col gap-[3px]" style={{ minWidth: `${weekCount * 13}px` }}>
+              {/* Month labels row */}
               <div
-                key={item.date}
-                title={
-                  item.future
-                    ? undefined
-                    : t('dashboardPage.reviewTooltip', {
-                        date: item.date,
-                        count: item.count,
-                      })
-                }
-                className={cn(
-                  'aspect-square w-full rounded-[3px] transition-transform hover:z-10 hover:scale-110',
-                  cellToneClass(item, max)
-                )}
-              />
-            ))}
+                className="grid gap-0"
+                style={{ gridTemplateColumns: `repeat(${weekCount}, minmax(10px, 1fr))` }}
+              >
+                {Array.from({ length: weekCount }, (_, weekIndex) => {
+                  const labels = monthLabels.get(weekIndex);
+                  return (
+                    <div
+                      key={`month-${weekIndex}`}
+                      className="truncate text-[10px] leading-none text-muted-foreground"
+                    >
+                      {labels ? (
+                        <>
+                          <span className="sm:hidden">{labels.mobile}</span>
+                          <span className="hidden sm:inline">{labels.desktop}</span>
+                        </>
+                      ) : (
+                        ''
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Heatmap cells grid */}
+              <div
+                className="grid gap-[3px]"
+                style={{
+                  gridTemplateColumns: `repeat(${weekCount}, minmax(10px, 1fr))`,
+                  gridTemplateRows: 'repeat(7, auto)',
+                  gridAutoFlow: 'column',
+                }}
+                role="img"
+                aria-label={t('dashboardPage.heatmapAria')}
+              >
+                {days.map((item) => (
+                  <div
+                    key={item.date}
+                    title={
+                      item.future
+                        ? undefined
+                        : t('dashboardPage.reviewTooltip', {
+                            date: item.date,
+                            count: item.count,
+                          })
+                    }
+                    className={cn(
+                      'aspect-square w-full rounded-[3px] transition-transform hover:z-10 hover:scale-110',
+                      cellToneClass(item, max)
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { forgotPasswordSchema } from '@/features/auth/schemas/auth.schema';
 import { env } from '@/config/env';
 import { prisma } from '@/server/db';
 import { resolveEmailLocale, sendPasswordResetEmail } from '@/server/auth/email';
+import { hashResetToken } from '@/server/auth/password';
 import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 import { loadCatalog } from '@/lib/i18n/catalog';
 import { t } from '@/lib/i18n/t';
@@ -14,8 +15,11 @@ export const POST = withErrorHandler(async (req) => {
   const catalog = loadCatalog(locale);
 
   const ip = getClientIp(req);
-  if (authRateLimit.check(`forgot:${ip}`)) {
-    throw new ApiError('RATE_LIMITED', t(catalog, 'errors.rateLimited'), 429);
+  const decision = await authRateLimit.check(`forgot:${ip}`);
+  if (decision.limited) {
+    throw new ApiError('RATE_LIMITED', t(catalog, 'errors.rateLimited'), 429, {
+      retryAfter: decision.retryAfterSec,
+    });
   }
 
   const body = await req.json();
@@ -41,11 +45,12 @@ export const POST = withErrorHandler(async (req) => {
 
   if (user) {
     const token = randomBytes(32).toString('hex');
+    const tokenHash = hashResetToken(token);
     const expires = new Date(Date.now() + 60 * 60 * 1000);
 
     await prisma.verificationToken.deleteMany({ where: { identifier: email } });
     await prisma.verificationToken.create({
-      data: { identifier: email, token, expires },
+      data: { identifier: email, token: tokenHash, expires },
     });
 
     const resetUrl = `${env.authUrl}/reset-password?token=${token}`;

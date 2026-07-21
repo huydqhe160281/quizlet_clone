@@ -3,7 +3,7 @@ import { ApiError } from '@/lib/api-error';
 
 const generateAiSetMock = vi.hoisted(() => vi.fn());
 const requireUserIdMock = vi.hoisted(() => vi.fn());
-const assertAiGenerateRateLimitMock = vi.hoisted(() => vi.fn());
+const assertAiGenerateRateLimitMock = vi.hoisted(() => vi.fn(async () => undefined));
 
 vi.mock('@/server/services/ai/ai-set.service', () => ({
   generateAiSet: generateAiSetMock,
@@ -13,7 +13,7 @@ vi.mock('@/server/auth/auth-utils', () => ({
   requireUserId: requireUserIdMock,
 }));
 
-vi.mock('@/lib/ai-rate-limit-guard', () => ({
+vi.mock('@/lib/rate-limit/ai-rate-limit-guard', () => ({
   assertAiGenerateRateLimit: assertAiGenerateRateLimitMock,
 }));
 
@@ -22,6 +22,7 @@ import { maxDuration, POST } from '@/app/api/v1/ai/generate-set/route';
 describe('POST /api/v1/ai/generate-set', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    assertAiGenerateRateLimitMock.mockResolvedValue(undefined);
     requireUserIdMock.mockResolvedValue('user-a');
     generateAiSetMock.mockResolvedValue({
       id: 'set-1',

@@ -9,7 +9,7 @@ import {
 } from '@/server/services/sets/import.service';
 
 export const POST = withErrorHandler(async (req) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const userId = await requireUserId();
 
   const { searchParams } = new URL(req.url);

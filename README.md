@@ -86,6 +86,7 @@ After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLo
 | `pnpm dev`        | Dev server                                     |
 | `pnpm build`      | Production build (runs `generate:guide` first) |
 | `pnpm test`       | Unit/integration tests (Vitest)                |
+| `pnpm typecheck`  | TypeScript (`tsc --noEmit`)                    |
 | `pnpm test:e2e`   | Playwright E2E tests                           |
 | `pnpm db:migrate` | Prisma migrations                              |
 | `pnpm db:studio`  | Prisma Studio                                  |
@@ -111,6 +112,7 @@ After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLo
 ### Quality gates
 
 ```bash
+pnpm typecheck         # TypeScript
 pnpm test              # unit tests
 pnpm test:coverage     # 80% threshold on sm2, fuzzy, services
 pnpm build             # production build

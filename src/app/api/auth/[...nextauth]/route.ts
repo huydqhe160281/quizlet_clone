@@ -10,9 +10,14 @@ export async function POST(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (pathname.includes('/callback/credentials')) {
     const ip = getClientIp(req);
-    if (authRateLimit.check(`login:${ip}`)) {
+    const decision = await authRateLimit.check(`login:${ip}`);
+    if (decision.limited) {
       return Response.json(
-        { error: 'RATE_LIMITED', message: 'Too many requests' },
+        {
+          error: 'RATE_LIMITED',
+          message: 'Too many requests',
+          details: { retryAfter: decision.retryAfterSec },
+        },
         { status: 429 }
       );
     }

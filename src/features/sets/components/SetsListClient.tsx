@@ -19,6 +19,22 @@ export function SetsListClient() {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useSets();
   const sets = data?.pages.flatMap((page) => page.data) ?? [];
 
+  const createDialog = (
+    <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>{t('setsPage.createTitle')}</DialogTitle>
+        </DialogHeader>
+        <SetForm
+          mode="create"
+          isModal
+          onSuccess={() => setCreateModalOpen(false)}
+          onCancel={() => setCreateModalOpen(false)}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+
   if (isLoading) {
     return (
       <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
@@ -50,20 +66,21 @@ export function SetsListClient() {
           </CardContent>
         </Card>
         <AIGenerateModal open={aiModalOpen} onOpenChange={setAiModalOpen} />
+        {createDialog}
       </>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
             {t('setsPage.title')}
           </h1>
-          <p className="text-muted-foreground">{t('setsPage.subtitle')}</p>
+          <p className="text-muted-foreground text-sm sm:text-base">{t('setsPage.subtitle')}</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <GenerateWithAIButton onClick={() => setAiModalOpen(true)} />
           <Button asChild variant="outline" className="shadow-sm">
             <Link href="/sets/import">
@@ -85,7 +102,7 @@ export function SetsListClient() {
             key={set.id}
             href={`/sets/${set.id}`}
             className="animate-in fade-in zoom-in-[0.98] slide-in-from-bottom-4 duration-500 fill-mode-both"
-            style={{ animationDelay: `${index * 75}ms` }}
+            style={{ animationDelay: `${Math.min(index, 8) * 75}ms` }}
           >
             <Card className="glass-panel h-full relative overflow-hidden rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 group">
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl transition-all duration-500 group-hover:bg-primary/10 group-hover:scale-150" />
@@ -118,19 +135,7 @@ export function SetsListClient() {
         </Button>
       )}
       <AIGenerateModal open={aiModalOpen} onOpenChange={setAiModalOpen} />
-      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>{t('setsPage.createTitle')}</DialogTitle>
-          </DialogHeader>
-          <SetForm
-            mode="create"
-            isModal
-            onSuccess={() => setCreateModalOpen(false)}
-            onCancel={() => setCreateModalOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {createDialog}
     </div>
   );
 }

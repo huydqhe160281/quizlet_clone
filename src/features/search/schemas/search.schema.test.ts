@@ -24,6 +24,14 @@ describe('search schemas', () => {
     expect(parsed.tagId).toBe('clxyz123456789012345678901');
   });
 
+  it('accepts opaque cursor for search pagination', () => {
+    const parsed = searchQuerySchema.parse({
+      q: 'vocab',
+      cursor: 'eyJ2IjoxLCJraW5kIjoic2VhcmNoIiwiaWQiOiJjMSJ9',
+    });
+    expect(parsed.cursor).toBeTruthy();
+  });
+
   it('test_library_newest_sort: defaults to newest', () => {
     const parsed = libraryQuerySchema.parse({});
     expect(parsed.sort).toBe('newest');
@@ -37,5 +45,13 @@ describe('search schemas', () => {
   it('test_library_most_studied_sort: accepts most_studied sort', () => {
     const parsed = libraryQuerySchema.parse({ sort: 'most_studied' });
     expect(parsed.sort).toBe('most_studied');
+  });
+
+  it('accepts opaque cursor for library pagination', () => {
+    const parsed = libraryQuerySchema.parse({
+      sort: 'newest',
+      cursor: 'eyJ2IjoxLCJraW5kIjoibmV3ZXN0IiwiaWQiOiJjMSJ9',
+    });
+    expect(parsed.cursor).toBeTruthy();
   });
 });

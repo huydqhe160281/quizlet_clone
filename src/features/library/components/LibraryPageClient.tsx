@@ -65,10 +65,10 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+        <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-2xl sm:text-3xl font-bold tracking-tight text-transparent">
           {t('library.title')}
         </h1>
-        <p className="text-muted-foreground">{t('library.subtitle')}</p>
+        <p className="text-sm sm:text-base text-muted-foreground">{t('library.subtitle')}</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {(['newest', 'most_studied', 'trending'] as SortOption[]).map((option) => (
@@ -108,17 +108,17 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
           <Link
             key={set.id}
             href={`/shared/${set.id}`}
-            className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm transition-all hover:border-primary/40 hover:shadow-md"
+            className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 p-4 sm:p-5 backdrop-blur-sm transition-all hover:border-primary/40 hover:shadow-md block"
           >
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10" />
-            <div className="relative z-10">
-              <h3 className="text-lg font-semibold transition-colors group-hover:text-primary">
+            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10 pointer-events-none" />
+            <div className="relative z-10 min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold transition-colors group-hover:text-primary line-clamp-2 break-words">
                 {set.title}
               </h3>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground break-words">
                 {set.description ?? t('ui.noDescription')}
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
                 <Badge
                   variant="secondary"
                   className="transition-colors group-hover:bg-primary/10 group-hover:text-primary"

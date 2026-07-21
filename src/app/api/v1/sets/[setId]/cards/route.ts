@@ -13,7 +13,7 @@ export const GET = withErrorHandler(async (_req, { params }) => {
 });
 
 export const POST = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { setId } = await params;
   const userId = await requireUserId();
   const body = await req.json();
@@ -23,7 +23,7 @@ export const POST = withErrorHandler(async (req, { params }) => {
 });
 
 export const DELETE = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { setId } = await params;
   const userId = await requireUserId();
   const body = await req.json();

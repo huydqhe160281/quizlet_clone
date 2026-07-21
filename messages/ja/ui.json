@@ -158,6 +158,8 @@
     "promptGetStarted": "登録したばかりです。どう勉強を始めればいいですか？",
     "promptCreateSet": "最初のカードセットはどう作りますか？",
     "promptStudyModes": "学習モードの違いは何ですか？",
+    "messageTooLong": "メッセージが 500 文字の上限を超えています。",
+    "assistantUnavailable": "AI アシスタントは現在利用できません。しばらくしてから再試行してください。",
     "connectError": "アシスタントに接続できません",
     "streamUnavailable": "ストリームを利用できません",
     "unknownError": "不明なエラー"

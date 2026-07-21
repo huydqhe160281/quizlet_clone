@@ -12,7 +12,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 vi.mock('@/lib/rate-limit/rate-limit', () => ({
-  authRateLimit: { check: vi.fn(() => false) },
+  authRateLimit: { check: vi.fn(async () => ({ limited: false, retryAfterSec: 60 })) },
   getClientIp: vi.fn(() => '127.0.0.1'),
 }));
 

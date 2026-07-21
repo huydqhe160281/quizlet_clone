@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async (_req, { params }) => {
 });
 
 export const PATCH = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { sessionId } = await params;
   const userId = await requireUserId();
   const body = await req.json();
@@ -29,17 +29,14 @@ export const PATCH = withErrorHandler(async (req, { params }) => {
   // Batch-only flush (sendBeacon mid-session or unmount without completion)
   if ('answers' in body && !('correctCount' in body)) {
     const { answers } = batchAnswersSchema.parse(body);
-    await recordSessionAnswersBatch(sessionId, userId, answers);
-    return Response.json({ data: { recorded: answers.length } });
+    const result = await recordSessionAnswersBatch(sessionId, userId, answers);
+    return Response.json({ data: result });
   }
 
   // Complete session — also flushes any remaining pending answers in one request
   if ('correctCount' in body) {
     const input = completeSessionWithAnswersSchema.parse(body);
-    if (input.answers && input.answers.length > 0) {
-      await recordSessionAnswersBatch(sessionId, userId, input.answers);
-    }
-    const { session, streak } = await completeSession(sessionId, userId, input.correctCount);
+    const { session, streak } = await completeSession(sessionId, userId, input.answers ?? []);
     return Response.json({ data: session, streak });
   }
 

@@ -1,4 +1,4 @@
-import type { Grade, StudyMode } from '@prisma/client';
+import type { Grade, Prisma, StudyMode } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { calculateSm2, gradeToSm2 } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
@@ -70,6 +70,40 @@ async function recordStreakForStudy(userId: string) {
     longestStreak: stats.longestStreak,
     changed,
   };
+}
+
+type SessionAnswerInput = {
+  cardId: string;
+  isCorrect: boolean;
+};
+
+function dedupeAnswers(answers: SessionAnswerInput[]) {
+  const latestByCardId = new Map<string, boolean>();
+  answers.forEach(({ cardId, isCorrect }) => {
+    latestByCardId.set(cardId, isCorrect);
+  });
+  return Array.from(latestByCardId.entries()).map(([cardId, isCorrect]) => ({
+    cardId,
+    isCorrect,
+  }));
+}
+
+async function assertAnswersBelongToSession(
+  tx: Prisma.TransactionClient,
+  sessionId: string,
+  answers: SessionAnswerInput[]
+) {
+  if (answers.length === 0) return;
+
+  const cardIds = answers.map((answer) => answer.cardId);
+  const rows = await tx.sessionCard.findMany({
+    where: { sessionId, cardId: { in: cardIds } },
+    select: { cardId: true },
+  });
+
+  if (rows.length !== cardIds.length) {
+    throw new ApiError('NOT_FOUND', 'Card not in session', 404);
+  }
 }
 
 export async function createSession(
@@ -180,39 +214,97 @@ export async function recordSessionAnswersBatch(
   userId: string,
   answers: Array<{ cardId: string; isCorrect: boolean }>
 ) {
-  await getOwnedSession(sessionId, userId);
+  return prisma.$transaction(async (tx) => {
+    const session = await tx.studySession.findUnique({
+      where: { id: sessionId },
+      select: { userId: true, completedAt: true },
+    });
 
-  const now = new Date();
-  // Use a single transaction to update all session cards in one DB round-trip
-  await prisma.$transaction(
-    answers.map(({ cardId, isCorrect }) =>
-      prisma.sessionCard.updateMany({
-        where: { sessionId, cardId },
-        data: { isCorrect, answeredAt: now },
-      })
-    )
-  );
+    if (!session) {
+      throw new ApiError('NOT_FOUND', 'Session not found', 404);
+    }
+    if (session.userId !== userId) {
+      throw new ApiError('FORBIDDEN', 'You do not have access to this session', 403);
+    }
+    // Late beacons/retries after completion are safe no-ops.
+    if (session.completedAt) {
+      return { recorded: 0 };
+    }
+
+    const normalizedAnswers = dedupeAnswers(answers);
+    await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
+
+    const now = new Date();
+    await Promise.all(
+      normalizedAnswers.map(({ cardId, isCorrect }) =>
+        tx.sessionCard.updateMany({
+          where: { sessionId, cardId },
+          data: { isCorrect, answeredAt: now },
+        })
+      )
+    );
+
+    return { recorded: normalizedAnswers.length };
+  });
 }
 
-export async function completeSession(sessionId: string, userId: string, correctCount: number) {
-  const session = await getOwnedSession(sessionId, userId);
+export async function completeSession(
+  sessionId: string,
+  userId: string,
+  answers: SessionAnswerInput[] = []
+) {
+  const session = await prisma.$transaction(async (tx) => {
+    const ownership = await tx.studySession.findUnique({
+      where: { id: sessionId },
+      select: { userId: true, totalCards: true, completedAt: true },
+    });
+    if (!ownership) {
+      throw new ApiError('NOT_FOUND', 'Session not found', 404);
+    }
+    if (ownership.userId !== userId) {
+      throw new ApiError('FORBIDDEN', 'You do not have access to this session', 403);
+    }
 
-  // `score` is accuracy at completion (correctCount / totalCards), NOT study progress.
-  // Progress (answered/total) is derived live from SessionCard.answeredAt for the Dashboard.
-  const score = session.totalCards > 0 ? correctCount / session.totalCards : 0;
+    if (!ownership.completedAt) {
+      const normalizedAnswers = dedupeAnswers(answers);
+      await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
 
-  const updated = await prisma.studySession.update({
-    where: { id: sessionId },
-    data: {
-      completedAt: new Date(),
-      correctCount,
-      score,
-    },
+      if (normalizedAnswers.length > 0) {
+        const now = new Date();
+        await Promise.all(
+          normalizedAnswers.map(({ cardId, isCorrect }) =>
+            tx.sessionCard.updateMany({
+              where: { sessionId, cardId },
+              data: { isCorrect, answeredAt: now },
+            })
+          )
+        );
+      }
+    }
+
+    const correctCount = await tx.sessionCard.count({
+      where: { sessionId, isCorrect: true },
+    });
+    const score = ownership.totalCards > 0 ? correctCount / ownership.totalCards : 0;
+    const completedAt = new Date();
+
+    // Idempotent under concurrent completion requests.
+    await tx.studySession.updateMany({
+      where: { id: sessionId, completedAt: null },
+      data: { completedAt, correctCount, score },
+    });
+
+    const finalSession = await tx.studySession.findUnique({ where: { id: sessionId } });
+    if (!finalSession) {
+      throw new ApiError('NOT_FOUND', 'Session not found', 404);
+    }
+
+    return finalSession;
   });
 
   // Safety net for resume-via-?sessionId paths that skip createSession streak recording.
   const streak = await recordStreakForStudy(userId);
-  return { session: updated, streak };
+  return { session, streak };
 }
 
 export async function getDueCards(userId: string) {

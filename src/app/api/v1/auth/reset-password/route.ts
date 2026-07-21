@@ -1,7 +1,7 @@
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { resetPasswordSchema } from '@/features/auth/schemas/auth.schema';
 import { prisma } from '@/server/db';
-import { hashPassword, isResetTokenExpired } from '@/server/auth/password';
+import { hashPassword, hashResetToken, isResetTokenExpired } from '@/server/auth/password';
 
 export const POST = withErrorHandler(async (req) => {
   const body = await req.json();
@@ -10,16 +10,22 @@ export const POST = withErrorHandler(async (req) => {
     throw new ApiError('VALIDATION_ERROR', 'Invalid input', 400, parsed.error.flatten());
   }
 
-  const record = await prisma.verificationToken.findUnique({
-    where: { token: parsed.data.token },
-  });
+  const tokenHash = hashResetToken(parsed.data.token);
+  // Backward-compat: accept old plaintext tokens until they naturally expire.
+  const record =
+    (await prisma.verificationToken.findUnique({
+      where: { token: tokenHash },
+    })) ??
+    (await prisma.verificationToken.findUnique({
+      where: { token: parsed.data.token },
+    }));
 
   if (!record) {
     throw new ApiError('TOKEN_INVALID', 'Invalid or expired token', 400);
   }
 
   if (isResetTokenExpired(record.expires)) {
-    await prisma.verificationToken.delete({ where: { token: parsed.data.token } });
+    await prisma.verificationToken.delete({ where: { token: record.token } });
     throw new ApiError('TOKEN_EXPIRED', 'Reset token has expired', 400);
   }
 
@@ -30,7 +36,7 @@ export const POST = withErrorHandler(async (req) => {
       where: { email: record.identifier },
       data: { passwordHash },
     }),
-    prisma.verificationToken.delete({ where: { token: parsed.data.token } }),
+    prisma.verificationToken.delete({ where: { token: record.token } }),
   ]);
 
   return Response.json({ data: { message: 'Password updated successfully' } });

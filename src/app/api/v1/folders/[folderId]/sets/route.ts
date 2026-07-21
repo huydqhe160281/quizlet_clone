@@ -5,7 +5,7 @@ import { requireUserId } from '@/server/auth/auth-utils';
 import { addSetToFolder } from '@/server/services/folder.service';
 
 export const POST = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { folderId } = await params;
   const userId = await requireUserId();
   const body = await req.json();

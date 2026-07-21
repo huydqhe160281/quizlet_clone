@@ -4,7 +4,7 @@ import { requireUserId } from '@/server/auth/auth-utils';
 import { removeSetFromFolder } from '@/server/services/folder.service';
 
 export const DELETE = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { folderId, setId } = await params;
   const userId = await requireUserId();
   await removeSetFromFolder(folderId, userId, setId);

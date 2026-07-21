@@ -137,6 +137,7 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          aria-label={t('ui.delete')}
           onClick={() => onDelete(card.id)}
         >
           <Trash2 className="h-4 w-4" />

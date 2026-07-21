@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { ApiError } from '@/lib/api-error';
 
 const aiGenerateRateLimitMock = vi.hoisted(() => ({
-  check: vi.fn(() => false),
+  check: vi.fn(async () => ({ limited: false, retryAfterSec: 60 })),
 }));
 
 vi.mock('@/lib/rate-limit/rate-limit', () => ({
@@ -16,16 +16,17 @@ describe('ai-rate-limit-guard', () => {
     vi.clearAllMocks();
   });
 
-  it('Scenario: Rate limit exceeded', () => {
-    aiGenerateRateLimitMock.check.mockReturnValue(true);
-    expect(() => assertAiGenerateRateLimit('user-1')).toThrow(ApiError);
-    expect(() => assertAiGenerateRateLimit('user-1')).toThrow(
-      expect.objectContaining({ code: 'RATE_LIMITED', status: 429 })
-    );
+  it('Scenario: Rate limit exceeded', async () => {
+    aiGenerateRateLimitMock.check.mockResolvedValue({ limited: true, retryAfterSec: 60 });
+    await expect(assertAiGenerateRateLimit('user-1')).rejects.toThrow(ApiError);
+    await expect(assertAiGenerateRateLimit('user-1')).rejects.toMatchObject({
+      code: 'RATE_LIMITED',
+      status: 429,
+    });
   });
 
-  it('allows request when under limit', () => {
-    aiGenerateRateLimitMock.check.mockReturnValue(false);
-    expect(() => assertAiGenerateRateLimit('user-1')).not.toThrow();
+  it('allows request when under limit', async () => {
+    aiGenerateRateLimitMock.check.mockResolvedValue({ limited: false, retryAfterSec: 60 });
+    await expect(assertAiGenerateRateLimit('user-1')).resolves.toBeUndefined();
   });
 });

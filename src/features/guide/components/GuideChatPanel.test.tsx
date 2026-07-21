@@ -1,8 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { cleanup, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi, afterEach, beforeEach } from 'vitest';
+import { renderWithLocale } from '@/test/render-with-locale';
 
 const sendMessageMock = vi.fn();
 const useGuideChatMock = vi.hoisted(() =>
@@ -37,7 +38,7 @@ describe('GuideChatPanel', () => {
 
   it('calls onClose when Escape is pressed', () => {
     const onClose = vi.fn();
-    render(<GuideChatPanel onClose={onClose} />);
+    renderWithLocale(<GuideChatPanel onClose={onClose} />);
 
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledTimes(1);

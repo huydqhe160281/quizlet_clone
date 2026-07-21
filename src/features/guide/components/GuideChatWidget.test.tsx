@@ -1,8 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { screen, fireEvent, cleanup } from '@testing-library/react';
 import { describe, expect, it, vi, afterEach } from 'vitest';
+import { renderWithLocale } from '@/test/render-with-locale';
 
 vi.mock('@/features/guide/components/GuideChatPanel', () => ({
   GuideChatPanel: ({ onClose }: { onClose: () => void }) => (
@@ -19,7 +20,7 @@ describe('GuideChatWidget', () => {
   afterEach(() => cleanup());
 
   it('shows FAB by default', () => {
-    render(
+    renderWithLocale(
       <GuideChatProvider>
         <GuideChatWidget />
       </GuideChatProvider>
@@ -28,7 +29,7 @@ describe('GuideChatWidget', () => {
   });
 
   it('hides after FAB dismiss button', () => {
-    render(
+    renderWithLocale(
       <GuideChatProvider>
         <GuideChatWidget />
       </GuideChatProvider>
@@ -38,7 +39,7 @@ describe('GuideChatWidget', () => {
   });
 
   it('keeps FAB visible when panel closes', () => {
-    render(
+    renderWithLocale(
       <GuideChatProvider>
         <GuideChatWidget />
       </GuideChatProvider>

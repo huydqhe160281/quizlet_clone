@@ -5,7 +5,7 @@ import { requireUserId } from '@/server/auth/auth-utils';
 import { deleteCard, updateCard } from '@/server/services/sets/card.service';
 
 export const PATCH = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { setId, cardId } = await params;
   const userId = await requireUserId();
   const body = await req.json();
@@ -15,7 +15,7 @@ export const PATCH = withErrorHandler(async (req, { params }) => {
 });
 
 export const DELETE = withErrorHandler(async (req, { params }) => {
-  assertApiRateLimit(req);
+  await assertApiRateLimit(req);
   const { setId, cardId } = await params;
   const userId = await requireUserId();
   await deleteCard(setId, cardId, userId);
