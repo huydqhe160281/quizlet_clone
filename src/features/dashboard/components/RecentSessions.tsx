@@ -61,7 +61,11 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
         return (
           <Link
             key={session.id}
-            href={`/sets/${session.set.id}`}
+            href={
+              isComplete
+                ? `/sets/${session.set.id}`
+                : `/sets/${session.set.id}/${session.mode.toLowerCase()}?sessionId=${session.id}`
+            }
             className="group relative flex items-center justify-between overflow-hidden rounded-xl border border-border/40 bg-background/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-background/60 hover:shadow-md"
           >
             <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary/0 transition-all duration-300 group-hover:bg-primary" />

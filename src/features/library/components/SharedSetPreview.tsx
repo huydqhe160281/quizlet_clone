@@ -21,16 +21,28 @@ type SharedSetPreviewProps = {
 export function SharedSetPreview({ set }: SharedSetPreviewProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const duplicate = async () => {
     setLoading(true);
-    const response = await fetch(`/api/v1/sets/${set.id}/duplicate`, { method: 'POST' });
-    setLoading(false);
-    if (!response.ok) {
-      return;
+    setError(null);
+    try {
+      const response = await fetch(`/api/v1/sets/${set.id}/duplicate`, { method: 'POST' });
+      if (!response.ok) {
+        if (response.status === 401) {
+          setError('Sign in to duplicate this set to your library.');
+          return;
+        }
+        setError('Could not duplicate this set. Please try again.');
+        return;
+      }
+      const payload = (await response.json()) as { data: { id: string } };
+      router.push(`/sets/${payload.data.id}`);
+    } catch {
+      setError('Network error. Check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
-    const payload = (await response.json()) as { data: { id: string } };
-    router.push(`/sets/${payload.data.id}`);
   };
 
   return (
@@ -46,6 +58,14 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
           {set.user.name && <Badge variant="outline">by {set.user.name}</Badge>}
         </div>
       </div>
+      {error && (
+        <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button type="button" size="sm" variant="outline" onClick={() => void duplicate()}>
+            Retry
+          </Button>
+        </div>
+      )}
       <Button onClick={() => void duplicate()} disabled={loading}>
         {loading ? 'Duplicating…' : 'Duplicate to my sets'}
       </Button>

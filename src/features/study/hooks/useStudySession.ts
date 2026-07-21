@@ -8,10 +8,15 @@ import {
   createStudySessionOnce,
   type CreatedStudySession,
 } from '@/features/study/lib/create-session-once';
-import { notifyStreakUpdated } from '@/lib/streak/streak-client';
+import { notifyStreakUpdated, type StreakUpdatedDetail } from '@/lib/streak/streak-client';
 import { useStudyStore, type StudyCard } from '@/features/study/store';
 
 type SessionResponse = CreatedStudySession;
+
+type SessionWithStreakResponse = {
+  data: SessionResponse;
+  streak?: StreakUpdatedDetail;
+};
 
 async function flushSessionAnswers(
   sessionId: string,
@@ -44,6 +49,11 @@ async function persistSessionCompletion(
   if (!response.ok) {
     throw new Error(`Failed to complete session (${response.status})`);
   }
+
+  const payload = (await response.json()) as { streak?: StreakUpdatedDetail };
+  if (payload.streak) {
+    notifyStreakUpdated(payload.streak);
+  }
 }
 
 export function useStudySession(setId: string, mode: StudyModeValue) {
@@ -74,8 +84,11 @@ export function useStudySession(setId: string, mode: StudyModeValue) {
           }
           return;
         }
-        const { data } = (await response.json()) as { data: SessionResponse };
-        sessionData = data;
+        const payload = (await response.json()) as SessionWithStreakResponse;
+        sessionData = payload.data;
+        if (active && payload.streak) {
+          notifyStreakUpdated(payload.streak);
+        }
       } else {
         try {
           // Shared cache prevents React Strict Mode from creating 2 DB rows.

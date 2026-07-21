@@ -6,6 +6,7 @@ const prismaMock = vi.hoisted(() => ({
   },
   studySession: {
     create: vi.fn(),
+    findFirst: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
   },
@@ -32,13 +33,16 @@ vi.mock('@/server/services/user/stats.service', () => ({
 import {
   completeSession,
   createSession,
+  getOwnedSessionForStudy,
   getSessionCards,
   recordSessionAnswer,
 } from '@/server/services/study/study.service';
+import { recordDailyStudyActivity } from '@/server/services/user/stats.service';
 
 describe('study.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.studySession.findFirst.mockResolvedValue(null);
   });
 
   it('test_study_session_created: creates session with session cards', async () => {
@@ -52,6 +56,7 @@ describe('study.service', () => {
       ],
     });
 
+    prismaMock.studySession.findFirst.mockResolvedValue(null);
     prismaMock.studySession.create.mockResolvedValue({
       id: 'session-1',
       totalCards: 2,
@@ -73,6 +78,60 @@ describe('study.service', () => {
     );
   });
 
+  it('resumes incomplete session with matching settings instead of creating', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [{ id: 'card-1', sortOrder: 0, type: null }],
+    });
+
+    const existing = {
+      id: 'session-existing',
+      totalCards: 1,
+      mode: 'LEARN',
+      settings: null,
+      sessionCards: [],
+    };
+    prismaMock.studySession.findFirst.mockResolvedValue(existing);
+
+    const { session } = await createSession('user-a', 'set-1', 'LEARN');
+
+    expect(session.id).toBe('session-existing');
+    expect(prismaMock.studySession.create).not.toHaveBeenCalled();
+  });
+
+  it('creates a new session when settings differ from incomplete one', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [{ id: 'card-1', sortOrder: 0, type: null }],
+    });
+
+    prismaMock.studySession.findFirst.mockResolvedValue({
+      id: 'session-old',
+      settings: { randomize: false },
+      sessionCards: [],
+    });
+    prismaMock.studySession.create.mockResolvedValue({
+      id: 'session-new',
+      totalCards: 1,
+      mode: 'FLASHCARD',
+    });
+
+    const { session } = await createSession('user-a', 'set-1', 'FLASHCARD', {
+      randomize: true,
+      cardsPerRound: 10,
+      requeueWrong: true,
+      presentation: 'default',
+      mcDirection: 'front_to_back',
+    });
+
+    expect(session.id).toBe('session-new');
+    expect(prismaMock.studySession.create).toHaveBeenCalled();
+  });
+
   it('test_study_session_completed: stores score from correct count', async () => {
     prismaMock.studySession.findUnique.mockResolvedValue({
       id: 'session-1',
@@ -87,9 +146,11 @@ describe('study.service', () => {
       completedAt: new Date(),
     });
 
-    const session = await completeSession('session-1', 'user-a', 3);
+    const { session, streak } = await completeSession('session-1', 'user-a', 3);
 
     expect(session.score).toBe(0.75);
+    expect(streak.currentStreak).toBe(1);
+    expect(recordDailyStudyActivity).toHaveBeenCalledWith('user-a');
     expect(prismaMock.studySession.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -98,6 +159,35 @@ describe('study.service', () => {
         }),
       })
     );
+  });
+
+  it('test_resume_session_records_daily_streak: loads owned session and records activity', async () => {
+    prismaMock.studySession.findUnique.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-a',
+      mode: 'LEARN',
+      sessionCards: [],
+    });
+
+    const { session, streak } = await getOwnedSessionForStudy('session-1', 'user-a');
+
+    expect(session.id).toBe('session-1');
+    expect(streak.currentStreak).toBe(1);
+    expect(streak.changed).toBe(true);
+    expect(recordDailyStudyActivity).toHaveBeenCalledWith('user-a');
+  });
+
+  it('test_resume_session_forbidden: rejects other users', async () => {
+    prismaMock.studySession.findUnique.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-a',
+      sessionCards: [],
+    });
+
+    await expect(getOwnedSessionForStudy('session-1', 'user-b')).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+    });
+    expect(recordDailyStudyActivity).not.toHaveBeenCalled();
   });
 
   it('test_create_session_with_settings: creates session with settings persisted', async () => {
@@ -126,6 +216,8 @@ describe('study.service', () => {
       randomize: false,
       cardsPerRound: 10,
       requeueWrong: true,
+      presentation: 'multiple_choice' as const,
+      mcDirection: 'front_to_back' as const,
     };
 
     const session = await createSession('user-a', 'set-1', 'LEARN', settings);

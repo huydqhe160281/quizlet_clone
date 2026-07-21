@@ -47,6 +47,31 @@ const getOwnedSession = async (sessionId: string, userId: string) => {
   return session;
 };
 
+const sessionCardsInclude = {
+  sessionCards: {
+    include: { card: true },
+    orderBy: { id: 'asc' as const },
+  },
+};
+
+function settingsFingerprint(settings?: StudySessionSettings) {
+  return JSON.stringify(settings ?? null);
+}
+
+function settingsMatchStored(stored: unknown, settings?: StudySessionSettings) {
+  return JSON.stringify(stored ?? null) === settingsFingerprint(settings);
+}
+
+async function recordStreakForStudy(userId: string) {
+  const { stats, changed } = await recordDailyStudyActivity(userId);
+  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+  return {
+    currentStreak,
+    longestStreak: stats.longestStreak,
+    changed,
+  };
+}
+
 export async function createSession(
   userId: string,
   setId: string,
@@ -65,12 +90,23 @@ export async function createSession(
     );
   }
 
+  // Idempotent resume: same user+set+mode+settings incomplete session (multi-tab / TTL miss).
+  const existing = await prisma.studySession.findFirst({
+    where: { userId, setId, mode, completedAt: null },
+    include: sessionCardsInclude,
+    orderBy: { startedAt: 'desc' },
+  });
+
+  if (existing && settingsMatchStored(existing.settings, settings)) {
+    const streak = await recordStreakForStudy(userId);
+    return { session: existing, streak };
+  }
+
   // Respect randomize setting — default true for backward compat when no settings
   const shouldShuffle = settings ? settings.randomize : true;
   const cards = shouldShuffle ? shuffle(poolCards) : [...poolCards];
 
-  const { stats, changed } = await recordDailyStudyActivity(userId);
-  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+  const streak = await recordStreakForStudy(userId);
 
   const session = await prisma.studySession.create({
     data: {
@@ -83,22 +119,10 @@ export async function createSession(
         create: cards.map((card) => ({ cardId: card.id })),
       },
     },
-    include: {
-      sessionCards: {
-        include: { card: true },
-        orderBy: { id: 'asc' },
-      },
-    },
+    include: sessionCardsInclude,
   });
 
-  return {
-    session,
-    streak: {
-      currentStreak,
-      longestStreak: stats.longestStreak,
-      changed,
-    },
-  };
+  return { session, streak };
 }
 
 export async function getSessionCards(sessionId: string, userId: string) {
@@ -109,6 +133,24 @@ export async function getSessionCards(sessionId: string, userId: string) {
     include: { card: true },
     orderBy: { id: 'asc' },
   });
+}
+
+/** Load an owned session for study resume and count today's streak activity. */
+export async function getOwnedSessionForStudy(sessionId: string, userId: string) {
+  const session = await prisma.studySession.findUnique({
+    where: { id: sessionId },
+    include: sessionCardsInclude,
+  });
+
+  if (!session) {
+    throw new ApiError('NOT_FOUND', 'Session not found', 404);
+  }
+  if (session.userId !== userId) {
+    throw new ApiError('FORBIDDEN', 'Access denied', 403);
+  }
+
+  const streak = await recordStreakForStudy(userId);
+  return { session, streak };
 }
 
 export async function recordSessionAnswer(
@@ -159,7 +201,7 @@ export async function completeSession(sessionId: string, userId: string, correct
   // Progress (answered/total) is derived live from SessionCard.answeredAt for the Dashboard.
   const score = session.totalCards > 0 ? correctCount / session.totalCards : 0;
 
-  return prisma.studySession.update({
+  const updated = await prisma.studySession.update({
     where: { id: sessionId },
     data: {
       completedAt: new Date(),
@@ -167,6 +209,10 @@ export async function completeSession(sessionId: string, userId: string, correct
       score,
     },
   });
+
+  // Safety net for resume-via-?sessionId paths that skip createSession streak recording.
+  const streak = await recordStreakForStudy(userId);
+  return { session: updated, streak };
 }
 
 export async function getDueCards(userId: string) {

@@ -8,3 +8,9 @@ export async function requireUserId(): Promise<string> {
   }
   return session.user.id;
 }
+
+/** Returns user id when signed in; otherwise null (no throw). */
+export async function optionalUserId(): Promise<string | null> {
+  const session = await auth();
+  return session?.user?.id ?? null;
+}

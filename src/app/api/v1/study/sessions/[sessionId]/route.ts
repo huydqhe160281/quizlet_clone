@@ -8,35 +8,16 @@ import {
 import { requireUserId } from '@/server/auth/auth-utils';
 import {
   completeSession,
+  getOwnedSessionForStudy,
   recordSessionAnswer,
   recordSessionAnswersBatch,
-  getSessionCards,
 } from '@/server/services/study/study.service';
-import { prisma } from '@/server/db';
-import { ApiError } from '@/lib/api-error';
 
-export const GET = withErrorHandler(async (req, { params }) => {
+export const GET = withErrorHandler(async (_req, { params }) => {
   const { sessionId } = await params;
   const userId = await requireUserId();
-
-  const session = await prisma.studySession.findUnique({
-    where: { id: sessionId },
-    include: {
-      sessionCards: {
-        include: { card: true },
-        orderBy: { id: 'asc' },
-      },
-    },
-  });
-
-  if (!session) {
-    throw new ApiError('NOT_FOUND', 'Session not found', 404);
-  }
-  if (session.userId !== userId) {
-    throw new ApiError('FORBIDDEN', 'Access denied', 403);
-  }
-
-  return Response.json({ data: session });
+  const { session, streak } = await getOwnedSessionForStudy(sessionId, userId);
+  return Response.json({ data: session, streak });
 });
 
 export const PATCH = withErrorHandler(async (req, { params }) => {
@@ -58,8 +39,8 @@ export const PATCH = withErrorHandler(async (req, { params }) => {
     if (input.answers && input.answers.length > 0) {
       await recordSessionAnswersBatch(sessionId, userId, input.answers);
     }
-    const session = await completeSession(sessionId, userId, input.correctCount);
-    return Response.json({ data: session });
+    const { session, streak } = await completeSession(sessionId, userId, input.correctCount);
+    return Response.json({ data: session, streak });
   }
 
   // Legacy single-answer path (kept for backward compatibility)

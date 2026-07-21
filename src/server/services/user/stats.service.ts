@@ -177,15 +177,16 @@ export async function getActivity(userId: string, days = 365) {
   since.setUTCDate(since.getUTCDate() - (days - 1));
   since.setUTCHours(0, 0, 0, 0);
 
-  const [reviewRows, sessionRows] = await Promise.all([
-    prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
+  // Single round-trip: union review_history + session_cards, then sum by day.
+  const rows = await prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
+    SELECT day, SUM(count)::bigint AS count
+    FROM (
       SELECT to_char("reviewedAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
              COUNT(*)::bigint AS count
       FROM "review_history"
       WHERE "userId" = ${userId} AND "reviewedAt" >= ${since}
       GROUP BY 1
-    `,
-    prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
+      UNION ALL
       SELECT to_char(sc."answeredAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
              COUNT(*)::bigint AS count
       FROM "session_cards" sc
@@ -194,16 +195,14 @@ export async function getActivity(userId: string, days = 365) {
         AND sc."answeredAt" IS NOT NULL
         AND sc."answeredAt" >= ${since}
       GROUP BY 1
-    `,
-  ]);
+    ) AS activity_days
+    GROUP BY day
+  `;
 
   const counts = new Map<string, number>();
-  const bump = (day: string, count: bigint) => {
-    counts.set(day, (counts.get(day) ?? 0) + Number(count));
-  };
-
-  reviewRows.forEach((row) => bump(row.day, row.count));
-  sessionRows.forEach((row) => bump(row.day, row.count));
+  rows.forEach((row) => {
+    counts.set(row.day, Number(row.count));
+  });
 
   const today = new Date();
   const endUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());

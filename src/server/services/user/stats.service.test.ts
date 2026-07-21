@@ -95,20 +95,34 @@ describe('dashboard stats service', () => {
   });
 
   it('test_activity_heatmap_performance: aggregates review history quickly', async () => {
-    prismaMock.$queryRaw
-      .mockResolvedValueOnce([{ day: '2026-01-01', count: BigInt(3) }])
-      .mockResolvedValueOnce([]);
+    prismaMock.$queryRaw.mockResolvedValueOnce([
+      { day: '2026-01-01', count: BigInt(3) },
+      { day: '2026-01-02', count: BigInt(1) },
+    ]);
 
     const started = performance.now();
     const activity = await getActivity('user-a', 365);
     const elapsed = performance.now() - started;
 
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
     expect(activity.length).toBe(365);
     expect(activity.every((day) => typeof day.count === 'number')).toBe(true);
     expect(activity[0]?.date < activity[activity.length - 1]?.date).toBe(true);
     expect(activity.some((day) => day.count === 0)).toBe(true);
     expect(activity.some((day) => day.count === 3)).toBe(true);
     expect(elapsed).toBeLessThan(200);
+  });
+
+  it('getActivity: sums union sources in one query result', async () => {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    prismaMock.$queryRaw.mockResolvedValueOnce([{ day: todayKey, count: BigInt(5) }]);
+
+    const activity = await getActivity('user-a', 7);
+    const hit = activity.find((day) => day.date === todayKey);
+
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(activity).toHaveLength(7);
+    expect(hit?.count).toBe(5);
   });
 
   it('test_update_streak: increments streak on consecutive day', async () => {

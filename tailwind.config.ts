@@ -47,9 +47,14 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        // Soft but not pill-like — base --radius = 0.75rem (12px)
+        sm: 'calc(var(--radius) - 4px)', // 8px
+        DEFAULT: 'calc(var(--radius) - 2px)', // 10px
+        md: 'calc(var(--radius) - 2px)', // 10px
+        lg: 'var(--radius)', // 12px
+        xl: 'calc(var(--radius) + 2px)', // 14px
+        '2xl': 'calc(var(--radius) + 4px)', // 16px
+        '3xl': 'calc(var(--radius) + 4px)', // 16px — max panel
       },
     },
   },

@@ -11,6 +11,11 @@ import type { z } from 'zod';
 type SearchQuery = z.infer<typeof searchQuerySchema>;
 type LibraryQuery = z.infer<typeof libraryQuerySchema>;
 
+const libraryInclude = {
+  _count: { select: { studySessions: true, cards: true } },
+  tags: { include: { tag: true } },
+} as const;
+
 const paginate = <T extends { id: string }>(items: T[], limit: number) => {
   const hasMore = items.length > limit;
   const data = hasMore ? items.slice(0, -1) : items;
@@ -23,7 +28,24 @@ const paginate = <T extends { id: string }>(items: T[], limit: number) => {
   };
 };
 
-export async function searchPublicSets(query: SearchQuery) {
+async function hydrateSetsByIds(ids: string[], userId?: string | null) {
+  if (ids.length === 0) return [];
+  const sets = await prisma.flashcardSet.findMany({
+    where: {
+      id: { in: ids },
+      ...(userId
+        ? { OR: [{ visibility: 'PUBLIC' as const }, { userId }] }
+        : { visibility: 'PUBLIC' as const }),
+    },
+    include: libraryInclude,
+  });
+  const byId = new Map(sets.map((set) => [set.id, set]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((set): set is NonNullable<typeof set> => Boolean(set));
+}
+
+export async function searchPublicSets(query: SearchQuery, userId?: string | null) {
   const limit = query.limit + 1;
   const languageFilter = query.language
     ? Prisma.sql`AND language = ${query.language}`
@@ -34,39 +56,40 @@ export async function searchPublicSets(query: SearchQuery) {
         WHERE st."setId" = fs.id AND st."tagId" = ${query.tagId}
       )`
     : Prisma.empty;
+  const visibilityFilter = userId
+    ? Prisma.sql`(visibility = 'PUBLIC'::"Visibility" OR "userId" = ${userId})`
+    : Prisma.sql`visibility = 'PUBLIC'::"Visibility"`;
+  const cursorFilter = query.cursor
+    ? Prisma.sql`AND (
+        "createdAt" < (SELECT "createdAt" FROM flashcard_sets WHERE id = ${query.cursor})
+        OR (
+          "createdAt" = (SELECT "createdAt" FROM flashcard_sets WHERE id = ${query.cursor})
+          AND id < ${query.cursor}
+        )
+      )`
+    : Prisma.empty;
 
-  const rows = await prisma.$queryRaw<
-    Array<{
-      id: string;
-      title: string;
-      description: string | null;
-      language: string | null;
-      createdAt: Date;
-    }>
-  >(Prisma.sql`
-    SELECT id, title, description, language, "createdAt"
+  // Prefer FTS (GIN). Prefix title match; include own sets when authenticated (spec).
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT id
     FROM flashcard_sets fs
-    WHERE visibility = 'PUBLIC'::"Visibility"
+    WHERE ${visibilityFilter}
       AND (
         search_vector @@ plainto_tsquery('english', ${query.q})
-        OR title ILIKE ${'%' + query.q + '%'}
-        OR description ILIKE ${'%' + query.q + '%'}
+        OR title ILIKE ${query.q + '%'}
       )
       ${languageFilter}
       ${tagFilter}
-    ORDER BY ts_rank(search_vector, plainto_tsquery('english', ${query.q})) DESC, "createdAt" DESC
+      ${cursorFilter}
+    ORDER BY ts_rank(search_vector, plainto_tsquery('english', ${query.q})) DESC, "createdAt" DESC, id DESC
     LIMIT ${limit}
   `);
 
-  const mapped = rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    description: row.description,
-    language: row.language,
-    createdAt: row.createdAt,
-  }));
-
-  return paginate(mapped, query.limit);
+  const hydrated = await hydrateSetsByIds(
+    rows.map((row) => row.id),
+    userId
+  );
+  return paginate(hydrated, query.limit);
 }
 
 export async function getPublicLibrary(query: LibraryQuery) {
@@ -80,10 +103,7 @@ export async function getPublicLibrary(query: LibraryQuery) {
   if (query.sort === 'most_studied') {
     const sets = await prisma.flashcardSet.findMany({
       where,
-      include: {
-        _count: { select: { studySessions: true, cards: true } },
-        tags: { include: { tag: true } },
-      },
+      include: libraryInclude,
       orderBy: { studySessions: { _count: 'desc' } },
       take,
       ...(query.cursor ? { skip: 1, cursor: { id: query.cursor } } : {}),
@@ -92,30 +112,43 @@ export async function getPublicLibrary(query: LibraryQuery) {
   }
 
   if (query.sort === 'trending') {
+    // Ranked window does not yet support keyset cursor; stop after first page.
+    if (query.cursor) {
+      return { data: [], pagination: { nextCursor: null, hasMore: false } };
+    }
+
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
-    const sets = await prisma.flashcardSet.findMany({
-      where: {
-        ...where,
-        studySessions: { some: { startedAt: { gte: weekAgo } } },
-      },
-      include: {
-        _count: { select: { studySessions: true, cards: true } },
-        tags: { include: { tag: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
-      take,
-      ...(query.cursor ? { skip: 1, cursor: { id: query.cursor } } : {}),
-    });
-    return paginate(sets, query.limit);
+
+    const languageFilter = query.language
+      ? Prisma.sql`AND fs.language = ${query.language}`
+      : Prisma.empty;
+    const tagFilter = query.tagId
+      ? Prisma.sql`AND EXISTS (
+          SELECT 1 FROM set_tags st
+          WHERE st."setId" = fs.id AND st."tagId" = ${query.tagId}
+        )`
+      : Prisma.empty;
+    const ranked = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+      SELECT fs.id
+      FROM flashcard_sets fs
+      INNER JOIN study_sessions ss
+        ON ss."setId" = fs.id AND ss."startedAt" >= ${weekAgo}
+      WHERE fs.visibility = 'PUBLIC'::"Visibility"
+        ${languageFilter}
+        ${tagFilter}
+      GROUP BY fs.id
+      ORDER BY COUNT(ss.id) DESC, MAX(ss."startedAt") DESC, fs.id DESC
+      LIMIT ${take}
+    `);
+
+    const hydrated = await hydrateSetsByIds(ranked.map((row) => row.id));
+    return paginate(hydrated, query.limit);
   }
 
   const sets = await prisma.flashcardSet.findMany({
     where,
-    include: {
-      _count: { select: { studySessions: true, cards: true } },
-      tags: { include: { tag: true } },
-    },
+    include: libraryInclude,
     orderBy: { createdAt: 'desc' },
     take,
     ...(query.cursor ? { skip: 1, cursor: { id: query.cursor } } : {}),
@@ -150,12 +183,23 @@ export const getCachedPublicLibrary = async (query: LibraryQuery) => {
   )();
 };
 
-export const getCachedSearchPublicSets = async (query: SearchQuery) => {
+export const getCachedSearchPublicSets = async (query: SearchQuery, userId?: string | null) => {
+  // User-scoped results must not share the anonymous public cache entry.
+  if (userId) {
+    return searchPublicSets(query, userId);
+  }
   return unstable_cache(
     async () => searchPublicSets(query),
     ['public-search', JSON.stringify(query)],
     { tags: ['public-sets'], revalidate: 3600 }
   )();
+};
+
+export const getCachedPublicSetPreview = async (setId: string) => {
+  return unstable_cache(async () => getPublicSetPreview(setId), ['public-set-preview', setId], {
+    tags: ['public-sets', `public-set-${setId}`],
+    revalidate: 300,
+  })();
 };
 
 const SITEMAP_PUBLIC_SET_LIMIT = 5000;
