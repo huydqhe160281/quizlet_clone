@@ -8,8 +8,9 @@ export type NavIconKey = 'home' | 'layers' | 'sparkles' | 'search' | 'library';
 export type AppNavItem = {
   id: AppNavItemId;
   href: string;
-  label: string;
-  mobileLabel: string;
+  /** i18n key in messages common catalog */
+  labelKey: string;
+  mobileLabelKey: string;
   guideTargetId: string;
   icon: NavIconKey;
 };
@@ -18,16 +19,16 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
   {
     id: 'dashboard',
     href: '/dashboard',
-    label: 'Dashboard',
-    mobileLabel: 'Home',
+    labelKey: 'nav.dashboard',
+    mobileLabelKey: 'nav.home',
     guideTargetId: 'nav-dashboard',
     icon: 'home',
   },
   {
     id: 'sets',
     href: '/sets',
-    label: 'My Sets',
-    mobileLabel: 'Sets',
+    labelKey: 'nav.sets',
+    mobileLabelKey: 'nav.setsShort',
     guideTargetId: 'nav-sets',
     icon: 'layers',
   },
@@ -36,8 +37,8 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
         {
           id: 'study' as const,
           href: '/study',
-          label: 'Study',
-          mobileLabel: 'Study',
+          labelKey: 'nav.study',
+          mobileLabelKey: 'nav.study',
           guideTargetId: 'nav-study',
           icon: 'sparkles' as const,
         },
@@ -46,16 +47,16 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
   {
     id: 'search',
     href: '/search',
-    label: 'Search',
-    mobileLabel: 'Search',
+    labelKey: 'nav.search',
+    mobileLabelKey: 'nav.search',
     guideTargetId: 'nav-search',
     icon: 'search',
   },
   {
     id: 'library',
     href: '/library',
-    label: 'Library',
-    mobileLabel: 'Library',
+    labelKey: 'nav.library',
+    mobileLabelKey: 'nav.library',
     guideTargetId: 'nav-library',
     icon: 'library',
   },

@@ -18,7 +18,9 @@ import {
 import type { StudyModeValue, StudySessionSettings } from '@/features/study/schemas/study.schema';
 import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
 import { createStudySessionOnce } from '@/features/study/lib/create-session-once';
+import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { notifyStreakUpdated } from '@/lib/streak/streak-client';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type StudySettingsFormProps = {
   setId: string;
@@ -41,6 +43,7 @@ export function StudySettingsForm({
   hideModeSelect = false,
   onClose,
 }: StudySettingsFormProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [mode, setMode] = useState<StudyModeValue>(initialMode);
   const [settings, setSettings] = useState<StudySessionSettings>({
@@ -53,11 +56,15 @@ export function StudySettingsForm({
   const maxPerRound = Math.min(50, totalCards);
 
   const modes: { value: StudyModeValue; label: string; disabled?: boolean }[] = [
-    { value: 'FLASHCARD', label: 'Thẻ ghi nhớ' },
-    { value: 'LEARN', label: 'Học & Nhớ' },
-    { value: 'WRITE', label: 'Gõ đáp án' },
-    { value: 'TEST', label: 'Kiểm tra' },
-    { value: 'DRAW', label: 'Viết chữ (CJK)', disabled: newWordCount === 0 },
+    { value: 'FLASHCARD', label: t(STUDY_MODE_LABEL_KEY.FLASHCARD) },
+    { value: 'LEARN', label: t(STUDY_MODE_LABEL_KEY.LEARN) },
+    { value: 'WRITE', label: t(STUDY_MODE_LABEL_KEY.WRITE) },
+    { value: 'TEST', label: t(STUDY_MODE_LABEL_KEY.TEST) },
+    {
+      value: 'DRAW',
+      label: t(STUDY_MODE_LABEL_KEY.DRAW),
+      disabled: newWordCount === 0,
+    },
   ];
 
   useEffect(() => {
@@ -89,7 +96,7 @@ export function StudySettingsForm({
       const modeParam = mode.toLowerCase();
       router.push(`/sets/${setId}/${modeParam}?sessionId=${payload.data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể bắt đầu phiên học');
+      setError(err instanceof Error ? err.message : t('study.settings.startFailed'));
     } finally {
       setLoading(false);
     }
@@ -99,10 +106,10 @@ export function StudySettingsForm({
     <>
       {!hideModeSelect && (
         <div className="space-y-2">
-          <Label htmlFor="study-mode">Chế độ học</Label>
+          <Label htmlFor="study-mode">{t('study.settings.modeLabel')}</Label>
           <Select value={mode} onValueChange={(value) => setMode(value as StudyModeValue)}>
             <SelectTrigger id="study-mode" className="rounded-xl">
-              <SelectValue placeholder="Chọn chế độ" />
+              <SelectValue placeholder={t('study.settings.modePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {modes.map((item) => (
@@ -113,16 +120,14 @@ export function StudySettingsForm({
             </SelectContent>
           </Select>
           {newWordCount === 0 && (
-            <p className="text-xs text-muted-foreground">
-              Không có thẻ &quot;từ mới&quot; trong bộ này — chế độ Viết chữ bị vô hiệu hóa.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('study.settings.drawDisabledHint')}</p>
           )}
         </div>
       )}
 
       {hideModeSelect && (
         <p className="text-sm text-muted-foreground">
-          Chế độ:{' '}
+          {t('study.settings.modePrefix')}{' '}
           <span className="font-semibold text-foreground">
             {modes.find((item) => item.value === mode)?.label ?? mode}
           </span>
@@ -132,7 +137,7 @@ export function StudySettingsForm({
       {mode === 'LEARN' && (
         <>
           <div className="space-y-2">
-            <Label htmlFor="question-style">Kiểu câu hỏi</Label>
+            <Label htmlFor="question-style">{t('study.settings.questionStyle')}</Label>
             <Select
               value={settings.presentation ?? 'multiple_choice'}
               onValueChange={(value) =>
@@ -143,18 +148,20 @@ export function StudySettingsForm({
               }
             >
               <SelectTrigger id="question-style" className="rounded-xl">
-                <SelectValue placeholder="Chọn kiểu câu hỏi" />
+                <SelectValue placeholder={t('study.settings.questionStylePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="multiple_choice">Trắc nghiệm</SelectItem>
-                <SelectItem value="default">Tự viết / Tự luận</SelectItem>
+                <SelectItem value="multiple_choice">
+                  {t('study.settings.multipleChoice')}
+                </SelectItem>
+                <SelectItem value="default">{t('study.settings.freeResponse')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {settings.presentation !== 'default' && (
             <div className="space-y-2">
-              <Label htmlFor="mc-direction">Hướng trắc nghiệm</Label>
+              <Label htmlFor="mc-direction">{t('study.settings.mcDirection')}</Label>
               <Select
                 value={settings.mcDirection ?? 'front_to_back'}
                 onValueChange={(value) =>
@@ -165,15 +172,11 @@ export function StudySettingsForm({
                 }
               >
                 <SelectTrigger id="mc-direction" className="rounded-xl">
-                  <SelectValue placeholder="Chọn hướng câu hỏi" />
+                  <SelectValue placeholder={t('study.settings.mcDirectionPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="front_to_back">
-                    Câu hỏi (mặt trước) → chọn đáp án (mặt sau)
-                  </SelectItem>
-                  <SelectItem value="back_to_front">
-                    Câu hỏi (mặt sau) → chọn thuật ngữ (mặt trước)
-                  </SelectItem>
+                  <SelectItem value="front_to_back">{t('study.settings.frontToBack')}</SelectItem>
+                  <SelectItem value="back_to_front">{t('study.settings.backToFront')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -183,7 +186,7 @@ export function StudySettingsForm({
 
       <div className="glass-panel space-y-3 rounded-2xl border border-border/50 p-4">
         <div className="flex items-center justify-between">
-          <Label htmlFor="cards-per-round-input">Số thẻ mỗi vòng</Label>
+          <Label htmlFor="cards-per-round-input">{t('study.settings.cardsPerRound')}</Label>
           <div className="flex items-center gap-2">
             <input
               id="cards-per-round-input"
@@ -202,7 +205,7 @@ export function StudySettingsForm({
               }}
               className="w-16 rounded-lg border border-input bg-transparent px-2 py-1 text-right text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
-            <span className="text-sm text-muted-foreground">thẻ</span>
+            <span className="text-sm text-muted-foreground">{t('study.settings.cardsUnit')}</span>
           </div>
         </div>
         <Slider
@@ -218,7 +221,9 @@ export function StudySettingsForm({
             }))
           }
         />
-        <p className="text-xs text-muted-foreground">1–{maxPerRound} thẻ mỗi vòng</p>
+        <p className="text-xs text-muted-foreground">
+          {t('study.settings.cardsRange', { max: maxPerRound })}
+        </p>
       </div>
 
       <div className="space-y-3">
@@ -231,7 +236,7 @@ export function StudySettingsForm({
             }
           />
           <Label htmlFor="randomize" className="cursor-pointer font-normal">
-            Xáo trộn thứ tự thẻ
+            {t('study.settings.randomize')}
           </Label>
         </div>
 
@@ -244,7 +249,7 @@ export function StudySettingsForm({
             }
           />
           <Label htmlFor="requeue-wrong" className="cursor-pointer font-normal">
-            Ôn lại câu sai ở vòng tiếp theo
+            {t('study.settings.requeueWrong')}
           </Label>
         </div>
       </div>
@@ -258,7 +263,7 @@ export function StudySettingsForm({
         disabled={loading}
       >
         <Compass className="mr-2 h-4 w-4" />
-        {loading ? 'Đang bắt đầu…' : 'Bắt đầu học'}
+        {loading ? t('study.settings.starting') : t('study.settings.start')}
       </Button>
     </>
   );
@@ -272,11 +277,9 @@ export function StudySettingsForm({
       <CardHeader className="space-y-2">
         <div className="flex items-center gap-2">
           <Settings2 className="h-5 w-5 text-primary" />
-          <CardTitle>Tùy chỉnh phiên học</CardTitle>
+          <CardTitle>{t('study.settings.title')}</CardTitle>
         </div>
-        <CardDescription>
-          Chọn chế độ và cấu hình vòng luyện tập — {totalCards} thẻ sẵn sàng.
-        </CardDescription>
+        <CardDescription>{t('study.settings.subtitle', { count: totalCards })}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">{formFields}</CardContent>
     </Card>

@@ -1,16 +1,26 @@
 import type { GuideConfig, GuideUserContext } from '@/features/guide/schemas/guide-config.schema';
-
-const OUT_OF_SCOPE_INSTRUCTION = `Chỉ trả lời về cách sử dụng website Flashcards bằng tiếng Việt.
-Nếu câu hỏi không liên quan đến website, từ chối lịch sự và gợi ý 2-3 chủ đề có thể giúp (tạo bộ thẻ, học, tìm kiếm, thư viện).
-Không bịa route hoặc chức năng không có trong cấu hình.`;
+import { DEFAULT_LOCALE, type Locale, isLocale } from '@/lib/i18n/constants';
+import { loadCatalog } from '@/lib/i18n/catalog';
+import { t } from '@/lib/i18n/t';
 
 export function buildSystemPrompt(
   config: GuideConfig,
-  options?: { userContext?: GuideUserContext; pathname?: string }
+  options?: {
+    userContext?: GuideUserContext;
+    pathname?: string;
+    locale?: string;
+  }
 ): string {
+  const locale: Locale = isLocale(options?.locale) ? options.locale : DEFAULT_LOCALE;
+  const catalog = loadCatalog(locale);
+  const appName = t(catalog, 'app.name') || config.site.name;
+  const role = t(catalog, 'guide.role', { appName });
+  const outOfScope = t(catalog, 'guide.outOfScope', { appName });
+  const formatRules = t(catalog, 'guide.formatRules');
+
   const configJson = JSON.stringify(
     {
-      site: config.site,
+      site: { ...config.site, locale },
       menus: config.menus,
       routes: config.routes.filter((r) => !r.path.includes('[')),
       flows: config.flows,
@@ -21,26 +31,31 @@ export function buildSystemPrompt(
   );
 
   const userBlock = options?.userContext
-    ? `\nNgữ cảnh người dùng (chỉ dùng khi relevant):\n${JSON.stringify(options.userContext)}`
+    ? `\n${t(catalog, 'guide.userContextLabel')}\n${JSON.stringify(options.userContext)}`
     : '';
 
-  const pathBlock = options?.pathname ? `\nTrang hiện tại của người dùng: ${options.pathname}` : '';
+  const pathBlock = options?.pathname
+    ? `\n${t(catalog, 'guide.currentPageLabel')} ${options.pathname}`
+    : '';
 
-  return `Bạn là trợ lý hướng dẫn sử dụng website Flashcards.
-${OUT_OF_SCOPE_INSTRUCTION}
+  return `${role}
+${outOfScope}
 
-Trả lời ngắn gọn bằng markdown có cấu trúc:
-- Mỗi bước trên một dòng riêng, đánh số tuần tự (1. rồi 2. rồi 3. — không lặp lại 1.)
-- Dùng **in đậm** cho tên màn hình hoặc nút bấm
-- Dùng dòng trống giữa các đoạn
-- Kèm markdown link nội bộ hợp lệ (ví dụ [Tạo bộ thẻ](/sets/new))
-Dùng thông tin cấu hình sau:
+${formatRules}
 
 ${configJson}${userBlock}${pathBlock}`;
 }
 
 export function isOutOfScopeTopic(content: string): boolean {
   const lowered = content.toLowerCase();
-  const offTopicHints = ['thời tiết', 'weather', 'bóng đá', 'chính trị', 'giá vàng'];
+  const offTopicHints = [
+    'thời tiết',
+    'weather',
+    'bóng đá',
+    'chính trị',
+    'giá vàng',
+    '天気',
+    '政治',
+  ];
   return offTopicHints.some((hint) => lowered.includes(hint));
 }

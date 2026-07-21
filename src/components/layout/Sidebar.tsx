@@ -6,9 +6,11 @@ import { BookOpen } from 'lucide-react';
 import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
 import { NAV_ICON_MAP } from '@/lib/navigation/navigation-icons';
 import { cn } from '@/lib/utils';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export function Sidebar() {
   const pathname = usePathname();
+  const t = useTranslations();
 
   return (
     <aside className="glass-panel hidden w-64 shrink-0 border-r border-r-border/50 md:flex md:flex-col sticky top-0 h-screen z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
@@ -17,11 +19,11 @@ export function Sidebar() {
           <BookOpen className="h-5 w-5 text-primary-foreground" />
         </div>
         <span className="text-xl font-extrabold bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-          Flashcards
+          {t('app.name')}
         </span>
       </div>
       <nav className="flex flex-1 flex-col gap-1 p-4">
-        {APP_NAV_ITEMS.map(({ href, label, icon, guideTargetId }) => {
+        {APP_NAV_ITEMS.map(({ href, labelKey, icon, guideTargetId }) => {
           const Icon = NAV_ICON_MAP[icon];
           const active = pathname === href || pathname.startsWith(`${href}/`);
           return (
@@ -42,7 +44,7 @@ export function Sidebar() {
                   active && 'scale-110 text-primary-foreground'
                 )}
               />
-              {label}
+              {t(labelKey)}
               {active && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full bg-primary-foreground animate-pulse" />
               )}

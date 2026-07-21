@@ -2,7 +2,10 @@
  * @vitest-environment jsdom
  */
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
+import { loadCatalog } from '@/lib/i18n/catalog';
 
 const pushMock = vi.fn();
 
@@ -17,6 +20,15 @@ vi.mock('sonner', () => ({
 import { AIGenerateModal } from './AIGenerateModal';
 
 const mockFetch = vi.fn();
+const viCatalog = loadCatalog('vi');
+
+function renderWithLocale(ui: ReactElement) {
+  return render(
+    <LocaleProvider locale="vi" catalog={viCatalog}>
+      {ui}
+    </LocaleProvider>
+  );
+}
 
 describe('AIGenerateModal', () => {
   beforeEach(() => {
@@ -31,18 +43,18 @@ describe('AIGenerateModal', () => {
   });
 
   it('Scenario: Open modal from sets list', () => {
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     expect(screen.getByText('Generate with AI')).toBeInTheDocument();
     expect(screen.getByLabelText('Nội dung / chủ đề')).toBeInTheDocument();
   });
 
   it('Scenario: Slider default is 15', () => {
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     expect(screen.getByRole('slider')).toHaveAttribute('aria-valuenow', '15');
   });
 
   it('Scenario: Prompt too short blocked client-side', () => {
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), { target: { value: 'short' } });
     fireEvent.click(screen.getByRole('button', { name: /Tạo bộ thẻ/i }));
     expect(mockFetch).not.toHaveBeenCalled();
@@ -60,7 +72,7 @@ describe('AIGenerateModal', () => {
       }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Create vocabulary about travel and food' },
     });
@@ -93,7 +105,7 @@ describe('AIGenerateModal', () => {
       }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.click(screen.getByLabelText('Không giới hạn số thẻ (để AI tự quyết)'));
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Generate full hiragana set without limit' },
@@ -121,7 +133,7 @@ describe('AIGenerateModal', () => {
       }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     const guidedTab = screen.getByRole('tab', { name: 'Theo form' });
     fireEvent.mouseDown(guidedTab);
     fireEvent.click(guidedTab);
@@ -156,7 +168,7 @@ describe('AIGenerateModal', () => {
         })
     );
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Valid prompt for loading test' },
     });
@@ -191,7 +203,7 @@ describe('AIGenerateModal', () => {
       }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Japanese family vocabulary N5' },
     });
@@ -210,7 +222,7 @@ describe('AIGenerateModal', () => {
       json: async () => ({ error: 'RATE_LIMITED', message: 'Too many requests' }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Valid prompt for rate limit test' },
     });
@@ -228,7 +240,7 @@ describe('AIGenerateModal', () => {
       json: async () => ({ error: 'AI_GENERATION_FAILED', message: 'Failed' }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Valid prompt for upstream failure' },
     });
@@ -251,7 +263,7 @@ describe('AIGenerateModal', () => {
     });
 
     const onOpenChange = vi.fn();
-    render(<AIGenerateModal open onOpenChange={onOpenChange} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={onOpenChange} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Confirm navigation test prompt' },
     });
@@ -272,7 +284,7 @@ describe('AIGenerateModal', () => {
       }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'No extra API on confirm test' },
     });
@@ -295,7 +307,7 @@ describe('AIGenerateModal', () => {
       })
       .mockResolvedValueOnce({ ok: true, json: async () => ({}) });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Discard draft test prompt here' },
     });
@@ -319,7 +331,7 @@ describe('AIGenerateModal', () => {
     });
 
     const onOpenChange = vi.fn();
-    render(<AIGenerateModal open onOpenChange={onOpenChange} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={onOpenChange} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Close modal without discard test' },
     });
@@ -341,7 +353,7 @@ describe('AIGenerateModal', () => {
       }),
     });
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Draft persists after close test' },
     });
@@ -354,7 +366,7 @@ describe('AIGenerateModal', () => {
   });
 
   it('Scenario: Modal uses glass-panel styling', () => {
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     expect(document.body.querySelector('.glass-panel')).toBeTruthy();
   });
 
@@ -367,7 +379,7 @@ describe('AIGenerateModal', () => {
         })
     );
 
-    render(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
       target: { value: 'Aria live region loading test' },
     });

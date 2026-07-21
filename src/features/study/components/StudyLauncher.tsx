@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
 import { StudySettingsModal } from '@/features/study/components/StudySettingsModal';
+import { STUDY_MODE_DESC_KEY, STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
 type StudyLauncherProps = {
@@ -28,8 +30,6 @@ type StudyLauncherProps = {
 type ModeConfig = {
   value: StudyModeValue;
   href: string;
-  label: string;
-  description: string;
   icon: typeof Layers;
   accentClass: string;
   iconClass: string;
@@ -41,8 +41,6 @@ const MODES: ModeConfig[] = [
   {
     value: 'FLASHCARD',
     href: 'flashcard',
-    label: 'Thẻ ghi nhớ',
-    description: 'Lật thẻ để ôn thuật ngữ và định nghĩa, kèm phát âm trực tiếp trên trình duyệt.',
     icon: Layers,
     accentClass: 'hover:border-primary/30 hover:bg-primary/5',
     iconClass: 'bg-primary/10 text-primary',
@@ -51,8 +49,6 @@ const MODES: ModeConfig[] = [
   {
     value: 'LEARN',
     href: 'learn',
-    label: 'Học & Nhớ',
-    description: 'Trắc nghiệm thông minh giúp bạn ghi nhớ nhanh hơn qua từng vòng luyện tập.',
     icon: HelpCircle,
     accentClass: 'hover:border-emerald-500/30 hover:bg-emerald-500/5',
     iconClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
@@ -60,8 +56,6 @@ const MODES: ModeConfig[] = [
   {
     value: 'WRITE',
     href: 'write',
-    label: 'Gõ đáp án',
-    description: 'Gõ trực tiếp đáp án đúng để rèn luyện trí nhớ và chính tả.',
     icon: Edit3,
     accentClass: 'hover:border-amber-500/30 hover:bg-amber-500/5',
     iconClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
@@ -69,8 +63,6 @@ const MODES: ModeConfig[] = [
   {
     value: 'TEST',
     href: 'test',
-    label: 'Kiểm tra',
-    description: 'Bài kiểm tra tổng hợp gồm trắc nghiệm, đúng/sai và gõ đáp án.',
     icon: FileCheck,
     accentClass: 'hover:border-rose-500/30 hover:bg-rose-500/5',
     iconClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
@@ -78,8 +70,6 @@ const MODES: ModeConfig[] = [
   {
     value: 'DRAW',
     href: 'draw',
-    label: 'Viết chữ (CJK)',
-    description: 'Luyện viết ký tự Hán với hướng dẫn nét bút tương tác.',
     icon: PenLine,
     accentClass: 'hover:border-violet-500/30 hover:bg-violet-500/5',
     iconClass: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
@@ -87,6 +77,7 @@ const MODES: ModeConfig[] = [
 ];
 
 export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLauncherProps) {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [hoveredMode, setHoveredMode] = useState<StudyModeValue | null>(null);
@@ -118,8 +109,8 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
     return (
       <Card className="glass-panel overflow-hidden rounded-xl border-border/50">
         <CardHeader>
-          <CardTitle>Luyện tập</CardTitle>
-          <CardDescription>Thêm ít nhất một thẻ trước khi bắt đầu học.</CardDescription>
+          <CardTitle>{t('study.practice')}</CardTitle>
+          <CardDescription>{t('study.needCards')}</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -131,7 +122,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Compass className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-extrabold tracking-tight">Lựa chọn phương pháp học</h2>
+            <h2 className="text-lg font-extrabold tracking-tight">{t('study.chooseMethod')}</h2>
           </div>
           <Button
             variant="outline"
@@ -140,7 +131,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
             onClick={() => openSettings()}
           >
             <Settings2 className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Tùy chỉnh phiên học</span>
+            <span className="hidden sm:inline">{t('study.customizeSession')}</span>
           </Button>
         </div>
 
@@ -163,20 +154,22 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
                 </div>
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-extrabold">{mode.label}</span>
+                    <span className="text-base font-extrabold">
+                      {t(STUDY_MODE_LABEL_KEY[mode.value])}
+                    </span>
                     {mode.recommended && (
                       <Badge variant="secondary" className="text-[10px] font-bold uppercase">
-                        Gợi ý
+                        {t('study.recommended')}
                       </Badge>
                     )}
                     {isDrawDisabled && (
                       <Badge variant="outline" className="text-[10px]">
-                        Cần thẻ từ mới
+                        {t('study.needsNewWord')}
                       </Badge>
                     )}
                   </div>
                   <p className="text-xs leading-relaxed text-muted-foreground">
-                    {mode.description}
+                    {t(STUDY_MODE_DESC_KEY[mode.value])}
                   </p>
                 </div>
               </>

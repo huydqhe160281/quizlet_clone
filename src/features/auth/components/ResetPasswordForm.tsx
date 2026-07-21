@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export function ResetPasswordForm() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
@@ -22,12 +24,12 @@ export function ResetPasswordForm() {
     setError(null);
 
     if (!token) {
-      setError('Missing reset token');
+      setError(t('auth.missingResetToken'));
       return;
     }
 
     if (password !== confirm) {
-      setError('Passwords do not match');
+      setError(t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -43,7 +45,7 @@ export function ResetPasswordForm() {
 
     if (!response.ok) {
       const payload = (await response.json()) as { message?: string; error?: string };
-      setError(payload.message ?? payload.error ?? 'Reset failed');
+      setError(payload.message ?? payload.error ?? t('auth.resetFailed'));
       return;
     }
 
@@ -54,13 +56,13 @@ export function ResetPasswordForm() {
     <Card className="glass-panel relative overflow-hidden rounded-2xl border-border/50 shadow-xl">
       <div className="absolute -right-20 -bottom-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
       <CardHeader className="relative z-10 text-center">
-        <CardTitle className="text-2xl font-bold">Set new password</CardTitle>
-        <CardDescription>Choose a new password for your account.</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('auth.resetPasswordTitle')}</CardTitle>
+        <CardDescription>{t('auth.resetPasswordSubtitle')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 relative z-10">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password">New password</Label>
+            <Label htmlFor="password">{t('auth.newPassword')}</Label>
             <Input
               id="password"
               type="password"
@@ -71,7 +73,7 @@ export function ResetPasswordForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm">Confirm password</Label>
+            <Label htmlFor="confirm">{t('auth.confirmPassword')}</Label>
             <Input
               id="confirm"
               type="password"
@@ -83,12 +85,12 @@ export function ResetPasswordForm() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Updating…' : 'Update password'}
+            {loading ? t('auth.updating') : t('auth.updatePassword')}
           </Button>
         </form>
         <p className="text-center text-sm text-muted-foreground">
           <Link href="/login" className="text-primary hover:underline">
-            Back to sign in
+            {t('auth.backToSignIn')}
           </Link>
         </p>
       </CardContent>

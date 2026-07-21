@@ -8,6 +8,7 @@ import {
   renderReferenceMask,
   scoreFreeDrawMatch,
 } from '@/features/study/lib/free-draw-scoring';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type FreeDrawCanvasProps = {
   character: string;
@@ -18,6 +19,7 @@ type FreeDrawCanvasProps = {
 const strokeStyle = '#0f172a';
 
 export function FreeDrawCanvas({ character, onComplete, onSkip }: FreeDrawCanvasProps) {
+  const t = useTranslations();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const referenceMaskRef = useRef<Uint8Array | null>(null);
   const drawingRef = useRef(false);
@@ -105,19 +107,19 @@ export function FreeDrawCanvas({ character, onComplete, onSkip }: FreeDrawCanvas
   const handleDone = () => {
     const canvas = canvasRef.current;
     if (!canvas) {
-      setFeedback('Không thể kiểm tra nét vẽ. Thử tải lại trang.');
+      setFeedback(t('studyUi.drawCheckFailed'));
       return;
     }
 
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      setFeedback('Hãy vẽ ký tự trước khi bấm Xong.');
+      setFeedback(t('studyUi.drawFirst'));
       return;
     }
 
     const referenceMask = referenceMaskRef.current ?? renderReferenceMask(displayChar, CANVAS_SIZE);
     if (!referenceMask) {
-      setFeedback('Hãy vẽ ký tự trước khi bấm Xong.');
+      setFeedback(t('studyUi.drawFirst'));
       return;
     }
 
@@ -125,7 +127,7 @@ export function FreeDrawCanvas({ character, onComplete, onSkip }: FreeDrawCanvas
     const result = scoreFreeDrawMatch(userMask, referenceMask, CANVAS_SIZE, CANVAS_SIZE);
 
     if (!result.passed) {
-      setFeedback(result.reason);
+      setFeedback(result.reason ? t(result.reason) : t('studyUi.drawShapeMismatch'));
       return;
     }
 
@@ -156,13 +158,13 @@ export function FreeDrawCanvas({ character, onComplete, onSkip }: FreeDrawCanvas
       {feedback && <p className="text-sm text-destructive">{feedback}</p>}
       <div className="flex flex-wrap justify-center gap-2">
         <Button variant="outline" size="sm" onClick={clearCanvas}>
-          Xóa
+          {t('studyUi.clearCanvas')}
         </Button>
         <Button size="sm" onClick={handleDone}>
-          Xong
+          {t('studyUi.done')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onSkip}>
-          Bỏ qua
+          {t('studyUi.skip')}
         </Button>
       </div>
     </div>

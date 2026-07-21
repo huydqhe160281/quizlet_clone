@@ -12,17 +12,20 @@ import { StudyModeShell } from '@/features/study/components/shared/StudyModeShel
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import {
-  studyContinueLabel,
+  studyContinueKey,
   studyProgressWhileFeedback,
 } from '@/features/study/lib/study-continue-label';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
 type WriteModeProps = {
   setId: string;
 };
 
 export function WriteMode({ setId }: WriteModeProps) {
+  const t = useTranslations();
   const study = useStudySession(setId, 'WRITE');
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -74,9 +77,10 @@ export function WriteMode({ setId }: WriteModeProps) {
     setSubmitted(true);
     setIsCorrectAnswer(isCorrect);
     if (isCorrect) {
-      setFeedback('Chính xác!');
+      setFeedback(t('studyUi.feedbackCorrect'));
     } else {
-      setFeedback(`Chưa đúng. Đáp án: ${currentCard.back}`);
+      const correctAnswer = currentCard.back;
+      setFeedback(t('studyUi.incorrectWithAnswer', { answer: correctAnswer }));
     }
 
     setLastRoundIndex(study.roundIndex);
@@ -92,7 +96,7 @@ export function WriteMode({ setId }: WriteModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Đang khởi tạo phiên học…
+        {t('studyUi.loadingSession')}
       </div>
     );
   }
@@ -131,7 +135,7 @@ export function WriteMode({ setId }: WriteModeProps) {
   return (
     <StudyModeShell
       setId={setId}
-      modeLabel="Gõ đáp án"
+      modeLabel={t(STUDY_MODE_LABEL_KEY.WRITE)}
       progress={{
         ...studyProgressWhileFeedback(
           roundEndedThisStep,
@@ -139,13 +143,13 @@ export function WriteMode({ setId }: WriteModeProps) {
           study.currentIndex,
           roundCards.length
         ),
-        label: 'Tiến trình viết',
+        label: t('study.progressWrite'),
       }}
     >
       <div className="glass-panel rounded-xl border border-border/50 p-6 text-center shadow-sm md:p-8">
         <div className="mb-2 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           <Edit3 className="h-3.5 w-3.5 text-amber-500" />
-          <span>Gõ đáp án cho thuật ngữ sau</span>
+          <span>{t('studyUi.promptTypeAnswerWrite')}</span>
         </div>
         <StudyCardText text={currentCard.front} side="front" className="md:text-3xl" />
       </div>
@@ -159,7 +163,7 @@ export function WriteMode({ setId }: WriteModeProps) {
             void handleSubmit();
           }
         }}
-        placeholder="Nhập câu trả lời của bạn…"
+        placeholder={t('studyUi.answerPlaceholder')}
         rows={4}
         disabled={submitted}
         className="rounded-2xl border-border/60 bg-background/80 text-base"
@@ -171,7 +175,7 @@ export function WriteMode({ setId }: WriteModeProps) {
           onClick={() => void handleSubmit()}
           disabled={!answer.trim()}
         >
-          Kiểm tra đáp án
+          {t('studyUi.checkAnswer')}
         </Button>
       ) : (
         <div
@@ -197,13 +201,13 @@ export function WriteMode({ setId }: WriteModeProps) {
             </div>
             <div>
               <h4 className="text-sm font-bold">
-                {isCorrectAnswer ? 'Tuyệt vời!' : 'Chưa chính xác.'}
+                {isCorrectAnswer ? t('studyUi.great') : t('studyUi.notExact')}
               </h4>
               {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
             </div>
           </div>
           <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
-            {studyContinueLabel(roundEndedThisStep)}
+            {t(studyContinueKey(roundEndedThisStep))}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

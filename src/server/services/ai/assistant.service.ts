@@ -26,9 +26,12 @@ function buildChatModelList(): Array<[label: string, model: LanguageModel | unde
 
 export async function streamAssistantChat(input: AssistantChatInput) {
   const config = loadGuideConfig();
+  const { getRequestLocale } = await import('@/lib/i18n/getRequestLocale');
+  const locale = await getRequestLocale();
   const system = buildSystemPrompt(config, {
     userContext: input.userContext,
     pathname: input.pathname,
+    locale,
   });
 
   const models = buildChatModelList();

@@ -12,18 +12,21 @@ import { speakStudyText } from '@/features/study/components/flashcard/FlashcardV
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { resolveLearnMcq } from '@/features/study/lib/test-generator';
 import {
-  studyContinueLabel,
+  studyContinueKey,
   studyProgressWhileFeedback,
 } from '@/features/study/lib/study-continue-label';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
 type LearnModeProps = {
   setId: string;
 };
 
 export function LearnMode({ setId }: LearnModeProps) {
+  const t = useTranslations();
   const study = useStudySession(setId, 'LEARN');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -110,14 +113,11 @@ export function LearnMode({ setId }: LearnModeProps) {
     setSelected(option);
     const isCorrect = isMultipleChoice ? option === mcCorrectAnswer : option === currentCard.back;
     if (isCorrect) {
-      setFeedback('Chính xác!');
+      setFeedback(t('studyUi.feedbackCorrect'));
       speakStudyText(mcPrompt, 'en-US');
     } else {
-      setFeedback(
-        isMultipleChoice
-          ? `Chưa đúng. Đáp án: ${mcCorrectAnswer}`
-          : `Chưa đúng. Đáp án: ${currentCard.back}`
-      );
+      const correctAnswer = isMultipleChoice ? mcCorrectAnswer : currentCard.back;
+      setFeedback(t('studyUi.incorrectWithAnswer', { answer: correctAnswer }));
     }
     recordAnswer(isCorrect);
   };
@@ -129,9 +129,10 @@ export function LearnMode({ setId }: LearnModeProps) {
     setSelected(answer);
     const isCorrect = fuzzyMatch(answer, currentCard.back);
     if (isCorrect) {
-      setFeedback('Chính xác!');
+      setFeedback(t('studyUi.feedbackCorrect'));
     } else {
-      setFeedback(`Chưa đúng. Đáp án: ${currentCard.back}`);
+      const correctAnswer = currentCard.back;
+      setFeedback(t('studyUi.incorrectWithAnswer', { answer: correctAnswer }));
     }
     recordAnswer(isCorrect);
   };
@@ -139,7 +140,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Đang khởi tạo phiên học…
+        {t('studyUi.loadingSession')}
       </div>
     );
   }
@@ -178,7 +179,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   return (
     <StudyModeShell
       setId={setId}
-      modeLabel="Học & Nhớ"
+      modeLabel={t(STUDY_MODE_LABEL_KEY.LEARN)}
       progress={{
         ...studyProgressWhileFeedback(
           roundEndedThisStep,
@@ -186,7 +187,7 @@ export function LearnMode({ setId }: LearnModeProps) {
           study.currentIndex,
           roundCards.length
         ),
-        label: 'Tiến trình trắc nghiệm',
+        label: t('study.progressLearn'),
       }}
     >
       <div className="glass-panel space-y-6 rounded-xl border border-border/50 p-6 shadow-sm md:p-8">
@@ -196,11 +197,11 @@ export function LearnMode({ setId }: LearnModeProps) {
             <span>
               {isMultipleChoice
                 ? learnMcq?.embedded
-                  ? 'Chọn đáp án đúng'
+                  ? t('studyUi.promptPickAnswer')
                   : mcDirection === 'back_to_front'
-                    ? 'Chọn thuật ngữ đúng cho định nghĩa sau'
-                    : 'Chọn đáp án đúng cho câu hỏi sau'
-                : 'Nhập đáp án cho thuật ngữ sau'}
+                    ? t('studyUi.promptPickTerm')
+                    : t('studyUi.promptPickAnswerForQuestion')
+                : t('studyUi.promptTypeAnswer')}
             </span>
           </div>
           <h2 className="text-xl font-bold leading-relaxed md:text-2xl">
@@ -214,10 +215,10 @@ export function LearnMode({ setId }: LearnModeProps) {
             >
               <Volume2 className="h-4 w-4" />
               {learnMcq?.embedded
-                ? 'Nghe câu hỏi'
+                ? t('studyUi.listenQuestion')
                 : mcDirection === 'back_to_front'
-                  ? 'Nghe định nghĩa'
-                  : 'Nghe câu hỏi'}
+                  ? t('studyUi.listenDefinition')
+                  : t('studyUi.listenQuestion')}
             </button>
           )}
         </div>
@@ -270,7 +271,7 @@ export function LearnMode({ setId }: LearnModeProps) {
                   void handleWrittenAnswer();
                 }
               }}
-              placeholder="Nhập câu trả lời của bạn…"
+              placeholder={t('studyUi.answerPlaceholder')}
               rows={3}
               disabled={Boolean(selected)}
             />
@@ -280,7 +281,7 @@ export function LearnMode({ setId }: LearnModeProps) {
                 onClick={() => void handleWrittenAnswer()}
                 disabled={!answer.trim()}
               >
-                Kiểm tra đáp án
+                {t('studyUi.checkAnswer')}
               </Button>
             )}
           </div>
@@ -311,13 +312,13 @@ export function LearnMode({ setId }: LearnModeProps) {
             </div>
             <div>
               <h4 className="text-sm font-bold">
-                {isCorrectAnswer ? 'Tuyệt vời! Bạn trả lời chính xác.' : 'Hãy xem lại câu này.'}
+                {isCorrectAnswer ? t('studyUi.greatExact') : t('studyUi.reviewThis')}
               </h4>
               {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
             </div>
           </div>
           <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
-            {studyContinueLabel(roundEndedThisStep)}
+            {t(studyContinueKey(roundEndedThisStep))}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

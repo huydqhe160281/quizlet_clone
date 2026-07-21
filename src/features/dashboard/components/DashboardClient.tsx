@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import { DueCardsAlert } from '@/features/dashboard/components/DueCardsAlert';
 import { StatsCards } from '@/features/dashboard/components/StatsCards';
 import { RecentSessions } from '@/features/dashboard/components/RecentSessions';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 const ActivityHeatmap = dynamic(
   () => import('@/features/dashboard/components/ActivityHeatmap').then((m) => m.ActivityHeatmap),
@@ -41,15 +42,15 @@ type DashboardClientProps = {
 };
 
 export function DashboardClient({ stats, activity, sessions }: DashboardClientProps) {
+  const t = useTranslations();
+
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
       <div className="mb-2 flex flex-col gap-2">
         <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent">
-          Dashboard
+          {t('dashboardPage.title')}
         </h1>
-        <p className="text-lg font-medium text-muted-foreground">
-          Your study overview and progress.
-        </p>
+        <p className="text-lg font-medium text-muted-foreground">{t('dashboardPage.subtitle')}</p>
       </div>
 
       <DueCardsAlert dueCount={stats.dueToday} />
@@ -60,7 +61,7 @@ export function DashboardClient({ stats, activity, sessions }: DashboardClientPr
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
         <h3 className="relative z-10 mb-4 flex items-center gap-2 text-lg font-semibold tracking-tight">
           <span className="h-2 w-2 rounded-full bg-primary" />
-          Recent sessions
+          {t('dashboardPage.recentSessions')}
         </h3>
         <div className="relative z-10">
           <RecentSessions sessions={sessions} />

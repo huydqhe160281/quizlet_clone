@@ -2,6 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type LoadingOverlayProps = {
   visible: boolean;
@@ -9,6 +10,8 @@ type LoadingOverlayProps = {
 };
 
 export function LoadingOverlay({ visible, message }: LoadingOverlayProps) {
+  const t = useTranslations();
+
   if (!visible || typeof document === 'undefined') {
     return null;
   }
@@ -21,7 +24,7 @@ export function LoadingOverlay({ visible, message }: LoadingOverlayProps) {
       role="status"
     >
       <Loader2 className="h-10 w-10 animate-spin text-white" aria-hidden />
-      <span className="sr-only">{message ?? 'Đang tải…'}</span>
+      <span className="sr-only">{message ?? t('ui.loading')}</span>
     </div>,
     document.body
   );

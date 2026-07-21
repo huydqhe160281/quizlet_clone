@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
 type ActivityDay = { date: string; count: number; future?: boolean };
@@ -10,8 +11,6 @@ type ActivityHeatmapProps = {
 };
 
 const WEEKS = 53;
-/** GitHub-style: label Mon / Wed / Fri only (Sun→Sat rows). */
-const DAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''] as const;
 
 function toUtcDateKey(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -49,7 +48,7 @@ function buildHeatmapDays(activity: Array<{ date: string; count: number }>): Act
   return days;
 }
 
-function getMonthLabels(days: ActivityDay[], weekCount: number) {
+function getMonthLabels(days: ActivityDay[], weekCount: number, locale: string) {
   const labelsByWeek = new Map<number, string>();
   let lastMonth = -1;
 
@@ -64,7 +63,7 @@ function getMonthLabels(days: ActivityDay[], weekCount: number) {
     lastMonth = month;
     labelsByWeek.set(
       weekIndex,
-      parseUtcDate(sample.date).toLocaleString('en-US', {
+      parseUtcDate(sample.date).toLocaleString(locale, {
         month: 'short',
         timeZone: 'UTC',
       })
@@ -89,14 +88,29 @@ function cellToneClass(day: ActivityDay, max: number) {
 }
 
 export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
+  const t = useTranslations();
+  const locale = useLocale();
   const days = useMemo(() => buildHeatmapDays(activity), [activity]);
   const weekCount = days.length / 7;
-  const monthLabels = useMemo(() => getMonthLabels(days, weekCount), [days, weekCount]);
+  const monthLabels = useMemo(
+    () => getMonthLabels(days, weekCount, locale),
+    [days, weekCount, locale]
+  );
   const totalReviews = useMemo(
     () => activity.reduce((sum, item) => sum + item.count, 0),
     [activity]
   );
   const max = Math.max(...days.map((item) => item.count), 1);
+  /** GitHub-style: label Mon / Wed / Fri only (Sun→Sat rows). */
+  const dayLabels = [
+    '',
+    t('dashboardPage.dayMon'),
+    '',
+    t('dashboardPage.dayWed'),
+    '',
+    t('dashboardPage.dayFri'),
+    '',
+  ];
 
   return (
     <div className="glass-panel relative overflow-hidden rounded-xl p-5 shadow-sm">
@@ -104,10 +118,12 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
       <div className="relative z-10 mb-4 flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
           <span className="h-2 w-2 rounded-full bg-primary" />
-          Study activity
+          {t('dashboardPage.activityTitle')}
         </h3>
         <p className="text-xs text-muted-foreground">
-          {totalReviews > 0 ? `${totalReviews} reviews (last year)` : 'Last 12 months'}
+          {totalReviews > 0
+            ? t('dashboardPage.reviewsLastYear', { count: totalReviews })
+            : t('dashboardPage.last12Months')}
         </p>
       </div>
 
@@ -135,7 +151,7 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
             style={{ gridTemplateRows: 'repeat(7, minmax(0, 1fr))' }}
             aria-hidden
           >
-            {DAY_LABELS.map((label, index) => (
+            {dayLabels.map((label, index) => (
               <span key={`day-${index}`} className="flex items-center justify-end pr-0.5">
                 {label}
               </span>
@@ -150,7 +166,7 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
               gridAutoFlow: 'column',
             }}
             role="img"
-            aria-label="Study activity heatmap for the past year"
+            aria-label={t('dashboardPage.heatmapAria')}
           >
             {days.map((item) => (
               <div
@@ -158,7 +174,10 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
                 title={
                   item.future
                     ? undefined
-                    : `${item.date}: ${item.count} review${item.count === 1 ? '' : 's'}`
+                    : t('dashboardPage.reviewTooltip', {
+                        date: item.date,
+                        count: item.count,
+                      })
                 }
                 className={cn(
                   'aspect-square w-full rounded-[3px] transition-transform hover:z-10 hover:scale-110',
@@ -172,21 +191,18 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
 
       <div className="relative z-10 mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {totalReviews === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Chưa có hoạt động. Trả lời thẻ khi học (Learn/Write/…) hoặc ôn spaced repetition để
-            heatmap hiện lên.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('dashboardPage.noActivity')}</p>
         ) : (
-          <p className="text-sm text-muted-foreground">Ô đậm hơn = nhiều thẻ đã trả lời hôm đó.</p>
+          <p className="text-sm text-muted-foreground">{t('dashboardPage.activityHint')}</p>
         )}
         <div className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
-          <span>Less</span>
+          <span>{t('dashboardPage.less')}</span>
           <span className="h-2.5 w-2.5 rounded-sm bg-muted/70 dark:bg-white/10" />
           <span className="h-2.5 w-2.5 rounded-sm bg-primary/35" />
           <span className="h-2.5 w-2.5 rounded-sm bg-primary/55" />
           <span className="h-2.5 w-2.5 rounded-sm bg-primary/75" />
           <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
-          <span>More</span>
+          <span>{t('dashboardPage.more')}</span>
         </div>
       </div>
     </div>

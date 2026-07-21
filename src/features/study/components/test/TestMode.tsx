@@ -13,23 +13,27 @@ import { StudyCardText } from '@/features/study/components/shared/StudyCardText'
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { generateTestQuestions, type TestQuestion } from '@/features/study/lib/test-generator';
 import {
-  studyContinueLabel,
+  STUDY_CONTINUE_NEXT_QUESTION_KEY,
+  studyContinueKey,
   studyProgressWhileFeedback,
 } from '@/features/study/lib/study-continue-label';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
 type TestModeProps = {
   setId: string;
 };
 
-const QUESTION_TYPE_LABELS: Record<TestQuestion['type'], string> = {
-  mc: 'Trắc nghiệm',
-  tf: 'Đúng / Sai',
-  typing: 'Gõ đáp án',
+const QUESTION_TYPE_KEYS: Record<TestQuestion['type'], string> = {
+  mc: 'studyUi.questionMc',
+  tf: 'studyUi.questionTf',
+  typing: 'studyUi.questionTyping',
 };
 
 export function TestMode({ setId }: TestModeProps) {
+  const t = useTranslations();
   const study = useStudySession(setId, 'TEST');
   const [questionIndex, setQuestionIndex] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -100,7 +104,7 @@ export function TestMode({ setId }: TestModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Đang khởi tạo phiên học…
+        {t('studyUi.loadingSession')}
       </div>
     );
   }
@@ -139,7 +143,7 @@ export function TestMode({ setId }: TestModeProps) {
   return (
     <StudyModeShell
       setId={setId}
-      modeLabel="Kiểm tra"
+      modeLabel={t(STUDY_MODE_LABEL_KEY.TEST)}
       progress={{
         ...studyProgressWhileFeedback(
           roundEndedThisStep,
@@ -147,13 +151,13 @@ export function TestMode({ setId }: TestModeProps) {
           questionIndex,
           questions.length
         ),
-        label: 'Tiến trình bài kiểm tra',
+        label: t('study.progressTest'),
       }}
     >
       <div className="glass-panel rounded-xl border border-border/50 p-6 shadow-sm md:p-8">
         <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           <FileCheck className="h-3.5 w-3.5 text-rose-500" />
-          <span>{QUESTION_TYPE_LABELS[currentQuestion.type]}</span>
+          <span>{t(QUESTION_TYPE_KEYS[currentQuestion.type])}</span>
         </div>
         <StudyCardText text={currentQuestion.front} side="front" className="md:text-2xl" />
       </div>
@@ -167,10 +171,13 @@ export function TestMode({ setId }: TestModeProps) {
               disabled={answered}
               onClick={() => {
                 const isCorrect = option === currentQuestion.correctBack;
+                const correctAnswer = currentQuestion.correctBack;
                 recordResult(
                   currentQuestion.cardId,
                   isCorrect,
-                  isCorrect ? 'Chính xác!' : `Chưa đúng. Đáp án: ${currentQuestion.correctBack}`
+                  isCorrect
+                    ? t('studyUi.feedbackCorrect')
+                    : t('studyUi.incorrectWithAnswer', { answer: correctAnswer })
                 );
               }}
               className={cn(
@@ -191,9 +198,7 @@ export function TestMode({ setId }: TestModeProps) {
           <p className="rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium">
             {currentQuestion.shownBack}
           </p>
-          <p className="text-center text-sm text-muted-foreground">
-            Cặp thuật ngữ – định nghĩa này có đúng không?
-          </p>
+          <p className="text-center text-sm text-muted-foreground">{t('studyUi.tfPrompt')}</p>
           <div className="grid grid-cols-2 gap-3">
             <Button
               disabled={answered}
@@ -203,11 +208,11 @@ export function TestMode({ setId }: TestModeProps) {
                 recordResult(
                   currentQuestion.cardId,
                   isCorrect,
-                  isCorrect ? 'Chính xác!' : 'Cặp này không đúng.'
+                  isCorrect ? t('studyUi.feedbackCorrect') : t('studyUi.incorrectPair')
                 );
               }}
             >
-              Đúng
+              {t('studyUi.true')}
             </Button>
             <Button
               variant="outline"
@@ -218,11 +223,11 @@ export function TestMode({ setId }: TestModeProps) {
                 recordResult(
                   currentQuestion.cardId,
                   isCorrect,
-                  isCorrect ? 'Chính xác!' : 'Cặp này không đúng.'
+                  isCorrect ? t('studyUi.feedbackCorrect') : t('studyUi.incorrectPair')
                 );
               }}
             >
-              Sai
+              {t('studyUi.false')}
             </Button>
           </div>
         </div>
@@ -233,7 +238,7 @@ export function TestMode({ setId }: TestModeProps) {
           <Input
             value={typingAnswer}
             onChange={(event) => setTypingAnswer(event.target.value)}
-            placeholder="Nhập câu trả lời của bạn…"
+            placeholder={t('studyUi.answerPlaceholder')}
             disabled={answered}
             className="rounded-xl"
           />
@@ -243,14 +248,17 @@ export function TestMode({ setId }: TestModeProps) {
               disabled={!typingAnswer.trim()}
               onClick={() => {
                 const isCorrect = fuzzyMatch(typingAnswer, currentQuestion.back);
+                const correctAnswer = currentQuestion.back;
                 recordResult(
                   currentQuestion.cardId,
                   isCorrect,
-                  isCorrect ? 'Chính xác!' : `Chưa đúng. Đáp án: ${currentQuestion.back}`
+                  isCorrect
+                    ? t('studyUi.feedbackCorrect')
+                    : t('studyUi.incorrectWithAnswer', { answer: correctAnswer })
                 );
               }}
             >
-              Nộp bài
+              {t('studyUi.submit')}
             </Button>
           ) : null}
         </div>
@@ -280,13 +288,13 @@ export function TestMode({ setId }: TestModeProps) {
             </div>
             <div>
               <h4 className="text-sm font-bold">
-                {isCorrectAnswer ? 'Tuyệt vời!' : 'Hãy ôn lại câu này.'}
+                {isCorrectAnswer ? t('studyUi.great') : t('studyUi.reviewThis')}
               </h4>
               {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
             </div>
           </div>
           <Button type="button" className="shrink-0 font-bold" onClick={goNext}>
-            {studyContinueLabel(roundEndedThisStep, 'Câu tiếp theo')}
+            {t(studyContinueKey(roundEndedThisStep, STUDY_CONTINUE_NEXT_QUESTION_KEY))}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         </div>

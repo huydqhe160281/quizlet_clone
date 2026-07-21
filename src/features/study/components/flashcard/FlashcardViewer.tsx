@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { CardMediaImage } from '@/components/shared/CardMediaImage';
 import { Button } from '@/components/ui/button';
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
 type FlashcardViewerProps = {
@@ -31,6 +32,7 @@ export function FlashcardViewer({
   onSpeakFront,
   onSpeakBack,
 }: FlashcardViewerProps) {
+  const t = useTranslations();
   const multilineFront = front.includes('\n');
   const multilineBack = back.includes('\n');
 
@@ -46,7 +48,7 @@ export function FlashcardViewer({
         }
       }}
       className="perspective-1000 mx-auto block w-full max-w-2xl focus:outline-none"
-      aria-label={isFlipped ? 'Hiện mặt trước' : 'Hiện mặt sau'}
+      aria-label={isFlipped ? t('studyUi.showFrontAria') : t('studyUi.showBackAria')}
     >
       <motion.div
         className="relative h-72 w-full transform-style-3d cursor-pointer md:h-80"
@@ -59,7 +61,9 @@ export function FlashcardViewer({
           )}
         >
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Thuật ngữ</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">
+              {t('studyUi.term')}
+            </span>
             {speechEnabled && onSpeakFront && (
               <Button
                 type="button"
@@ -70,7 +74,7 @@ export function FlashcardViewer({
                   event.stopPropagation();
                   onSpeakFront();
                 }}
-                aria-label="Phát âm thuật ngữ"
+                aria-label={t('studyUi.speakTermAria')}
               >
                 <Volume2 className="h-4 w-4" />
               </Button>
@@ -89,9 +93,7 @@ export function FlashcardViewer({
             {!isFlipped && imageUrl && <CardMediaImage src={imageUrl} alt={front} />}
           </div>
 
-          <p className="text-[11px] font-semibold text-muted-foreground">
-            Bấm thẻ hoặc nhấn Phím Cách để lật
-          </p>
+          <p className="text-[11px] font-semibold text-muted-foreground">{t('studyUi.flipHint')}</p>
         </div>
 
         <div
@@ -100,7 +102,9 @@ export function FlashcardViewer({
           )}
         >
           <div className="flex items-center justify-between text-primary-foreground/70">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Định nghĩa</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">
+              {t('studyUi.definition')}
+            </span>
             {speechEnabled && onSpeakBack && (
               <Button
                 type="button"
@@ -111,7 +115,7 @@ export function FlashcardViewer({
                   event.stopPropagation();
                   onSpeakBack();
                 }}
-                aria-label="Phát âm định nghĩa"
+                aria-label={t('studyUi.speakDefinitionAria')}
               >
                 <Volume2 className="h-4 w-4" />
               </Button>
@@ -134,7 +138,9 @@ export function FlashcardViewer({
             )}
           </div>
 
-          <p className="text-[11px] font-semibold text-primary-foreground/70">Mặt định nghĩa</p>
+          <p className="text-[11px] font-semibold text-primary-foreground/70">
+            {t('studyUi.definitionSide')}
+          </p>
         </div>
       </motion.div>
     </div>

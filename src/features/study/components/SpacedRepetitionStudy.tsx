@@ -26,6 +26,7 @@ import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useDueCards, useSubmitReview } from '@/features/study/hooks/useSpacedRepetition';
 import { generateLearnOptions } from '@/features/study/lib/test-generator';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type StudyStyle = 'flashcard' | 'multiple_choice' | 'default';
 
@@ -37,6 +38,7 @@ interface SpacedRepetitionSettings {
 }
 
 export function SpacedRepetitionStudy() {
+  const t = useTranslations();
   const { data, isLoading, error, refetch } = useDueCards();
   const submitReview = useSubmitReview();
   const { isFlipped, flip, resetFlip } = useFlipState();
@@ -65,6 +67,7 @@ export function SpacedRepetitionStudy() {
   const [typedAnswer, setTypedAnswer] = useState('');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedbackOk, setFeedbackOk] = useState(false);
 
   const cards = data?.data ?? [];
   const totalCards = cards.length;
@@ -136,12 +139,14 @@ export function SpacedRepetitionStudy() {
     const isCorrect = option === currentCard.back;
 
     if (isCorrect) {
-      setFeedback('Correct!');
+      setFeedback(t('studyUi.spacedCorrect'));
+      setFeedbackOk(true);
       setCorrectCount((c) => c + 1);
       setCorrectInRound((c) => c + 1);
       await submitReview(currentCard.cardId, 'GOOD');
     } else {
-      setFeedback(`Incorrect. Answer: ${currentCard.back}`);
+      setFeedback(t('studyUi.incorrectWithAnswer', { answer: currentCard.back }));
+      setFeedbackOk(false);
       await submitReview(currentCard.cardId, 'AGAIN');
       if (settings.requeueWrong) {
         setRemediationQueue((q) => {
@@ -160,12 +165,14 @@ export function SpacedRepetitionStudy() {
     const isCorrect = fuzzyMatch(typedAnswer, currentCard.back);
 
     if (isCorrect) {
-      setFeedback('Correct!');
+      setFeedback(t('studyUi.spacedCorrect'));
+      setFeedbackOk(true);
       setCorrectCount((c) => c + 1);
       setCorrectInRound((c) => c + 1);
       await submitReview(currentCard.cardId, 'GOOD');
     } else {
-      setFeedback(`Incorrect. Answer: ${currentCard.back}`);
+      setFeedback(t('studyUi.incorrectWithAnswer', { answer: currentCard.back }));
+      setFeedbackOk(false);
       await submitReview(currentCard.cardId, 'AGAIN');
       if (settings.requeueWrong) {
         setRemediationQueue((q) => {
@@ -180,6 +187,7 @@ export function SpacedRepetitionStudy() {
 
   const handleNextQuestion = () => {
     setFeedback(null);
+    setFeedbackOk(false);
     setSelectedOption(null);
     setTypedAnswer('');
 
@@ -221,22 +229,22 @@ export function SpacedRepetitionStudy() {
   if (isLoading) {
     return (
       <div className="glass-panel animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Loading due cards…
+        {t('studyUi.spacedLoadingDue')}
       </div>
     );
   }
 
   if (error) {
-    return <p className="text-sm text-destructive">Failed to load due cards.</p>;
+    return <p className="text-sm text-destructive">{t('studyUi.spacedLoadFailed')}</p>;
   }
 
   if (totalCards === 0 && !started) {
     return (
       <div className="glass-panel rounded-2xl p-8 text-center shadow-sm">
-        <h2 className="text-xl font-semibold">All caught up!</h2>
-        <p className="mt-2 text-muted-foreground">No cards due for review right now.</p>
+        <h2 className="text-xl font-semibold">{t('studyUi.spacedCaughtUpTitle')}</h2>
+        <p className="mt-2 text-muted-foreground">{t('studyUi.spacedCaughtUpHint')}</p>
         <Button className="mt-4" asChild>
-          <Link href="/dashboard">Back to dashboard</Link>
+          <Link href="/dashboard">{t('studyUi.spacedBackDashboard')}</Link>
         </Button>
       </div>
     );
@@ -247,15 +255,14 @@ export function SpacedRepetitionStudy() {
     return (
       <Card className="glass-panel w-full max-w-lg mx-auto overflow-hidden rounded-2xl border-border/50 shadow-lg">
         <CardHeader>
-          <CardTitle>Spaced Repetition Study Settings</CardTitle>
+          <CardTitle>{t('studyUi.spacedSettingsTitle')}</CardTitle>
           <CardDescription>
-            Configure your SM-2 session — {totalCards} due cards available today.
+            {t('studyUi.spacedSettingsSubtitle', { count: totalCards })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Study style selection */}
           <div className="space-y-2">
-            <Label htmlFor="study-style">Study style</Label>
+            <Label htmlFor="study-style">{t('studyUi.spacedStyle')}</Label>
             <Select
               value={settings.style}
               onValueChange={(v) =>
@@ -266,20 +273,19 @@ export function SpacedRepetitionStudy() {
               }
             >
               <SelectTrigger id="study-style">
-                <SelectValue placeholder="Select style" />
+                <SelectValue placeholder={t('studyUi.spacedStylePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="multiple_choice">Multiple Choice (Trắc nghiệm)</SelectItem>
-                <SelectItem value="default">Written (Tự viết/Tự luận)</SelectItem>
-                <SelectItem value="flashcard">Flashcards (Tự đánh giá)</SelectItem>
+                <SelectItem value="multiple_choice">{t('studyUi.spacedMc')}</SelectItem>
+                <SelectItem value="default">{t('studyUi.spacedWritten')}</SelectItem>
+                <SelectItem value="flashcard">{t('studyUi.spacedFlashcard')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Cards per round */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <Label htmlFor="cards-per-round-input">Cards per round</Label>
+              <Label htmlFor="cards-per-round-input">{t('study.settings.cardsPerRound')}</Label>
               <div className="flex items-center gap-2">
                 <input
                   id="cards-per-round-input"
@@ -298,7 +304,9 @@ export function SpacedRepetitionStudy() {
                   }}
                   className="w-16 rounded-md border border-input bg-transparent px-2 py-1 text-right text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
-                <span className="text-sm text-muted-foreground">cards</span>
+                <span className="text-sm text-muted-foreground">
+                  {t('study.settings.cardsUnit')}
+                </span>
               </div>
             </div>
             <Slider
@@ -312,11 +320,10 @@ export function SpacedRepetitionStudy() {
               }
             />
             <p className="text-xs text-muted-foreground">
-              1–{maxPerRound > 0 ? maxPerRound : 50} cards per round
+              {t('study.settings.cardsRange', { max: maxPerRound > 0 ? maxPerRound : 50 })}
             </p>
           </div>
 
-          {/* Randomize */}
           <div className="flex items-center gap-2">
             <Checkbox
               id="randomize"
@@ -324,11 +331,10 @@ export function SpacedRepetitionStudy() {
               onCheckedChange={(c) => setSettings((s) => ({ ...s, randomize: c === true }))}
             />
             <Label htmlFor="randomize" className="font-normal cursor-pointer">
-              Randomize cards
+              {t('study.settings.randomize')}
             </Label>
           </div>
 
-          {/* Requeue wrong */}
           <div className="flex items-center gap-2">
             <Checkbox
               id="requeue-wrong"
@@ -336,12 +342,12 @@ export function SpacedRepetitionStudy() {
               onCheckedChange={(c) => setSettings((s) => ({ ...s, requeueWrong: c === true }))}
             />
             <Label htmlFor="requeue-wrong" className="font-normal cursor-pointer">
-              Review wrong answers in next round
+              {t('study.settings.requeueWrong')}
             </Label>
           </div>
 
           <Button onClick={handleStart} className="w-full" size="lg">
-            Start session
+            {t('studyUi.spacedStart')}
           </Button>
         </CardContent>
       </Card>
@@ -378,7 +384,7 @@ export function SpacedRepetitionStudy() {
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div className="flex justify-between items-center text-sm text-muted-foreground">
-        <span>Round {roundIndex + 1}</span>
+        <span>{t('studyUi.roundBadge', { round: roundIndex + 1 })}</span>
         <StudyProgress current={currentIndex + 1} total={roundCards.length} />
       </div>
       <p className="text-center text-sm text-muted-foreground">{currentCard.setTitle}</p>
@@ -401,7 +407,7 @@ export function SpacedRepetitionStudy() {
       ) : settings.style === 'multiple_choice' ? (
         <>
           <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
-            <p className="text-sm text-muted-foreground">Choose the correct answer</p>
+            <p className="text-sm text-muted-foreground">{t('studyUi.spacedChooseAnswer')}</p>
             <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
           </div>
           <div className="grid gap-2">
@@ -423,7 +429,7 @@ export function SpacedRepetitionStudy() {
       ) : (
         <>
           <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
-            <p className="text-sm text-muted-foreground">Type the answer</p>
+            <p className="text-sm text-muted-foreground">{t('studyUi.spacedTypeAnswer')}</p>
             <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
           </div>
           <div className="space-y-4">
@@ -436,7 +442,7 @@ export function SpacedRepetitionStudy() {
                   void handleWrittenAnswer();
                 }
               }}
-              placeholder="Type your answer…"
+              placeholder={t('studyUi.spacedTypePlaceholder')}
               rows={3}
               disabled={Boolean(selectedOption)}
             />
@@ -446,7 +452,7 @@ export function SpacedRepetitionStudy() {
                 onClick={() => void handleWrittenAnswer()}
                 disabled={!typedAnswer.trim()}
               >
-                Check answer
+                {t('studyUi.checkAnswer')}
               </Button>
             )}
           </div>
@@ -454,15 +460,15 @@ export function SpacedRepetitionStudy() {
       )}
 
       {feedback && (
-        <p
-          className={`text-center text-sm ${feedback.startsWith('Correct') ? 'text-green-600' : 'text-destructive'}`}
-        >
+        <p className={`text-center text-sm ${feedbackOk ? 'text-green-600' : 'text-destructive'}`}>
           {feedback}
         </p>
       )}
       {selectedOption && (
         <Button className="w-full" onClick={handleNextQuestion}>
-          {currentIndex >= currentRound.length - 1 ? 'Finish Round' : 'Next question'}
+          {currentIndex >= currentRound.length - 1
+            ? t('studyUi.spacedFinishRound')
+            : t('studyUi.nextQuestion')}
         </Button>
       )}
     </div>

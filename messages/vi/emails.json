@@ -1,0 +1,11 @@
+{
+  "emails": {
+    "passwordReset": {
+      "subject": "Đặt lại mật khẩu QuizFree",
+      "intro": "Bạn đã yêu cầu đặt lại mật khẩu.",
+      "cta": "Nhấn vào đây để đặt lại mật khẩu",
+      "expiry": "Liên kết này hết hạn sau 1 giờ.",
+      "ignore": "Nếu bạn không yêu cầu, hãy bỏ qua email này."
+    }
+  }
+}

@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export function DueCardsAlert({ dueCount }: { dueCount: number }) {
+  const t = useTranslations();
+
   if (dueCount === 0) {
     return (
       <Card className="relative overflow-hidden rounded-xl border-border/50 bg-muted/20 shadow-sm">
@@ -14,15 +17,13 @@ export function DueCardsAlert({ dueCount }: { dueCount: number }) {
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div>
-            <CardTitle className="text-lg">All caught up</CardTitle>
-            <CardDescription>
-              No cards due today — start a set when you want more practice.
-            </CardDescription>
+            <CardTitle className="text-lg">{t('dashboardPage.allCaughtUp')}</CardTitle>
+            <CardDescription>{t('dashboardPage.noCardsDue')}</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <Button asChild size="sm" variant="outline">
-            <Link href="/library">Browse library</Link>
+            <Link href="/library">{t('dashboardPage.browseLibrary')}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -38,14 +39,14 @@ export function DueCardsAlert({ dueCount }: { dueCount: number }) {
         </div>
         <div>
           <CardTitle className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-lg text-transparent">
-            {dueCount} cards due today
+            {t('dashboardPage.cardsDueToday', { count: dueCount })}
           </CardTitle>
-          <CardDescription>Keep your streak going with spaced repetition.</CardDescription>
+          <CardDescription>{t('dashboardPage.keepStreak')}</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
         <Button asChild size="sm">
-          <Link href="/study">Start review</Link>
+          <Link href="/study">{t('dashboardPage.startReview')}</Link>
         </Button>
       </CardContent>
     </Card>

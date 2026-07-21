@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SharedSetPreviewProps = {
   set: {
@@ -19,6 +20,7 @@ type SharedSetPreviewProps = {
 };
 
 export function SharedSetPreview({ set }: SharedSetPreviewProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,16 +32,16 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
       const response = await fetch(`/api/v1/sets/${set.id}/duplicate`, { method: 'POST' });
       if (!response.ok) {
         if (response.status === 401) {
-          setError('Sign in to duplicate this set to your library.');
+          setError(t('shared.signInToDuplicate'));
           return;
         }
-        setError('Could not duplicate this set. Please try again.');
+        setError(t('shared.duplicateFailed'));
         return;
       }
       const payload = (await response.json()) as { data: { id: string } };
       router.push(`/sets/${payload.data.id}`);
     } catch {
-      setError('Network error. Check your connection and try again.');
+      setError(t('shared.networkError'));
     } finally {
       setLoading(false);
     }
@@ -51,23 +53,25 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
           {set.title}
         </h1>
-        <p className="mt-2 text-muted-foreground">{set.description ?? 'No description'}</p>
+        <p className="mt-2 text-muted-foreground">{set.description ?? t('ui.noDescription')}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Badge variant="secondary">{set._count.cards} cards</Badge>
+          <Badge variant="secondary">{t('ui.cardsCount', { count: set._count.cards })}</Badge>
           {set.language && <Badge variant="outline">{set.language}</Badge>}
-          {set.user.name && <Badge variant="outline">by {set.user.name}</Badge>}
+          {set.user.name && (
+            <Badge variant="outline">{t('shared.byAuthor', { name: set.user.name })}</Badge>
+          )}
         </div>
       </div>
       {error && (
         <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">{error}</p>
           <Button type="button" size="sm" variant="outline" onClick={() => void duplicate()}>
-            Retry
+            {t('ui.retry')}
           </Button>
         </div>
       )}
       <Button onClick={() => void duplicate()} disabled={loading}>
-        {loading ? 'Duplicating…' : 'Duplicate to my sets'}
+        {loading ? t('shared.duplicating') : t('shared.duplicateToMySets')}
       </Button>
       <div className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-sm">
         {set.cards.map((card) => (
@@ -81,7 +85,7 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
         ))}
       </div>
       <Link href="/library" className="text-sm text-primary hover:underline">
-        Back to library
+        {t('shared.backToLibrary')}
       </Link>
     </div>
   );

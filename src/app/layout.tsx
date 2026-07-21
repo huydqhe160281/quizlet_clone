@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -13,30 +12,39 @@ import { Toaster } from '@/components/ui/sonner';
 import { GuideProviders } from '@/features/guide/components/GuideProviders';
 import { createRootMetadata } from '@/lib/seo/metadata';
 import { siteConfig } from '@/lib/seo/site-config';
+import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
+import { loadCatalog } from '@/lib/i18n/catalog';
+import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
-export const metadata: Metadata = {
-  ...createRootMetadata(),
-  applicationName: siteConfig.name,
-  authors: [{ name: siteConfig.name }],
-  creator: siteConfig.name,
-  publisher: siteConfig.name,
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  category: 'education',
-};
+export async function generateMetadata() {
+  const locale = await getRequestLocale();
+  return {
+    ...createRootMetadata(locale),
+    applicationName: siteConfig.name,
+    authors: [{ name: siteConfig.name }],
+    creator: siteConfig.name,
+    publisher: siteConfig.name,
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    category: 'education',
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
+  const catalog = loadCatalog(locale);
+
   return (
-    <html lang={siteConfig.language} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${inter.variable} min-h-screen font-sans antialiased bg-gradient-to-b from-background to-muted/20 dark:from-background dark:to-background`}
       >
@@ -50,11 +58,13 @@ export default function RootLayout({
         >
           <QueryProvider>
             <AuthSessionProvider>
-              <LoadingOverlayProvider>
-                <ErrorBoundary>
-                  <GuideProviders>{children}</GuideProviders>
-                </ErrorBoundary>
-              </LoadingOverlayProvider>
+              <LocaleProvider locale={locale} catalog={catalog}>
+                <LoadingOverlayProvider>
+                  <ErrorBoundary>
+                    <GuideProviders>{children}</GuideProviders>
+                  </ErrorBoundary>
+                </LoadingOverlayProvider>
+              </LocaleProvider>
             </AuthSessionProvider>
           </QueryProvider>
           <Toaster />

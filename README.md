@@ -69,6 +69,16 @@ npm run generate:guide:check  # CI: fail if committed config is stale
 
 Hand-authored flows/FAQ live under `docs/guide/`. See [docs/guide/README.md](docs/guide/README.md).
 
+## Internationalization (VI / EN / JA)
+
+UI and system copy default to **Vietnamese**. Locale is stored in the `app-locale` cookie (and `User.preferredLocale` when signed in). There is no `/vi|/en|/ja` URL prefix.
+
+- Catalogs: `messages/{vi,en,ja}/*.json`
+- Core helpers: `src/lib/i18n/`
+- Switcher: navbar language control (cookie + optional preference API)
+
+After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLocale` column exists.
+
 ## Scripts
 
 | Command           | Description                                    |

@@ -5,7 +5,7 @@ import type { GuideConfig } from '@/features/guide/schemas/guide-config.schema';
 const baseConfig: GuideConfig = {
   version: 1,
   generatedAt: '2026-06-26T00:00:00.000Z',
-  site: { name: 'Flashcards', locale: 'vi' },
+  site: { name: 'QuizFree', locale: 'runtime' },
   menus: [],
   routes: [{ path: '/sets/new', title: 'Tạo bộ thẻ', auth: 'required' }],
   flows: [],
@@ -15,13 +15,20 @@ const baseConfig: GuideConfig = {
 
 describe('assistant.prompt', () => {
   it('includes guide config in system prompt', () => {
-    const prompt = buildSystemPrompt(baseConfig);
+    const prompt = buildSystemPrompt(baseConfig, { locale: 'vi' });
     expect(prompt).toContain('/sets/new');
     expect(prompt).toContain('tiếng Việt');
   });
 
+  it('Scenario: Guide prompt follows active locale', () => {
+    const prompt = buildSystemPrompt(baseConfig, { locale: 'en' });
+    expect(prompt).toContain('Only answer questions');
+    expect(prompt).toContain('QuizFree');
+  });
+
   it('includes allow-listed userContext fields', () => {
     const prompt = buildSystemPrompt(baseConfig, {
+      locale: 'vi',
       userContext: { setCount: 0, hasSets: false, recentSetIds: [] },
     });
     expect(prompt).toContain('"setCount":0');

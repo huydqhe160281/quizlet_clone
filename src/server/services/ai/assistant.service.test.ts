@@ -30,6 +30,10 @@ vi.mock('@/server/ai/zai', () => ({
   getZaiChatModel: vi.fn(() => 'mock-zai-model'),
 }));
 
+vi.mock('@/lib/i18n/getRequestLocale', () => ({
+  getRequestLocale: vi.fn(async () => 'vi'),
+}));
+
 import { streamAssistantChat } from '@/server/services/ai/assistant.service';
 
 // Helper: build a mock stream result where `usage` resolves successfully

@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
 import { StudySettingsForm } from '@/features/study/components/StudySettingsForm';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type StudySettingsModalProps = {
   open: boolean;
@@ -23,15 +24,17 @@ export function StudySettingsModal({
   initialMode,
   hideModeSelect = false,
 }: StudySettingsModalProps) {
+  const t = useTranslations();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Tùy chỉnh phiên học</DialogTitle>
+          <DialogTitle>{t('study.settings.title')}</DialogTitle>
           <p className="text-sm text-muted-foreground">
             {hideModeSelect
-              ? `Cấu hình vòng luyện tập — ${totalCards} thẻ sẵn sàng.`
-              : `Chọn chế độ và cấu hình vòng luyện tập — ${totalCards} thẻ sẵn sàng.`}
+              ? t('studyUi.settingsSubtitleLocked', { count: totalCards })
+              : t('study.settings.subtitle', { count: totalCards })}
           </p>
         </DialogHeader>
         {open ? (

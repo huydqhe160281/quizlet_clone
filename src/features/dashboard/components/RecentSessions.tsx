@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type RecentSessionsProps = {
   sessions: Array<{
@@ -21,11 +22,11 @@ type RecentSessionsProps = {
   }>;
 };
 
-function formatSessionDate(value: string | Date | null) {
+function formatSessionDate(value: string | Date | null, locale: string) {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -33,14 +34,14 @@ function formatSessionDate(value: string | Date | null) {
 }
 
 export function RecentSessions({ sessions }: RecentSessionsProps) {
+  const t = useTranslations();
+  const locale = useLocale();
+
   if (sessions.length === 0) {
     return (
       <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">Chưa có phiên học nào.</p>
-        <p className="text-xs text-muted-foreground/80">
-          Sau mỗi vòng học, tiến độ (ví dụ 10%, 70%) sẽ hiện tại đây. Học hết phiên để đánh dấu hoàn
-          thành.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('dashboardPage.noSessions')}</p>
+        <p className="text-xs text-muted-foreground/80">{t('dashboardPage.noSessionsHint')}</p>
       </div>
     );
   }
@@ -53,10 +54,25 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
           session.progress ?? (session.totalCards > 0 ? answeredCount / session.totalCards : 0);
         const progressPercent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
         const isComplete = Boolean(session.completedAt);
-        const dateLabel = formatSessionDate(session.completedAt);
+        const dateLabel = formatSessionDate(session.completedAt, locale);
         const accuracy = session.accuracy ?? session.score;
         const accuracyPercent =
           accuracy != null ? Math.round(Math.min(1, Math.max(0, accuracy)) * 100) : null;
+
+        const details = [
+          t('dashboardPage.modeSuffix', { mode: session.mode.toLowerCase() }),
+          t('dashboardPage.cardsFraction', {
+            answered: answeredCount,
+            total: session.totalCards,
+          }),
+          isComplete && accuracyPercent != null
+            ? t('dashboardPage.percentCorrect', { percent: accuracyPercent })
+            : null,
+          dateLabel,
+          isComplete ? t('dashboardPage.done') : t('dashboardPage.inProgress'),
+        ]
+          .filter(Boolean)
+          .join(' · ');
 
         return (
           <Link
@@ -73,18 +89,11 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
               <p className="truncate font-semibold text-card-foreground transition-colors group-hover:text-primary">
                 {session.set.title}
               </p>
-              <p className="text-sm text-muted-foreground">
-                <span className="capitalize">{session.mode.toLowerCase()}</span> mode
-                {` · ${answeredCount}/${session.totalCards} thẻ`}
-                {isComplete && accuracyPercent != null ? ` · ${accuracyPercent}% đúng` : ''}
-                {dateLabel ? ` · ${dateLabel}` : ''}
-                {` · ${isComplete ? 'Đã xong' : 'Đang học'}`}
-              </p>
+              <p className="text-sm text-muted-foreground">{details}</p>
             </div>
             <Badge
               variant={isComplete ? 'secondary' : 'outline'}
               className="ml-3 shrink-0 transition-colors group-hover:bg-primary/10 group-hover:text-primary"
-              title="Tiến độ (đã trả lời / tổng thẻ)"
             >
               {progressPercent}%
             </Badge>

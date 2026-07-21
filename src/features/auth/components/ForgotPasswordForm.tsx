@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export function ForgotPasswordForm() {
+  const t = useTranslations();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function ForgotPasswordForm() {
 
     if (!response.ok) {
       const payload = (await response.json()) as { message?: string; error?: string };
-      setError(payload.message ?? payload.error ?? 'Request failed');
+      setError(payload.message ?? payload.error ?? t('auth.requestFailed'));
       return;
     }
 
@@ -46,13 +48,13 @@ export function ForgotPasswordForm() {
     <Card className="glass-panel relative overflow-hidden rounded-2xl border-border/50 shadow-xl">
       <div className="absolute -left-20 -bottom-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
       <CardHeader className="relative z-10 text-center">
-        <CardTitle className="text-2xl font-bold">Forgot password</CardTitle>
-        <CardDescription>We will email you a reset link.</CardDescription>
+        <CardTitle className="text-2xl font-bold">{t('auth.forgotPasswordTitle')}</CardTitle>
+        <CardDescription>{t('auth.forgotPasswordSubtitle')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 relative z-10">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="fp-email">Email</Label>
+            <Label htmlFor="fp-email">{t('auth.email')}</Label>
             <Input
               id="fp-email"
               type="email"
@@ -65,7 +67,7 @@ export function ForgotPasswordForm() {
           {message && <p className="text-sm text-green-600">{message}</p>}
           {devResetUrl && (
             <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-xs space-y-1">
-              <p className="font-semibold text-amber-700">🛠 Dev mode — no email sent</p>
+              <p className="font-semibold text-amber-700">🛠 {t('auth.devModeNoEmail')}</p>
               <p className="text-amber-600 break-all">
                 <a
                   href={devResetUrl}
@@ -81,17 +83,17 @@ export function ForgotPasswordForm() {
                 className="text-amber-600 underline text-xs"
                 onClick={() => void navigator.clipboard.writeText(devResetUrl)}
               >
-                Copy link
+                {t('auth.copyLink')}
               </button>
             </div>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Sending…' : 'Send reset link'}
+            {loading ? t('auth.sending') : t('auth.sendResetLink')}
           </Button>
         </form>
         <p className="text-center text-sm text-muted-foreground">
           <Link href="/login" className="text-primary hover:underline">
-            Back to sign in
+            {t('auth.backToSignIn')}
           </Link>
         </p>
       </CardContent>

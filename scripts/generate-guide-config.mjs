@@ -12,13 +12,13 @@ const GUIDE_CONFIG_MAX_BYTES = 51_200;
 const STUDY_NAV_ENABLED = false;
 
 const APP_NAV_ITEMS = [
-  { id: 'dashboard', href: '/dashboard', label: 'Dashboard', guideTargetId: 'nav-dashboard' },
-  { id: 'sets', href: '/sets', label: 'My Sets', guideTargetId: 'nav-sets' },
+  { id: 'dashboard', href: '/dashboard', labelKey: 'nav.dashboard', guideTargetId: 'nav-dashboard' },
+  { id: 'sets', href: '/sets', labelKey: 'nav.sets', guideTargetId: 'nav-sets' },
   ...(STUDY_NAV_ENABLED
-    ? [{ id: 'study', href: '/study', label: 'Study', guideTargetId: 'nav-study' }]
+    ? [{ id: 'study', href: '/study', labelKey: 'nav.study', guideTargetId: 'nav-study' }]
     : []),
-  { id: 'search', href: '/search', label: 'Search', guideTargetId: 'nav-search' },
-  { id: 'library', href: '/library', label: 'Library', guideTargetId: 'nav-library' },
+  { id: 'search', href: '/search', labelKey: 'nav.search', guideTargetId: 'nav-search' },
+  { id: 'library', href: '/library', labelKey: 'nav.library', guideTargetId: 'nav-library' },
 ];
 
 function titleFromSegment(segment) {
@@ -85,12 +85,13 @@ export function buildGuideConfig() {
   return {
     version: 1,
     generatedAt: new Date().toISOString(),
-    site: { name: 'Flashcards', locale: 'vi' },
+    // Locale is resolved at request time from messages/{locale}/guide.json — do not freeze UI copy here.
+    site: { name: 'QuizFree', locale: 'runtime' },
     menus: APP_NAV_ITEMS.map((item) => ({
       id: item.id,
-      label: item.label,
+      label: item.labelKey,
       href: item.href,
-      description: `Menu ${item.label}`,
+      description: item.labelKey,
     })),
     routes: uniqueRoutes,
     flows: loadFlows(),
@@ -98,7 +99,7 @@ export function buildGuideConfig() {
     guideTargets: APP_NAV_ITEMS.map((item) => ({
       id: item.guideTargetId,
       selector: `[data-guide=${item.guideTargetId}]`,
-      label: item.label,
+      label: item.labelKey,
     })),
   };
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export type GuideChatMessage = {
   id: string;
@@ -19,6 +20,7 @@ export type GuideChatSessionValue = {
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export function useGuideChatSession(): GuideChatSessionValue {
+  const t = useTranslations();
   const pathname = usePathname();
   const [messages, setMessages] = useState<GuideChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,12 +53,12 @@ export function useGuideChatSession(): GuideChatSessionValue {
 
         if (!response.ok) {
           const payload = (await response.json().catch(() => null)) as { message?: string } | null;
-          throw new Error(payload?.message ?? 'Không thể kết nối trợ lý');
+          throw new Error(payload?.message ?? t('guideUi.connectError'));
         }
 
         const reader = response.body?.getReader();
         if (!reader) {
-          throw new Error('Stream unavailable');
+          throw new Error(t('guideUi.streamUnavailable'));
         }
 
         const decoder = new TextDecoder();
@@ -75,14 +77,14 @@ export function useGuideChatSession(): GuideChatSessionValue {
           );
         }
       } catch (sendError) {
-        const message = sendError instanceof Error ? sendError.message : 'Lỗi không xác định';
+        const message = sendError instanceof Error ? sendError.message : t('guideUi.unknownError');
         setError(message);
         setMessages((current) => current.filter((entry) => entry.id !== assistantId));
       } finally {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, pathname]
+    [isLoading, messages, pathname, t]
   );
 
   return { messages, isLoading, error, sendMessage };

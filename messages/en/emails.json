@@ -1,0 +1,11 @@
+{
+  "emails": {
+    "passwordReset": {
+      "subject": "Reset your QuizFree password",
+      "intro": "You requested a password reset.",
+      "cta": "Click here to reset your password",
+      "expiry": "This link expires in 1 hour.",
+      "ignore": "If you did not request this, you can ignore this email."
+    }
+  }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,12 +20,7 @@ import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-
-const LOADING_MESSAGES = [
-  'Đang phân tích tài liệu...',
-  'Đang trích xuất từ vựng...',
-  'Đang hoàn thiện bộ thẻ...',
-];
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 const DEFAULT_CARD_COUNT = 15;
 
@@ -33,6 +28,7 @@ type GenerateMode = 'freeform' | 'guided';
 
 type GuidedLanguage = 'ja-vi' | 'en-vi' | 'vi-en';
 
+/** English labels for the AI prompt payload (not user-facing UI). */
 const GUIDED_LANGUAGE_LABEL: Record<GuidedLanguage, string> = {
   'ja-vi': 'Japanese -> Vietnamese',
   'en-vi': 'English -> Vietnamese',
@@ -62,6 +58,7 @@ type AIGenerateModalProps = {
 };
 
 export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [step, setStep] = useState<ModalStep>('form');
   const [mode, setMode] = useState<GenerateMode>('freeform');
@@ -77,6 +74,15 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   const [generatedSet, setGeneratedSet] = useState<GeneratedSet | null>(null);
   const [generatedCards, setGeneratedCards] = useState<GeneratedCard[]>([]);
   const [isDiscarding, setIsDiscarding] = useState(false);
+
+  const loadingMessages = useMemo(
+    () => [
+      t('aiGenerate.loadingAnalyze'),
+      t('aiGenerate.loadingExtract'),
+      t('aiGenerate.loadingFinalize'),
+    ],
+    [t]
+  );
 
   const resetForm = useCallback(() => {
     setStep('form');
@@ -102,10 +108,10 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
       return;
     }
     const interval = window.setInterval(() => {
-      setLoadingMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+      setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
     }, 2500);
     return () => window.clearInterval(interval);
-  }, [open, step]);
+  }, [open, step, loadingMessages.length]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && step === 'preview' && generatedSet) {
@@ -147,7 +153,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
     if (mode === 'freeform') {
       const trimmed = prompt.trim();
       if (trimmed.length < 10) {
-        setPromptError('Nhập ít nhất 10 ký tự hoặc dán nội dung dài hơn.');
+        setPromptError(t('aiGenerate.errorPromptShort'));
         return;
       }
       if (isFreeformUnlimited) {
@@ -160,14 +166,14 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
       const rawCount = guidedCardCount.trim();
 
       if (trimmedContent.length < 3) {
-        setPromptError('Nhập nội dung học ít nhất 3 ký tự.');
+        setPromptError(t('aiGenerate.errorContentShort'));
         return;
       }
 
       if (rawCount) {
         const parsed = Number(rawCount);
         if (!Number.isInteger(parsed) || parsed < 5 || parsed > 200) {
-          setPromptError('Số thẻ phải là số nguyên từ 5 đến 200 hoặc để trống.');
+          setPromptError(t('aiGenerate.errorCardCount'));
           return;
         }
         resolvedCardCount = parsed;
@@ -204,8 +210,8 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
         const message =
           payload.message ??
           (response.status === 429
-            ? 'Bạn đã dùng hết lượt tạo AI trong giờ này.'
-            : 'Không thể tạo bộ thẻ. Vui lòng thử lại.');
+            ? t('aiGenerate.errorRateLimit')
+            : t('aiGenerate.errorGenerateFailed'));
         toast.error(message);
         return;
       }
@@ -217,7 +223,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
       }
     } catch {
       setStep('form');
-      toast.error('Lỗi kết nối. Vui lòng thử lại.');
+      toast.error(t('aiGenerate.errorNetwork'));
     }
   };
 
@@ -238,13 +244,13 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
     try {
       const response = await fetch(`/api/v1/sets/${generatedSet.id}`, { method: 'DELETE' });
       if (!response.ok) {
-        toast.error('Không thể xóa bản nháp.');
+        toast.error(t('aiGenerate.errorDiscard'));
         return;
       }
       resetForm();
       onOpenChange(false);
     } catch {
-      toast.error('Không thể xóa bản nháp.');
+      toast.error(t('aiGenerate.errorDiscard'));
     } finally {
       setIsDiscarding(false);
     }
@@ -256,29 +262,27 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            Generate with AI
+            {t('aiGenerate.title')}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Chọn Prompt tự do hoặc Theo form để tạo bộ flashcard bằng AI.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('aiGenerate.subtitle')}</p>
         </DialogHeader>
 
         {step === 'form' && (
           <div className="space-y-4">
             <Tabs value={mode} onValueChange={(value) => setMode(value as GenerateMode)}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="freeform">Prompt tự do</TabsTrigger>
-                <TabsTrigger value="guided">Theo form</TabsTrigger>
+                <TabsTrigger value="freeform">{t('aiGenerate.tabFreeform')}</TabsTrigger>
+                <TabsTrigger value="guided">{t('aiGenerate.tabGuided')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="freeform" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ai-prompt">Nội dung / chủ đề</Label>
+                  <Label htmlFor="ai-prompt">{t('aiGenerate.promptLabel')}</Label>
                   <Textarea
                     id="ai-prompt"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="VD: Tạo 20 từ vựng JLPT N5 chủ đề gia đình..."
+                    placeholder={t('aiGenerate.promptPlaceholder')}
                     rows={5}
                     className="resize-none"
                   />
@@ -291,13 +295,13 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
                       onCheckedChange={(checked) => setIsFreeformUnlimited(checked === true)}
                     />
                     <Label htmlFor="ai-freeform-unlimited" className="cursor-pointer">
-                      Không giới hạn số thẻ (để AI tự quyết)
+                      {t('aiGenerate.unlimitedCards')}
                     </Label>
                   </div>
                   {!isFreeformUnlimited && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <Label>Số thẻ</Label>
+                        <Label>{t('aiGenerate.cardCount')}</Label>
                         <span className="text-sm text-muted-foreground">{cardCount}</span>
                       </div>
                       <Slider
@@ -314,46 +318,46 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
 
               <TabsContent value="guided" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ai-guided-language">Ngôn ngữ học</Label>
+                  <Label htmlFor="ai-guided-language">{t('aiGenerate.languageLabel')}</Label>
                   <Select
                     value={guidedLanguage}
                     onValueChange={(value) => setGuidedLanguage(value as GuidedLanguage)}
                   >
                     <SelectTrigger id="ai-guided-language">
-                      <SelectValue placeholder="Chọn ngôn ngữ" />
+                      <SelectValue placeholder={t('aiGenerate.languagePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ja-vi">Japanese -&gt; Vietnamese</SelectItem>
-                      <SelectItem value="en-vi">English -&gt; Vietnamese</SelectItem>
-                      <SelectItem value="vi-en">Vietnamese -&gt; English</SelectItem>
+                      <SelectItem value="ja-vi">{t('aiGenerate.langJaVi')}</SelectItem>
+                      <SelectItem value="en-vi">{t('aiGenerate.langEnVi')}</SelectItem>
+                      <SelectItem value="vi-en">{t('aiGenerate.langViEn')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ai-guided-content">Nội dung học</Label>
+                  <Label htmlFor="ai-guided-content">{t('aiGenerate.contentLabel')}</Label>
                   <Textarea
                     id="ai-guided-content"
                     value={guidedContent}
                     onChange={(e) => setGuidedContent(e.target.value)}
-                    placeholder="VD: Bảng chữ cái hiragana, từ vựng JLPT N5..."
+                    placeholder={t('aiGenerate.contentPlaceholder')}
                     rows={3}
                     className="resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ai-guided-topic">Chủ đề (tuỳ chọn)</Label>
+                  <Label htmlFor="ai-guided-topic">{t('aiGenerate.topicLabel')}</Label>
                   <Input
                     id="ai-guided-topic"
                     value={guidedTopic}
                     onChange={(e) => setGuidedTopic(e.target.value)}
-                    placeholder="VD: Gia đình, chào hỏi, du lịch..."
+                    placeholder={t('aiGenerate.topicPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="ai-guided-count">Số thẻ (tuỳ chọn, 5-200)</Label>
+                  <Label htmlFor="ai-guided-count">{t('aiGenerate.guidedCountLabel')}</Label>
                   <Input
                     id="ai-guided-count"
                     type="number"
@@ -361,7 +365,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
                     max={200}
                     value={guidedCardCount}
                     onChange={(e) => setGuidedCardCount(e.target.value)}
-                    placeholder="Để trống = không giới hạn"
+                    placeholder={t('aiGenerate.guidedCountPlaceholder')}
                   />
                 </div>
               </TabsContent>
@@ -376,7 +380,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
                 className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg shadow-primary/25 hover:from-violet-500 hover:to-indigo-500"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Tạo bộ thẻ
+                {t('aiGenerate.submit')}
               </Button>
             </div>
           </div>
@@ -386,7 +390,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
           <div className="flex flex-col items-center gap-4 py-8" aria-busy="true">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground" aria-live="polite">
-              {LOADING_MESSAGES[loadingMessageIndex]}
+              {loadingMessages[loadingMessageIndex]}
             </p>
           </div>
         )}
@@ -399,7 +403,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
                 <p className="text-sm text-muted-foreground">{generatedSet.description}</p>
               )}
               <p className="mt-1 text-xs text-muted-foreground">
-                {generatedCards.length} thẻ · Bản nháp riêng tư
+                {t('aiGenerate.previewMeta', { count: generatedCards.length })}
               </p>
             </div>
             <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border border-border/50 p-3">
@@ -420,10 +424,10 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
                 onClick={handleDiscard}
                 disabled={isDiscarding}
               >
-                {isDiscarding ? 'Đang xóa...' : 'Discard'}
+                {isDiscarding ? t('aiGenerate.discarding') : t('aiGenerate.discard')}
               </Button>
               <Button type="button" onClick={handleConfirm}>
-                Confirm &amp; xem bộ thẻ
+                {t('aiGenerate.confirm')}
               </Button>
             </div>
           </div>
@@ -440,6 +444,8 @@ export function GenerateWithAIButton({
   onClick: () => void;
   className?: string;
 }) {
+  const t = useTranslations();
+
   return (
     <Button
       type="button"
@@ -451,7 +457,7 @@ export function GenerateWithAIButton({
       )}
     >
       <Sparkles className="mr-2 h-4 w-4 text-primary" />
-      Generate with AI
+      {t('aiGenerate.button')}
     </Button>
   );
 }

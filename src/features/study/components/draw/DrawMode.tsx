@@ -10,12 +10,15 @@ import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { HINT_DISPLAY_MS } from '@/features/study/lib/draw-config';
 import { studyProgressWhileFeedback } from '@/features/study/lib/study-continue-label';
 import type { StudyCard } from '@/features/study/store';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
 type DrawModeProps = {
   setId: string;
 };
 
 export function DrawMode({ setId }: DrawModeProps) {
+  const t = useTranslations();
   const study = useStudySession(setId, 'DRAW');
   const [showSummary, setShowSummary] = useState(false);
   const [roundEndedThisStep, setRoundEndedThisStep] = useState(false);
@@ -82,7 +85,7 @@ export function DrawMode({ setId }: DrawModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Đang khởi tạo phiên học…
+        {t('studyUi.loadingSession')}
       </div>
     );
   }
@@ -121,7 +124,7 @@ export function DrawMode({ setId }: DrawModeProps) {
   return (
     <StudyModeShell
       setId={setId}
-      modeLabel="Viết chữ (CJK)"
+      modeLabel={t(STUDY_MODE_LABEL_KEY.DRAW)}
       progress={{
         ...studyProgressWhileFeedback(
           roundEndedThisStep,
@@ -129,12 +132,12 @@ export function DrawMode({ setId }: DrawModeProps) {
           study.currentIndex,
           roundCards.length
         ),
-        label: 'Tiến trình luyện viết',
+        label: t('study.progressDraw'),
       }}
     >
       <div className="glass-panel rounded-xl border border-border/50 p-6 text-center shadow-sm md:p-8">
         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-          Vẽ ký tự cho định nghĩa
+          {t('studyUi.drawPrompt')}
         </p>
         <p className="mt-2 text-2xl font-extrabold md:text-3xl">{currentCard.back}</p>
       </div>

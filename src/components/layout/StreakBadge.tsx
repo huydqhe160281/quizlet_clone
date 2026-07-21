@@ -12,9 +12,11 @@ import {
   type StreakUpdatedDetail,
   writeStreakCache,
 } from '@/lib/streak/streak-client';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
 export function StreakBadge({ className }: { className?: string }) {
+  const t = useTranslations();
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const [streak, setStreak] = useState<StreakSnapshot | null>(null);
@@ -68,10 +70,10 @@ export function StreakBadge({ className }: { className?: string }) {
         'inline-flex items-center gap-1.5 rounded-full border border-orange-500/25 bg-orange-500/10 px-3 py-1.5 text-sm font-bold text-orange-600 shadow-sm dark:text-orange-400',
         className
       )}
-      title={`Chuỗi học liên tiếp · Kỷ lục: ${streak.longestStreak} ngày`}
+      title={t('dashboardPage.streakTitle', { record: streak.longestStreak })}
     >
       <Flame className="h-4 w-4 fill-orange-500 text-orange-500" aria-hidden />
-      <span>{streak.currentStreak} Ngày</span>
+      <span>{t('dashboardPage.streakDays', { count: streak.currentStreak })}</span>
     </div>
   );
 }

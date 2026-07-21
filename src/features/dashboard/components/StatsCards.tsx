@@ -1,6 +1,7 @@
 'use client';
 
 import { Flame, Trophy, Layers, Target, Clock, BookOpen, Hash, CheckCircle2 } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type StatsCardsProps = {
   stats: {
@@ -15,21 +16,39 @@ type StatsCardsProps = {
   };
 };
 
-const items = (stats: StatsCardsProps['stats']) => [
-  { label: 'Current streak', value: `${stats.currentStreak} days`, icon: Flame },
-  { label: 'Longest streak', value: `${stats.longestStreak} days`, icon: Trophy },
-  { label: 'Cards studied', value: stats.totalReviews.toString(), icon: Layers },
-  { label: 'Accuracy', value: `${Math.round(stats.accuracy * 100)}%`, icon: Target },
-  { label: 'Due today', value: stats.dueToday.toString(), icon: Clock },
-  { label: 'Total sets', value: stats.totalSets.toString(), icon: BookOpen },
-  { label: 'Total cards', value: stats.totalCards.toString(), icon: Hash },
-  { label: 'Correct answers', value: stats.totalCorrect.toString(), icon: CheckCircle2 },
-];
-
 export function StatsCards({ stats }: StatsCardsProps) {
+  const t = useTranslations();
+
+  const items = [
+    {
+      label: t('dashboard.currentStreak'),
+      value: t('dashboard.days', { count: stats.currentStreak }),
+      icon: Flame,
+    },
+    {
+      label: t('dashboard.longestStreak'),
+      value: t('dashboard.days', { count: stats.longestStreak }),
+      icon: Trophy,
+    },
+    { label: t('dashboard.cardsStudied'), value: stats.totalReviews.toString(), icon: Layers },
+    {
+      label: t('dashboard.accuracy'),
+      value: `${Math.round(stats.accuracy * 100)}%`,
+      icon: Target,
+    },
+    { label: t('dashboard.dueToday'), value: stats.dueToday.toString(), icon: Clock },
+    { label: t('dashboard.totalSets'), value: stats.totalSets.toString(), icon: BookOpen },
+    { label: t('dashboard.totalCards'), value: stats.totalCards.toString(), icon: Hash },
+    {
+      label: t('dashboard.correctAnswers'),
+      value: stats.totalCorrect.toString(),
+      icon: CheckCircle2,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-      {items(stats).map(({ label, value, icon: Icon }) => (
+      {items.map(({ label, value, icon: Icon }) => (
         <div
           key={label}
           className="glass-panel group relative overflow-hidden rounded-xl p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl sm:p-5"

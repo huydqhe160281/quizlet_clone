@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SetFormProps = {
   mode?: 'create' | 'edit';
@@ -38,6 +39,7 @@ export function SetForm({
   onCancel,
   isModal = false,
 }: SetFormProps) {
+  const t = useTranslations();
   const router = useRouter();
   const { createSet, updateSet } = useSetMutations();
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -87,11 +89,11 @@ export function SetForm({
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">{t('setsPage.formTitle')}</Label>
         <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t('setsPage.formDescription')}</Label>
         <Textarea
           id="description"
           value={description}
@@ -101,16 +103,16 @@ export function SetForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="language">Language</Label>
+          <Label htmlFor="language">{t('setsPage.formLanguage')}</Label>
           <Input
             id="language"
-            placeholder="en, vi…"
+            placeholder={t('setsPage.languagePlaceholder')}
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="visibility">Visibility</Label>
+          <Label htmlFor="visibility">{t('setsPage.formVisibility')}</Label>
           <Select
             value={visibility}
             onValueChange={(v) => setVisibility(v as 'PRIVATE' | 'PUBLIC')}
@@ -119,8 +121,8 @@ export function SetForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="PRIVATE">Private</SelectItem>
-              <SelectItem value="PUBLIC">Public</SelectItem>
+              <SelectItem value="PRIVATE">{t('ui.private')}</SelectItem>
+              <SelectItem value="PUBLIC">{t('ui.public')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -133,10 +135,14 @@ export function SetForm({
           onClick={() => (onCancel ? onCancel() : router.back())}
           disabled={loading}
         >
-          Cancel
+          {t('ui.cancel')}
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? 'Saving…' : mode === 'create' ? 'Create set' : 'Save changes'}
+          {loading
+            ? t('setsPage.saving')
+            : mode === 'create'
+              ? t('setsPage.createSet')
+              : t('setsPage.saveChanges')}
         </Button>
       </div>
     </form>
@@ -149,8 +155,10 @@ export function SetForm({
   return (
     <Card className="glass-panel overflow-hidden rounded-2xl border-border/50 shadow-lg">
       <CardHeader>
-        <CardTitle>{mode === 'create' ? 'New flashcard set' : 'Edit set'}</CardTitle>
-        <CardDescription>Add metadata for your study material.</CardDescription>
+        <CardTitle>
+          {mode === 'create' ? t('setsPage.createTitle') : t('setsPage.editTitle')}
+        </CardTitle>
+        <CardDescription>{t('setsPage.formHint')}</CardDescription>
       </CardHeader>
       <CardContent>{formContent}</CardContent>
     </Card>

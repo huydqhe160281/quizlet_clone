@@ -373,7 +373,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou: 0,
       normalizedF1: 0,
       userInk,
-      reason: 'Hãy vẽ ký tự trước khi bấm Xong.',
+      reason: 'studyUi.drawFirst',
     };
   }
 
@@ -389,7 +389,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou: 0,
       normalizedF1: 0,
       userInk,
-      reason: 'Không tạo được mẫu ký tự để so sánh.',
+      reason: 'studyUi.drawNoReference',
     };
   }
 
@@ -407,7 +407,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou: 0,
       normalizedF1: 0,
       userInk,
-      reason: 'Không thể so khớp nét vẽ với mẫu. Hãy thử lại.',
+      reason: 'studyUi.drawMatchFailed',
     };
   }
 
@@ -466,7 +466,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou,
       normalizedF1,
       userInk,
-      reason: 'Độ đậm nét vẽ chưa hợp lý so với mẫu. Hãy viết gần giống kích thước ký tự.',
+      reason: 'studyUi.drawStrokeWeight',
     };
   }
 
@@ -482,7 +482,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou,
       normalizedF1,
       userInk,
-      reason: 'Nét vẽ chưa khớp mẫu — thử vẽ đúng hình ký tự hơn.',
+      reason: 'studyUi.drawShapeMismatch',
     };
   }
 
@@ -515,7 +515,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou,
       normalizedF1,
       userInk,
-      reason: 'Nét vẽ chưa khớp mẫu — thử vẽ đúng hình ký tự hơn.',
+      reason: 'studyUi.drawShapeMismatch',
     };
   }
 
@@ -531,7 +531,7 @@ export const scoreFreeDrawMatch = (
       normalizedIou,
       normalizedF1,
       userInk,
-      reason: 'Chưa phủ đủ nét của ký tự — hãy vẽ lại.',
+      reason: 'studyUi.drawCoverage',
     };
   }
 

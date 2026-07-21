@@ -22,6 +22,39 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   secret: env.authSecret,
+  events: {
+    async signIn({ user }) {
+      if (!user.id) return;
+      try {
+        const { cookies, headers } = await import('next/headers');
+        const { planLoginLocaleSync } = await import('@/lib/auth/login-sync');
+        const { APP_LOCALE_COOKIE } = await import('@/lib/i18n/constants');
+        const { setLocaleCookie } = await import('@/lib/i18n/cookies');
+
+        const jar = await cookies();
+        const headerStore = await headers();
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { preferredLocale: true },
+        });
+        const plan = planLoginLocaleSync({
+          dbLocale: dbUser?.preferredLocale ?? null,
+          cookieLocale: jar.get(APP_LOCALE_COOKIE)?.value,
+          acceptLanguage: headerStore.get('accept-language'),
+        });
+
+        if (plan.persistToDb) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { preferredLocale: plan.locale },
+          });
+        }
+        await setLocaleCookie(plan.locale);
+      } catch {
+        // Login must not fail if locale sync cannot run (e.g. outside request scope).
+      }
+    },
+  },
   providers: [
     ...googleProvider,
     Credentials({

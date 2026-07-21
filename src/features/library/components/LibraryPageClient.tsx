@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SortOption = 'newest' | 'most_studied' | 'trending';
 
@@ -21,7 +22,14 @@ type LibraryPage = {
   pagination: { nextCursor: string | null; hasMore: boolean };
 };
 
+const SORT_LABEL_KEY: Record<SortOption, string> = {
+  newest: 'library.sortNewest',
+  most_studied: 'library.sortMostStudied',
+  trending: 'library.sortTrending',
+};
+
 export function LibraryPageClient({ initialData }: { initialData: LibraryPage }) {
+  const t = useTranslations();
   const [sort, setSort] = useState<SortOption>('newest');
 
   const {
@@ -41,7 +49,7 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
       if (pageParam) params.set('cursor', pageParam);
       const response = await fetch(`/api/v1/library?${params.toString()}`);
       if (!response.ok) {
-        throw new Error('Failed to load library');
+        throw new Error(t('library.loadFailed'));
       }
       return (await response.json()) as LibraryPage;
     },
@@ -58,9 +66,9 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
-          Public library
+          {t('library.title')}
         </h1>
-        <p className="text-muted-foreground">Browse and duplicate public flashcard sets.</p>
+        <p className="text-muted-foreground">{t('library.subtitle')}</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {(['newest', 'most_studied', 'trending'] as SortOption[]).map((option) => (
@@ -71,27 +79,27 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
             onClick={() => setSort(option)}
             disabled={isFetching && !isFetchingNextPage}
           >
-            {option.replace('_', ' ')}
+            {t(SORT_LABEL_KEY[option])}
           </Button>
         ))}
       </div>
-      {isLoading && <p className="text-sm text-muted-foreground">Loading library…</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t('library.loading')}</p>}
       {isError && (
         <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
           <p className="text-sm text-destructive">
-            {error instanceof Error ? error.message : 'Could not load library.'}
+            {error instanceof Error ? error.message : t('library.loadFailed')}
           </p>
           <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
-            Retry
+            {t('ui.retry')}
           </Button>
         </div>
       )}
       {showEmpty && (
         <div className="rounded-xl border border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">No public sets yet</p>
-          <p className="mt-1">Publish a set from your library to see it here.</p>
+          <p className="font-medium text-foreground">{t('library.emptyTitle')}</p>
+          <p className="mt-1">{t('library.emptyHint')}</p>
           <Button asChild size="sm" className="mt-3" variant="outline">
-            <Link href="/sets">Go to my sets</Link>
+            <Link href="/sets">{t('library.goToMySets')}</Link>
           </Button>
         </div>
       )}
@@ -108,16 +116,18 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
                 {set.title}
               </h3>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                {set.description ?? 'No description'}
+                {set.description ?? t('ui.noDescription')}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Badge
                   variant="secondary"
                   className="transition-colors group-hover:bg-primary/10 group-hover:text-primary"
                 >
-                  {set._count.cards} cards
+                  {t('ui.cardsCount', { count: set._count.cards })}
                 </Badge>
-                <Badge variant="outline">{set._count.studySessions} studied</Badge>
+                <Badge variant="outline">
+                  {t('ui.studiedCount', { count: set._count.studySessions })}
+                </Badge>
                 {set.language && <Badge variant="outline">{set.language}</Badge>}
               </div>
             </div>
@@ -132,7 +142,7 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
             disabled={isFetchingNextPage}
             onClick={() => void fetchNextPage()}
           >
-            {isFetchingNextPage ? 'Loading…' : 'Load more'}
+            {isFetchingNextPage ? t('ui.loading') : t('ui.loadMore')}
           </Button>
         </div>
       )}

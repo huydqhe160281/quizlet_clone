@@ -4,22 +4,36 @@ import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { forgotPasswordSchema } from '@/features/auth/schemas/auth.schema';
 import { env } from '@/config/env';
 import { prisma } from '@/server/db';
-import { sendPasswordResetEmail } from '@/server/auth/email';
+import { resolveEmailLocale, sendPasswordResetEmail } from '@/server/auth/email';
+import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
+import { loadCatalog } from '@/lib/i18n/catalog';
+import { t } from '@/lib/i18n/t';
 
 export const POST = withErrorHandler(async (req) => {
+  const locale = await getRequestLocale();
+  const catalog = loadCatalog(locale);
+
   const ip = getClientIp(req);
   if (authRateLimit.check(`forgot:${ip}`)) {
-    throw new ApiError('RATE_LIMITED', 'Too many requests', 429);
+    throw new ApiError('RATE_LIMITED', t(catalog, 'errors.rateLimited'), 429);
   }
 
   const body = await req.json();
   const parsed = forgotPasswordSchema.safeParse(body);
   if (!parsed.success) {
-    throw new ApiError('VALIDATION_ERROR', 'Invalid input', 400, parsed.error.flatten());
+    throw new ApiError(
+      'VALIDATION_ERROR',
+      t(catalog, 'errors.validation'),
+      400,
+      parsed.error.flatten()
+    );
   }
 
   const email = parsed.data.email.toLowerCase();
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, preferredLocale: true },
+  });
 
   // Enumeration-safe: always return success. devResetUrl ONLY for existing users.
   // For non-existent users, devResetUrl is NEVER included (not even in dev mode).
@@ -35,12 +49,11 @@ export const POST = withErrorHandler(async (req) => {
     });
 
     const resetUrl = `${env.authUrl}/reset-password?token=${token}`;
+    const emailLocale = resolveEmailLocale(user.preferredLocale, locale);
 
     if (env.resendApiKey) {
-      // Production path: send real email
-      await sendPasswordResetEmail(email, resetUrl);
+      await sendPasswordResetEmail(email, resetUrl, emailLocale);
     } else if (env.nodeEnv !== 'production') {
-      // Development-only: expose URL when no Resend key configured
       devResetUrl = resetUrl;
     }
   }

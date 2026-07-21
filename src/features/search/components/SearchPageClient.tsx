@@ -6,6 +6,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type PublicSetItem = {
   id: string;
@@ -21,6 +22,7 @@ type SetsPage = {
 };
 
 export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
+  const t = useTranslations();
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState('');
 
@@ -44,7 +46,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
 
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('Failed to load sets');
+          throw new Error(t('searchPage.loadFailed'));
         }
         return (await response.json()) as SetsPage;
       },
@@ -60,12 +62,9 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
-          Search public sets
+          {t('searchPage.title')}
         </h1>
-        <p className="text-muted-foreground">
-          Browse community sets or search by title and description. Signed-in users also see their
-          own matching sets.
-        </p>
+        <p className="text-muted-foreground">{t('searchPage.subtitle')}</p>
       </div>
       <form
         className="flex gap-2"
@@ -77,9 +76,9 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by title or description…"
+          placeholder={t('searchPage.placeholder')}
         />
-        <Button type="submit">Search</Button>
+        <Button type="submit">{t('ui.search')}</Button>
         {isSearching && (
           <Button
             type="button"
@@ -89,35 +88,35 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
               setSubmitted('');
             }}
           >
-            Clear
+            {t('ui.clear')}
           </Button>
         )}
       </form>
       <p className="text-sm text-muted-foreground">
-        {isSearching ? `Results for “${submitted}”` : 'Showing all public sets (newest first)'}
+        {isSearching
+          ? t('searchPage.resultsFor', { query: submitted })
+          : t('searchPage.showingAll')}
       </p>
       {isLoading && (
         <p className="text-sm text-muted-foreground">
-          {isSearching ? 'Searching…' : 'Loading sets…'}
+          {isSearching ? t('searchPage.searching') : t('searchPage.loadingSets')}
         </p>
       )}
       {error && (
         <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-          <p className="text-sm text-destructive">Could not load sets. Try again.</p>
+          <p className="text-sm text-destructive">{t('searchPage.loadFailed')}</p>
           <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
-            Retry
+            {t('ui.retry')}
           </Button>
         </div>
       )}
       {!isLoading && !error && sets.length === 0 && (
         <div className="rounded-xl border border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
           <p className="font-medium text-foreground">
-            {isSearching ? 'No sets match your search' : 'No public sets yet'}
+            {isSearching ? t('searchPage.noMatchTitle') : t('searchPage.emptyTitle')}
           </p>
           <p className="mt-1">
-            {isSearching
-              ? 'Try a shorter keyword or clear the search to browse newest sets.'
-              : 'Publish a set to make it discoverable.'}
+            {isSearching ? t('searchPage.noMatchHint') : t('searchPage.emptyHint')}
           </p>
           {isSearching && (
             <Button
@@ -130,7 +129,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
                 setSubmitted('');
               }}
             >
-              Browse newest
+              {t('searchPage.browseNewest')}
             </Button>
           )}
         </div>
@@ -148,7 +147,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
                 {set.title}
               </h3>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                {set.description ?? 'No description'}
+                {set.description ?? t('ui.noDescription')}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {set._count && (
@@ -156,7 +155,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
                     variant="secondary"
                     className="transition-colors group-hover:bg-primary/10 group-hover:text-primary"
                   >
-                    {set._count.cards} cards
+                    {t('ui.cardsCount', { count: set._count.cards })}
                   </Badge>
                 )}
                 {set.language && <Badge variant="outline">{set.language}</Badge>}
@@ -173,7 +172,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
             disabled={isFetchingNextPage}
             onClick={() => void fetchNextPage()}
           >
-            {isFetchingNextPage ? 'Loading…' : 'Load more'}
+            {isFetchingNextPage ? t('ui.loading') : t('ui.loadMore')}
           </Button>
         </div>
       )}

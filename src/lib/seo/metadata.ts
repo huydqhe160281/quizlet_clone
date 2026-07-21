@@ -1,16 +1,20 @@
 import type { Metadata } from 'next';
 import { env } from '@/config/env';
 import { siteConfig } from '@/lib/seo/site-config';
+import { OG_LOCALE_MAP, type Locale, DEFAULT_LOCALE } from '@/lib/i18n/constants';
+import { loadCatalog } from '@/lib/i18n/catalog';
+import { t } from '@/lib/i18n/t';
 
 export const getSiteUrl = (): string => env.authUrl;
 
 const buildOpenGraph = (
   title: string,
   description: string,
-  path: string
+  path: string,
+  locale: Locale = DEFAULT_LOCALE
 ): NonNullable<Metadata['openGraph']> => ({
   type: 'website',
-  locale: siteConfig.locale,
+  locale: OG_LOCALE_MAP[locale],
   url: `${getSiteUrl()}${path === '/' ? '' : path}`,
   siteName: siteConfig.name,
   title,
@@ -38,30 +42,37 @@ type PageMetadataOptions = {
   path?: string;
   keywords?: string[];
   robots?: Metadata['robots'];
+  locale?: Locale;
 };
 
-export const createRootMetadata = (): Metadata => ({
-  metadataBase: new URL(getSiteUrl()),
-  title: {
-    default: siteConfig.title,
-    template: siteConfig.titleTemplate,
-  },
-  description: siteConfig.description,
-  keywords: [...siteConfig.keywords],
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export const createRootMetadata = (locale: Locale = DEFAULT_LOCALE): Metadata => {
+  const catalog = loadCatalog(locale);
+  const title = t(catalog, 'seo.title') || siteConfig.title;
+  const description = t(catalog, 'seo.description') || siteConfig.description;
+
+  return {
+    metadataBase: new URL(getSiteUrl()),
+    title: {
+      default: title,
+      template: siteConfig.titleTemplate,
+    },
+    description,
+    keywords: [...siteConfig.keywords],
+    robots: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
     },
-  },
-  openGraph: buildOpenGraph(siteConfig.title, siteConfig.description, '/'),
-  twitter: buildTwitter(siteConfig.title, siteConfig.description),
-});
+    openGraph: buildOpenGraph(title, description, '/', locale),
+    twitter: buildTwitter(title, description),
+  };
+};
 
 export const createPageMetadata = ({
   title,
@@ -69,6 +80,7 @@ export const createPageMetadata = ({
   path = '/',
   keywords,
   robots,
+  locale = DEFAULT_LOCALE,
 }: PageMetadataOptions = {}): Metadata => {
   const resolvedTitle = title ?? siteConfig.title;
   const canonicalPath = path === '' ? '/' : path;
@@ -81,7 +93,7 @@ export const createPageMetadata = ({
       canonical: canonicalPath,
     },
     ...(robots ? { robots } : {}),
-    openGraph: buildOpenGraph(resolvedTitle, description, canonicalPath),
+    openGraph: buildOpenGraph(resolvedTitle, description, canonicalPath, locale),
     twitter: buildTwitter(resolvedTitle, description),
   };
 };

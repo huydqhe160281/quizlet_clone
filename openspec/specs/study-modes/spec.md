@@ -146,6 +146,60 @@ The system SHALL create a StudySession record at session start and update it on 
 
 ---
 
+### Requirement: Study Session Create Idempotency
+
+The system MUST create or resume a study session such that duplicate create attempts for the same learner intent do not produce conflicting or duplicate active sessions.
+
+#### Scenario: Double submit does not duplicate session
+
+- **GIVEN** a learner starts a study mode for a set and a create-session request is already in flight or succeeded
+- **WHEN** a second create-session request is issued for the same set, mode, and learner intent (e.g. double click, remount, retry)
+- **THEN** the client continues with a single canonical session (existing or newly created once) and does not leave the learner in a broken double-session state
+
+#### Scenario: Resume prefers existing in-progress session
+
+- **GIVEN** the learner has an in-progress session for the set and mode
+- **WHEN** they choose to continue/resume from the launcher or dashboard recent session
+- **THEN** the system resumes that session rather than silently creating a conflicting new session
+
+---
+
+### Requirement: Immediate Study Feedback And Progress
+
+The system MUST provide immediate correctness, progress, and completion feedback during study modes without requiring hover-only interactions. Feedback in scope is **mode-native** (client/session evaluation for Learn/Write/Test/Flashcard/Draw as applicable) — not AI-generate or AI-evaluator paths (those remain do-not-touch unless a user-approved P0).
+
+#### Scenario: Answer feedback is immediate
+
+- **GIVEN** a learner submits an answer in a study mode that evaluates correctness with mode-native logic
+- **WHEN** the answer is accepted by the client/session logic
+- **THEN** the UI shows clear correct/incorrect (or equivalent) feedback and updates progress before requiring another navigation step
+
+#### Scenario: Session complete is explicit
+
+- **GIVEN** the learner finishes the last card/question in the session round
+- **WHEN** completion is reached
+- **THEN** a session complete (or round summary) surface is shown with actionable next steps (e.g. restart, back to set)
+
+#### Scenario: Mobile study does not depend on hover
+
+- **GIVEN** a learner uses a touch viewport
+- **WHEN** they study in a mode whose chrome was edited for feedback/UX
+- **THEN** primary actions and feedback remain usable without hover
+
+#### Scenario: Actionable error on touched study flow
+
+- **GIVEN** a study create/resume or answer submit fails on a touched flow (network/API/validation)
+- **WHEN** the error is shown
+- **THEN** the message states what went wrong and a next action (retry/resume/back), and in-progress typed input is preserved unless a documented P0 forces a remount
+
+#### Scenario: Auth is out of rewrite scope for optimization playbooks
+
+- **GIVEN** an unauthenticated or stale-session learner hits dashboard or study entry
+- **WHEN** existing auth-entry-redirect behavior applies
+- **THEN** optimization playbook changes MUST NOT rewrite auth flows; Observe may only flag auth issues as P0 for a separate change unless the user explicitly expands scope
+
+---
+
 ### Requirement: Pre-Study Settings Screen
 
 The system SHALL present a settings form before starting any study mode.

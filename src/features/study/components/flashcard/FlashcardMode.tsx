@@ -25,12 +25,15 @@ import { StudyModeShell } from '@/features/study/components/shared/StudyModeShel
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
 type FlashcardModeProps = {
   setId: string;
 };
 
 export function FlashcardMode({ setId }: FlashcardModeProps) {
+  const t = useTranslations();
   const study = useStudySession(setId, 'FLASHCARD');
   const { isFlipped, flip, resetFlip } = useFlipState();
   const touchStartX = useRef<number | null>(null);
@@ -135,7 +138,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   if (study.isLoading) {
     return (
       <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        Đang khởi tạo phiên học…
+        {t('studyUi.loadingSession')}
       </div>
     );
   }
@@ -169,22 +172,22 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   }
 
   if (!currentCard) {
-    return <p className="text-sm text-muted-foreground">Không có thẻ trong bộ này.</p>;
+    return <p className="text-sm text-muted-foreground">{t('studyUi.emptyCards')}</p>;
   }
 
   return (
     <StudyModeShell
       setId={setId}
-      modeLabel="Chế độ thẻ ghi nhớ"
+      modeLabel={t(STUDY_MODE_LABEL_KEY.FLASHCARD)}
       progress={{
         current: study.currentIndex + 1,
         total: roundCards.length,
-        label: 'Tiến trình',
+        label: t('study.progressDefault'),
       }}
       badge={
         <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
           <Sparkles className="h-3.5 w-3.5" />
-          Vòng {study.roundIndex + 1}
+          {t('studyUi.roundBadge', { round: study.roundIndex + 1 })}
         </span>
       }
     >
@@ -216,7 +219,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
             onClick={() => setSpeechEnabled((value) => !value)}
           >
             <Volume2 className="mr-1.5 h-3.5 w-3.5" />
-            Phát âm: {speechEnabled ? 'Bật' : 'Tắt'}
+            {speechEnabled ? t('studyUi.speechOn') : t('studyUi.speechOff')}
           </Button>
           <Button
             type="button"
@@ -230,13 +233,13 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
             ) : (
               <Play className="mr-1.5 h-3.5 w-3.5" />
             )}
-            Tự chạy: {autoplay ? 'Đang chạy' : 'Dừng'}
+            {autoplay ? t('studyUi.autoplayRunning') : t('studyUi.autoplayPaused')}
           </Button>
         </div>
         {study.settings?.randomize && (
           <span className="inline-flex items-center gap-1.5 font-semibold text-muted-foreground">
             <Shuffle className="h-3.5 w-3.5" />
-            Thứ tự đã xáo trộn
+            {t('studyUi.shuffledOrder')}
           </span>
         )}
       </div>
@@ -261,7 +264,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
           className="h-12 w-12 rounded-full shadow-sm"
           onClick={goPrev}
           disabled={study.currentIndex === 0}
-          aria-label="Thẻ trước"
+          aria-label={t('studyUi.prevCardAria')}
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
@@ -274,17 +277,14 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
           size="icon"
           className="h-12 w-12 rounded-full shadow-sm"
           onClick={() => void goNext()}
-          aria-label="Thẻ tiếp theo"
+          aria-label={t('studyUi.nextCardAria')}
         >
           <ChevronRight className="h-6 w-6" />
         </Button>
       </div>
 
       <p className="text-center text-[11px] font-semibold text-muted-foreground">
-        Mẹo: dùng phím{' '}
-        <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-[10px]">←</kbd>{' '}
-        <kbd className="rounded border bg-muted px-1 py-0.5 font-mono text-[10px]">→</kbd> hoặc vuốt
-        để chuyển thẻ
+        {t('studyUi.navTip')}
       </p>
 
       {isLastCard && isFlipped && (
@@ -294,9 +294,9 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
               <Award className="h-7 w-7 text-primary-foreground" />
             </div>
             <div>
-              <h3 className="text-base font-bold">Bạn đã xem hết thẻ trong vòng này!</h3>
+              <h3 className="text-base font-bold">{t('studyUi.roundDoneTitle')}</h3>
               <p className="mt-0.5 text-xs text-primary-foreground/80">
-                Bấm tiếp để sang vòng sau, hoặc học hết các vòng để lưu phiên trên Dashboard.
+                {t('studyUi.roundDoneHint')}
               </p>
             </div>
           </div>
@@ -306,7 +306,9 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
             className={cn('shrink-0 font-extrabold')}
             onClick={() => void goNext()}
           >
-            {study.currentIndex >= roundCards.length - 1 ? 'Vòng tiếp theo' : 'Tiếp tục'}
+            {study.currentIndex >= roundCards.length - 1
+              ? t('study.nextRound')
+              : t('studyUi.continue')}
           </Button>
         </div>
       )}
@@ -320,7 +322,9 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
           onClick={() => void goNext()}
         >
           <Layers className="mr-2 h-4 w-4" />
-          {study.currentIndex >= roundCards.length - 1 ? 'Vòng tiếp theo' : 'Thẻ tiếp theo'}
+          {study.currentIndex >= roundCards.length - 1
+            ? t('study.nextRound')
+            : t('studyUi.nextCard')}
         </Button>
       </div>
     </StudyModeShell>

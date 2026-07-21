@@ -19,12 +19,14 @@ import { StudyLauncher } from '@/features/study/components/StudyLauncher';
 import { useSet, useSetMutations, useCards } from '@/features/sets/hooks/useSets';
 import { ImportSetWizard } from '@/features/sets/components/ImportSetWizard';
 import { SetForm } from '@/features/sets/components/SetForm';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SetDetailClientProps = {
   setId: string;
 };
 
 export function SetDetailClient({ setId }: SetDetailClientProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [importOpen, setImportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -36,18 +38,14 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
 
   if (loadError) {
     return (
-      <RedirectingNotice
-        error={loadError}
-        fallbackHref="/sets"
-        message="Không tìm thấy bộ thẻ. Đang quay lại…"
-      />
+      <RedirectingNotice error={loadError} fallbackHref="/sets" message={t('setsPage.notFound')} />
     );
   }
 
   if (isLoading || !set) {
     return (
       <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
-        Loading set…
+        {t('setsPage.loadingSet')}
       </div>
     );
   }
@@ -61,7 +59,7 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
             className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to sets
+            {t('setsPage.backToSets')}
           </Link>
         </Button>
       </div>
@@ -70,10 +68,12 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
             {set.title}
           </h1>
-          <p className="mt-1 text-muted-foreground">{set.description ?? 'No description'}</p>
+          <p className="mt-1 text-muted-foreground">{set.description ?? t('ui.noDescription')}</p>
           <div className="mt-2 flex gap-2">
-            <Badge variant="secondary">{set._count.cards} cards</Badge>
-            <Badge variant="outline">{set.visibility.toLowerCase()}</Badge>
+            <Badge variant="secondary">{t('ui.cardsCount', { count: set._count.cards })}</Badge>
+            <Badge variant="outline">
+              {set.visibility === 'PUBLIC' ? t('ui.public') : t('ui.private')}
+            </Badge>
             {set.language && <Badge variant="outline">{set.language}</Badge>}
           </div>
         </div>
@@ -85,12 +85,12 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
             className="flex-1 sm:flex-none"
           >
             <Pencil className="mr-2 h-4 w-4" />
-            Edit
+            {t('ui.edit')}
           </Button>
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Edit set</DialogTitle>
+                <DialogTitle>{t('setsPage.editSet')}</DialogTitle>
               </DialogHeader>
               <SetForm
                 mode="edit"
@@ -111,7 +111,7 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                 <Upload className="mr-2 h-4 w-4" />
-                Import
+                {t('ui.import')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[620px] flex flex-col max-h-[90vh] overflow-hidden">
@@ -137,27 +137,27 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
             }
           >
             <Copy className="mr-2 h-4 w-4" />
-            Duplicate
+            {t('ui.duplicate')}
           </Button>
           <Button
             variant="destructive"
             size="sm"
             className="flex-1 sm:flex-none"
             onClick={() => {
-              if (window.confirm('Delete this set and all cards?')) {
+              if (window.confirm(t('setsPage.deleteConfirm'))) {
                 deleteSet.mutate(setId, { onSuccess: () => router.push('/sets') });
               }
             }}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t('ui.delete')}
           </Button>
         </div>
       </div>
       <Suspense
         fallback={
           <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
-            Loading study modes…
+            {t('setsPage.loadingModes')}
           </div>
         }
       >

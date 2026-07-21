@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CANVAS_PADDING, CANVAS_SIZE, MAX_MISTAKES } from '@/features/study/lib/draw-config';
 import { isHanziWriterHanChar } from '@/features/study/lib/cjk-draw-utils';
 import { FreeDrawCanvas } from '@/features/study/components/draw/FreeDrawCanvas';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type HanziWriterCanvasProps = {
   character: string;
@@ -31,6 +32,7 @@ type HanziWriterQuizCanvasProps = {
 };
 
 function HanziWriterQuizCanvas({ character, onComplete, onSkip }: HanziWriterQuizCanvasProps) {
+  const t = useTranslations();
   const containerRef = useRef<HTMLDivElement>(null);
   const writerRef = useRef<HanziWriter | null>(null);
   const mistakesRef = useRef(0);
@@ -87,15 +89,13 @@ function HanziWriterQuizCanvas({ character, onComplete, onSkip }: HanziWriterQui
   if (loadError) {
     return (
       <div className="space-y-4 rounded-xl border border-dashed border-border p-4 text-center">
-        <p className="text-sm text-muted-foreground">
-          Không tải được dữ liệu nét vẽ. Kiểm tra kết nối mạng rồi thử lại.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('studyUi.drawLoadError')}</p>
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button variant="outline" onClick={() => setLoadError(false)}>
-            Thử lại
+            {t('ui.retry')}
           </Button>
           <Button variant="secondary" onClick={onSkip}>
-            Bỏ qua thẻ này
+            {t('studyUi.skipCard')}
           </Button>
         </div>
       </div>
@@ -109,7 +109,7 @@ function HanziWriterQuizCanvas({ character, onComplete, onSkip }: HanziWriterQui
         className="rounded-xl border border-border bg-background shadow-inner"
       />
       <Button variant="outline" size="sm" onClick={restartQuiz}>
-        Xóa
+        {t('studyUi.clearCanvas')}
       </Button>
     </div>
   );

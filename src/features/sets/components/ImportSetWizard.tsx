@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type ImportResult = {
   set: { id: string; title: string };
@@ -83,23 +84,24 @@ const SIMPLE_JSON_EXAMPLE = `{
 }`;
 
 function FieldLegend() {
+  const t = useTranslations();
   const fields = [
     {
       key: 'front',
       label: 'front',
-      desc: 'Câu hỏi + 4 đáp án a, b, c, d (xuống dòng hoặc cùng dòng)',
+      desc: t('importWizard.fieldFrontDesc'),
       sample: 'Danh mục tài khoản...\\na. Tổng hợp\\nb. Danh mục và số dư...',
     },
     {
       key: 'back',
       label: 'back',
-      desc: 'Chữ cái đáp án đúng — A, B, C hoặc D',
+      desc: t('importWizard.fieldBackDesc'),
       sample: 'B',
     },
     {
       key: 'example',
       label: 'example',
-      desc: 'Giải thích (tùy chọn) — hiển thị sau khi trả lời sai',
+      desc: t('importWizard.fieldExampleDesc'),
       sample: 'Đây là nơi khai báo hệ thống tài khoản...',
     },
   ];
@@ -108,7 +110,7 @@ function FieldLegend() {
     <div className="min-w-0 space-y-2 overflow-hidden rounded-xl border border-border/50 bg-muted/20 p-3">
       <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
         <HelpCircle className="h-3.5 w-3.5 text-primary" />
-        Cấu trúc cột CSV / trường JSON
+        {t('importWizard.fieldLegendTitle')}
       </p>
       <div className="space-y-2">
         {fields.map((field) => (
@@ -133,10 +135,12 @@ function FieldLegend() {
 }
 
 function McqPreview() {
+  const t = useTranslations();
+
   return (
     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
       <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
-        Ví dụ hiển thị khi học
+        {t('importWizard.mcqPreviewTitle')}
       </p>
       <div className="space-y-2 rounded-lg border border-border/40 bg-background/80 p-3 text-xs">
         <p className="font-semibold leading-relaxed">
@@ -158,7 +162,7 @@ function McqPreview() {
           ))}
         </div>
         <p className="text-[10px] text-muted-foreground">
-          <span className="font-semibold">back = B</span> → đáp án đúng là{' '}
+          <span className="font-semibold">{t('importWizard.mcqPreviewHint')}</span>{' '}
           <span className="font-semibold">b. Danh mục và số dư</span>
         </p>
       </div>
@@ -167,12 +171,13 @@ function McqPreview() {
 }
 
 function FormatExample({ format }: { format: 'csv' | 'json' }) {
+  const t = useTranslations();
   const content = format === 'csv' ? MCQ_CSV_EXAMPLE : MCQ_JSON_GUIDE_EXAMPLE;
 
   return (
     <div className="min-w-0 space-y-2 overflow-hidden">
       <p className="text-xs font-semibold text-muted-foreground">
-        Mẫu {format.toUpperCase()} — câu trắc nghiệm a/b/c/d
+        {t('importWizard.formatExampleTitle', { format: format.toUpperCase() })}
       </p>
       <pre className="max-h-40 max-w-full overflow-auto rounded-xl border border-border/50 bg-muted/30 p-3 font-mono text-[10px] leading-relaxed whitespace-pre-wrap break-words text-foreground/90">
         {content}
@@ -190,6 +195,8 @@ function McqImportGuide({
   onToggle: () => void;
   format: 'csv' | 'json';
 }) {
+  const t = useTranslations();
+
   return (
     <div className="min-w-0 space-y-2">
       <button
@@ -199,9 +206,9 @@ function McqImportGuide({
       >
         <HelpCircle className="h-3.5 w-3.5 shrink-0 text-primary" />
         <span className="min-w-0 flex-1">
-          Import theo cấu trúc a/b/c/d thì{' '}
+          {t('importWizard.guideToggle')}{' '}
           <span className="font-semibold text-primary underline-offset-2 hover:underline">
-            {open ? 'ẩn chỉ dẫn' : 'xem chỉ dẫn'}
+            {open ? t('importWizard.guideHide') : t('importWizard.guideShow')}
           </span>
         </span>
         <ChevronDown
@@ -229,6 +236,8 @@ function CsvUploadZone({
   csvFile: File | null;
   onFileChange: (file: File | null) => void;
 }) {
+  const t = useTranslations();
+
   return (
     <>
       <input
@@ -260,12 +269,12 @@ function CsvUploadZone({
         </div>
         <div className="text-center">
           <p className="text-sm font-semibold">
-            {csvFile ? csvFile.name : 'Chọn hoặc kéo thả file CSV'}
+            {csvFile ? csvFile.name : t('importWizard.csvPickFile')}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {csvFile
-              ? `${(csvFile.size / 1024).toFixed(1)} KB · Bấm để đổi file`
-              : 'UTF-8 · tối đa 2MB · tối đa 500 thẻ'}
+              ? t('importWizard.csvChangeFile', { size: (csvFile.size / 1024).toFixed(1) })
+              : t('importWizard.csvConstraints')}
           </p>
         </div>
       </button>
@@ -274,6 +283,7 @@ function CsvUploadZone({
 }
 
 export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSetWizardProps) {
+  const t = useTranslations();
   const router = useRouter();
   const { withLoading } = useLoadingOverlay();
   const { invalidateSetData } = useSetMutations();
@@ -296,7 +306,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
     try {
       parsed = JSON.parse(jsonText);
     } catch {
-      setError('JSON không hợp lệ — vui lòng kiểm tra lại định dạng.');
+      setError(t('importWizard.errorInvalidJson'));
       return;
     }
 
@@ -321,7 +331,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
 
   const handleCsvImport = async () => {
     if (!csvFile) {
-      setError('Vui lòng chọn file CSV.');
+      setError(t('importWizard.errorNoCsv'));
       return;
     }
 
@@ -340,7 +350,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
 
   const handleSubmit = async (format: 'json' | 'csv') => {
     if (!setId && !title.trim()) {
-      setError('Vui lòng nhập tên bộ thẻ.');
+      setError(t('importWizard.errorNoTitle'));
       return;
     }
 
@@ -354,7 +364,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
 
           if (!response || !response.ok) {
             const payload = response ? ((await response.json()) as { message?: string }) : null;
-            setError(payload?.message ?? 'Import thất bại. Kiểm tra lại file và thử lại.');
+            setError(payload?.message ?? t('importWizard.errorFailed'));
             return;
           }
 
@@ -363,7 +373,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
           await router.refresh();
           setResult(data);
         },
-        { message: 'Đang import dữ liệu…' }
+        { message: t('importWizard.loadingOverlay') }
       );
     } finally {
       setLoading(false);
@@ -376,12 +386,17 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
         <CheckCircle2 className="h-10 w-10" />
       </div>
       <div className="space-y-1">
-        <h3 className="text-lg font-bold">Import thành công!</h3>
+        <h3 className="text-lg font-bold">{t('importWizard.successTitle')}</h3>
         <p className="text-sm text-muted-foreground">
           {setId
-            ? `Đã thêm ${result.cardsCreated} thẻ vào bộ này.`
-            : `Đã tạo "${result.set.title}" với ${result.cardsCreated} thẻ.`}
-          {result.skippedRows ? ` (${result.skippedRows} dòng trống đã bỏ qua)` : ''}
+            ? t('importWizard.successAdded', { count: result.cardsCreated })
+            : t('importWizard.successCreated', {
+                title: result.set.title,
+                count: result.cardsCreated,
+              })}
+          {result.skippedRows
+            ? t('importWizard.successSkipped', { count: result.skippedRows })
+            : ''}
         </p>
       </div>
       <div className="flex w-full flex-col gap-2 pt-2">
@@ -396,11 +411,11 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
             }
           }}
         >
-          {setId ? 'Đóng' : 'Xem bộ thẻ'}
+          {setId ? t('importWizard.close') : t('importWizard.viewSet')}
         </Button>
         {!setId && (
           <Button variant="outline" className="w-full rounded-xl" onClick={() => setResult(null)}>
-            Import thêm
+            {t('importWizard.importMore')}
           </Button>
         )}
       </div>
@@ -416,10 +431,10 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
           </div>
           <div>
             <h2 className="text-base font-bold leading-tight">
-              {setId ? 'Import thẻ vào bộ này' : 'Import bộ thẻ mới'}
+              {setId ? t('importWizard.headingIntoSet') : t('importWizard.headingNew')}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {setId ? 'Thêm thẻ từ file CSV hoặc JSON.' : 'Tạo bộ thẻ mới từ CSV hoặc JSON.'}
+              {setId ? t('importWizard.subtitleIntoSet') : t('importWizard.subtitleNew')}
             </p>
           </div>
         </div>
@@ -428,29 +443,29 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
       {!setId && (
         <div className="space-y-3 rounded-xl border border-border/50 bg-muted/10 p-4">
           <div className="space-y-2">
-            <Label htmlFor="import-title">Tên bộ thẻ *</Label>
+            <Label htmlFor="import-title">{t('importWizard.titleLabel')}</Label>
             <Input
               id="import-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="VD: Fast Accounting TT99"
+              placeholder={t('importWizard.titlePlaceholder')}
               className="rounded-xl"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="import-description">Mô tả</Label>
+            <Label htmlFor="import-description">{t('importWizard.descriptionLabel')}</Label>
             <Textarea
               id="import-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              placeholder="Mô tả ngắn (tùy chọn)"
+              placeholder={t('importWizard.descriptionPlaceholder')}
               className="rounded-xl"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="import-visibility">Quyền riêng tư</Label>
+            <Label htmlFor="import-visibility">{t('importWizard.visibilityLabel')}</Label>
             <Select
               value={visibility}
               onValueChange={(v) => setVisibility(v as 'PRIVATE' | 'PUBLIC')}
@@ -459,8 +474,8 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PRIVATE">Riêng tư</SelectItem>
-                <SelectItem value="PUBLIC">Công khai</SelectItem>
+                <SelectItem value="PRIVATE">{t('ui.private')}</SelectItem>
+                <SelectItem value="PUBLIC">{t('ui.public')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -491,14 +506,14 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
 
         <TabsContent value="csv" className="mt-4 space-y-4">
           <p className="text-xs text-muted-foreground">
-            File CSV với cột <code className="text-[10px]">front</code>,{' '}
-            <code className="text-[10px]">back</code> — hoặc{' '}
+            {t('importWizard.csvHint')} <code className="text-[10px]">front</code>,{' '}
+            <code className="text-[10px]">back</code> {t('importWizard.csvHintOr')}{' '}
             <button
               type="button"
               className="font-semibold text-primary underline-offset-2 hover:underline"
               onClick={() => downloadTextFile(SIMPLE_CSV_EXAMPLE, SAMPLE_CSV_FILENAME)}
             >
-              tải CSV mẫu thẻ đơn
+              {t('importWizard.downloadSimpleCsv')}
             </button>
             {' · '}
             <button
@@ -506,7 +521,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
               className="font-semibold text-primary underline-offset-2 hover:underline"
               onClick={() => downloadTextFile(MCQ_CSV_EXAMPLE, MCQ_SAMPLE_CSV_FILENAME)}
             >
-              tải CSV mẫu a/b/c/d
+              {t('importWizard.downloadMcqCsv')}
             </button>
           </p>
           <CsvUploadZone
@@ -527,14 +542,14 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
             onClick={() => void handleSubmit('csv')}
             disabled={loading || !csvFile}
           >
-            {loading ? 'Đang import…' : 'Import CSV'}
+            {loading ? t('importWizard.importing') : t('importWizard.importCsv')}
           </Button>
         </TabsContent>
 
         <TabsContent value="json" className="mt-4 min-w-0 space-y-4">
           <div className="min-w-0 space-y-2">
             <Label htmlFor="import-json" className="break-words text-xs text-muted-foreground">
-              Dán JSON — hoặc thẻ đơn giản:{' '}
+              {t('importWizard.jsonLabel')}{' '}
               <code className="text-[10px]">{`{ "front": "...", "back": "..." }`}</code>
             </Label>
             <Textarea
@@ -559,7 +574,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
             onClick={() => void handleSubmit('json')}
             disabled={loading || !jsonText.trim()}
           >
-            {loading ? 'Đang import…' : 'Import JSON'}
+            {loading ? t('importWizard.importing') : t('importWizard.importJson')}
           </Button>
         </TabsContent>
       </Tabs>
@@ -583,10 +598,8 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
   return (
     <Card className="glass-panel mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border-border/50 shadow-lg">
       <CardHeader className="border-b border-border/40 bg-muted/10 pb-4">
-        <CardTitle className="text-xl">Import bộ thẻ</CardTitle>
-        <CardDescription>
-          Hỗ trợ flashcard thường và câu trắc nghiệm có đáp án a, b, c, d.
-        </CardDescription>
+        <CardTitle className="text-xl">{t('importWizard.pageTitle')}</CardTitle>
+        <CardDescription>{t('importWizard.pageDescription')}</CardDescription>
       </CardHeader>
       <CardContent className="pt-6">{formView}</CardContent>
     </Card>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type MediaUploadProps = {
   fileType: 'image' | 'audio';
@@ -10,6 +11,7 @@ type MediaUploadProps = {
 };
 
 export function MediaUpload({ fileType, onUploaded }: MediaUploadProps) {
+  const t = useTranslations();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,7 +37,7 @@ export function MediaUpload({ fileType, onUploaded }: MediaUploadProps) {
 
     if (!presignedResponse.ok) {
       const payload = (await presignedResponse.json()) as { message?: string };
-      setError(payload.message ?? 'Upload request failed');
+      setError(payload.message ?? t('cards.uploadRequestFailed'));
       setLoading(false);
       return;
     }
@@ -53,7 +55,7 @@ export function MediaUpload({ fileType, onUploaded }: MediaUploadProps) {
     setLoading(false);
 
     if (!uploadResponse.ok) {
-      setError('Upload to storage failed');
+      setError(t('cards.uploadStorageFailed'));
       return;
     }
 
@@ -63,7 +65,7 @@ export function MediaUpload({ fileType, onUploaded }: MediaUploadProps) {
   return (
     <div className="space-y-2">
       <Label htmlFor={`${fileType}-upload`}>
-        {fileType === 'image' ? 'Image' : 'Audio'} (optional)
+        {fileType === 'image' ? t('cards.imageOptional') : t('cards.audioOptional')}
       </Label>
       <Input
         id={`${fileType}-upload`}
@@ -79,7 +81,7 @@ export function MediaUpload({ fileType, onUploaded }: MediaUploadProps) {
         }}
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {loading && <p className="text-sm text-muted-foreground">Uploading…</p>}
+      {loading && <p className="text-sm text-muted-foreground">{t('cards.uploading')}</p>}
     </div>
   );
 }

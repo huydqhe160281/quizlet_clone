@@ -97,3 +97,45 @@ The system SHALL maintain usable layouts at mobile (≥375px), tablet (≥768px)
 - **GIVEN** viewport width ≥1280px
 - **WHEN** user navigates authenticated app
 - **THEN** full shell (Sidebar + Navbar + main) displays with glass styling and readable content width
+
+---
+
+### Requirement: Token And Primitive Reuse On Touched Surfaces
+
+The system MUST reuse existing design tokens and shared UI primitives on touched surfaces. **Definition — touched:** application source files edited in an implement batch (within `BATCH_FILE_BUDGET` from `optimize-perf-playbook`). When UI on Dashboard, study, or CardEditor is changed under an optimization change, the system MUST use shared primitives (`Button`, `Card`, `Dialog`, `Input`, `Select`, `Tabs`, `DropdownMenu`) and MUST NOT invent one-off colors, radii, or stacked shadows that bypass tokens.
+
+#### Scenario: Touched study chrome uses tokens
+
+- **GIVEN** a study mode chrome surface file is touched in the current batch for UI simplification
+- **WHEN** it renders in light or dark theme
+- **THEN** colors, radius, and elevation resolve from existing tokens / shared primitives rather than hard-coded one-off values that break theme contrast
+
+#### Scenario: No decorative card-in-card without interaction need
+
+- **GIVEN** a layout change on a touched surface
+- **WHEN** a container uses card styling
+- **THEN** the card exists only when it aids an interaction or understanding; nested card-in-card without purpose is not introduced
+
+---
+
+### Requirement: Study Chrome Focus On Card Content
+
+The system MUST keep study mode chrome minimal so primary attention stays on card/question content.
+
+#### Scenario: Primary content dominates study viewport
+
+- **GIVEN** a learner is mid-session in a study mode
+- **WHEN** the mode UI is shown
+- **THEN** navigation/settings chrome does not obscure or dominate the card content area on mobile-sized viewports
+
+---
+
+### Requirement: Soft Radius Token Ladder
+
+The system MUST keep Tailwind `borderRadius` tokens aligned to the CSS `--radius` base so touched panels use a soft ladder (`sm`…`3xl`) rather than inventing one-off pixel radii. The ladder MUST remain non-pill (no `rounded-full` as the default panel radius).
+
+#### Scenario: Radius tokens derive from --radius
+
+- **GIVEN** `--radius` is defined in the theme CSS variables
+- **WHEN** `tailwind.config.ts` maps `borderRadius` keys
+- **THEN** `sm`/`md`/`lg`/`xl`/`2xl`/`3xl` resolve via calc offsets from `--radius`, and panel classes on touched surfaces prefer these tokens over hard-coded arbitrary radii

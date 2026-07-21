@@ -33,7 +33,7 @@ describe('scoreFreeDrawMatch', () => {
     const reference = fillBox(6, 4, 14, 16);
     const result = scoreFreeDrawMatch(emptyMask(), reference, width, height);
     expect(result.passed).toBe(false);
-    expect(result.reason).toContain('Hãy vẽ');
+    expect(result.reason).toBe('studyUi.drawFirst');
   });
 
   it('rejects scribble away from the reference outline', () => {

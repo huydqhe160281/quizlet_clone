@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { GuideChatPanel } from '@/features/guide/components/GuideChatPanel';
 import { useGuideChatUi } from '@/features/guide/context/GuideChatContext';
 import { GUIDE_CHAT_MOBILE_BOTTOM_OFFSET } from '@/features/guide/constants';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 export function GuideChatWidget() {
+  const t = useTranslations();
   const { dismissed, dismiss } = useGuideChatUi();
   const [expanded, setExpanded] = useState(false);
 
@@ -33,7 +35,7 @@ export function GuideChatWidget() {
           <Button
             type="button"
             size="icon"
-            aria-label="Mở trợ lý hướng dẫn"
+            aria-label={t('guideUi.openAria')}
             className="relative h-12 w-12 rounded-full shadow-lg"
             onClick={() => setExpanded(true)}
           >
@@ -43,7 +45,7 @@ export function GuideChatWidget() {
             type="button"
             size="icon"
             variant="secondary"
-            aria-label="Ẩn trợ lý hướng dẫn"
+            aria-label={t('guideUi.hideAria')}
             className={cn(
               'absolute -right-0.5 -top-0.5 h-5 w-5 min-h-0 min-w-0 rounded-full border p-0 shadow-md',
               'opacity-0 transition-opacity pointer-events-none',

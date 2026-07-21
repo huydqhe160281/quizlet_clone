@@ -27,6 +27,7 @@ import { VirtualList } from '@/components/shared/VirtualList';
 import { MediaUpload } from '@/features/sets/cards/components/MediaUpload';
 import type { FlashcardItem } from '@/features/sets/api/sets-api';
 import { useCards, useSetMutations } from '@/features/sets/hooks/useSets';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
 type SortableCardProps = {
@@ -38,6 +39,7 @@ type SortableCardProps = {
 };
 
 function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: SortableCardProps) {
+  const t = useTranslations();
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: card.id,
   });
@@ -88,11 +90,11 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
         <div className="min-w-0">
           <div className="mb-1.5 flex items-center gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-              Front
+              {t('cards.front')}
             </p>
             {card.type === 'new-word' && (
               <Badge variant="secondary" className="scale-90 text-[10px]">
-                Từ mới
+                {t('cards.newWord')}
               </Badge>
             )}
           </div>
@@ -102,7 +104,7 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
         </div>
         <div className={isChoiceAnswer ? 'min-w-0 sm:text-center' : 'min-w-0'}>
           <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-            Back
+            {t('cards.back')}
           </p>
           {isChoiceAnswer ? (
             <p className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg bg-muted/60 px-3 text-base font-semibold tracking-wide text-foreground">
@@ -129,7 +131,7 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
             checked={card.type === 'new-word'}
             onCheckedChange={(checked) => onTypeToggle(card.id, checked === true)}
           />
-          <span className="hidden text-xs font-medium lg:inline">Từ mới</span>
+          <span className="hidden text-xs font-medium lg:inline">{t('cards.newWord')}</span>
         </label>
         <Button
           variant="ghost"
@@ -149,6 +151,7 @@ type CardEditorProps = {
 };
 
 export function CardEditor({ setId }: CardEditorProps) {
+  const t = useTranslations();
   const { data: cards = [], isLoading } = useCards(setId);
   const { createCard, deleteCard, deleteCards, reorderCards, updateCard } = useSetMutations();
   const [front, setFront] = useState('');
@@ -239,7 +242,7 @@ export function CardEditor({ setId }: CardEditorProps) {
   if (isLoading) {
     return (
       <div className="glass-panel animate-pulse rounded-xl p-8 text-sm text-muted-foreground">
-        Loading cards…
+        {t('cards.loading')}
       </div>
     );
   }
@@ -247,10 +250,10 @@ export function CardEditor({ setId }: CardEditorProps) {
   return (
     <div className="space-y-6">
       <div className="glass-panel space-y-3 rounded-xl p-4 shadow-sm">
-        <h3 className="font-medium">Add card</h3>
+        <h3 className="font-medium">{t('cards.addCard')}</h3>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="min-w-0 flex-1 space-y-1.5">
-            <Label htmlFor="front">Front</Label>
+            <Label htmlFor="front">{t('cards.front')}</Label>
             <Input
               id="front"
               value={front}
@@ -261,11 +264,11 @@ export function CardEditor({ setId }: CardEditorProps) {
                   handleAdd();
                 }
               }}
-              placeholder="Thuật ngữ"
+              placeholder={t('cards.frontPlaceholder')}
             />
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
-            <Label htmlFor="back">Back</Label>
+            <Label htmlFor="back">{t('cards.back')}</Label>
             <Input
               id="back"
               value={back}
@@ -276,7 +279,7 @@ export function CardEditor({ setId }: CardEditorProps) {
                   handleAdd();
                 }
               }}
-              placeholder="Định nghĩa"
+              placeholder={t('cards.backPlaceholder')}
             />
           </div>
           <Button
@@ -284,7 +287,7 @@ export function CardEditor({ setId }: CardEditorProps) {
             onClick={handleAdd}
             disabled={createCard.isPending || !front.trim() || !back.trim()}
           >
-            Add card
+            {t('cards.addCard')}
           </Button>
         </div>
 
@@ -296,10 +299,10 @@ export function CardEditor({ setId }: CardEditorProps) {
           <ChevronDown
             className={cn('h-4 w-4 transition-transform', showAdvanced && 'rotate-180')}
           />
-          Tùy chọn nâng cao
+          {t('cards.advancedOptions')}
           {hasAdvancedValues && !showAdvanced && (
             <Badge variant="secondary" className="ml-1 scale-90 text-[10px]">
-              Đã điền
+              {t('cards.filled')}
             </Badge>
           )}
         </button>
@@ -307,7 +310,7 @@ export function CardEditor({ setId }: CardEditorProps) {
         {showAdvanced && (
           <div className="space-y-3 border-t border-border/50 pt-3">
             <div className="space-y-2">
-              <Label htmlFor="example">Example</Label>
+              <Label htmlFor="example">{t('cards.example')}</Label>
               <Textarea
                 id="example"
                 value={example}
@@ -336,7 +339,7 @@ export function CardEditor({ setId }: CardEditorProps) {
                 onCheckedChange={(checked) => setCardType(checked ? 'new-word' : null)}
               />
               <Label htmlFor="new-word" className="cursor-pointer font-normal">
-                Từ mới (luyện viết CJK)
+                {t('cards.newWordLabel')}
               </Label>
             </div>
           </div>
@@ -353,7 +356,10 @@ export function CardEditor({ setId }: CardEditorProps) {
               disabled={cards.length === 0}
             />
             <Label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
-              Select all ({selectedIds.length}/{cards.length} selected)
+              {t('cards.selectAll', {
+                selected: selectedIds.length,
+                total: cards.length,
+              })}
             </Label>
           </div>
           {selectedIds.length > 0 && (
@@ -362,9 +368,7 @@ export function CardEditor({ setId }: CardEditorProps) {
               size="sm"
               onClick={() => {
                 if (
-                  window.confirm(
-                    `Are you sure you want to delete ${selectedIds.length} selected cards?`
-                  )
+                  window.confirm(t('cards.deleteSelectedConfirm', { count: selectedIds.length }))
                 ) {
                   deleteCards.mutate(
                     { setId, cardIds: selectedIds },
@@ -379,7 +383,7 @@ export function CardEditor({ setId }: CardEditorProps) {
               disabled={deleteCards.isPending}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete selected ({selectedIds.length})
+              {t('cards.deleteSelected', { count: selectedIds.length })}
             </Button>
           )}
         </div>

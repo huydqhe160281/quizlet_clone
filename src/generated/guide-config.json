@@ -1,34 +1,34 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-08T10:01:12.729Z",
+  "generatedAt": "2026-07-21T04:45:52.610Z",
   "site": {
-    "name": "Flashcards",
-    "locale": "vi"
+    "name": "QuizFree",
+    "locale": "runtime"
   },
   "menus": [
     {
       "id": "dashboard",
-      "label": "Dashboard",
+      "label": "nav.dashboard",
       "href": "/dashboard",
-      "description": "Menu Dashboard"
+      "description": "nav.dashboard"
     },
     {
       "id": "sets",
-      "label": "My Sets",
+      "label": "nav.sets",
       "href": "/sets",
-      "description": "Menu My Sets"
+      "description": "nav.sets"
     },
     {
       "id": "search",
-      "label": "Search",
+      "label": "nav.search",
       "href": "/search",
-      "description": "Menu Search"
+      "description": "nav.search"
     },
     {
       "id": "library",
-      "label": "Library",
+      "label": "nav.library",
       "href": "/library",
-      "description": "Menu Library"
+      "description": "nav.library"
     }
   ],
   "routes": [
@@ -170,22 +170,22 @@
     {
       "id": "nav-dashboard",
       "selector": "[data-guide=nav-dashboard]",
-      "label": "Dashboard"
+      "label": "nav.dashboard"
     },
     {
       "id": "nav-sets",
       "selector": "[data-guide=nav-sets]",
-      "label": "My Sets"
+      "label": "nav.sets"
     },
     {
       "id": "nav-search",
       "selector": "[data-guide=nav-search]",
-      "label": "Search"
+      "label": "nav.search"
     },
     {
       "id": "nav-library",
       "selector": "[data-guide=nav-library]",
-      "label": "Library"
+      "label": "nav.library"
     }
   ]
 }

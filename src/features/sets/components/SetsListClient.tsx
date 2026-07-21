@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { AIGenerateModal, GenerateWithAIButton } from '@/features/sets/components/AIGenerateModal';
 import { SetForm } from '@/features/sets/components/SetForm';
 import { useSets } from '@/features/sets/hooks/useSets';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export function SetsListClient() {
+  const t = useTranslations();
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useSets();
@@ -20,7 +22,7 @@ export function SetsListClient() {
   if (isLoading) {
     return (
       <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
-        Loading sets…
+        {t('setsPage.loading')}
       </div>
     );
   }
@@ -30,19 +32,19 @@ export function SetsListClient() {
       <>
         <Card className="glass-panel overflow-hidden rounded-2xl">
           <CardHeader>
-            <CardTitle>No sets yet</CardTitle>
-            <CardDescription>Create your first flashcard set to get started.</CardDescription>
+            <CardTitle>{t('setsPage.emptyTitle')}</CardTitle>
+            <CardDescription>{t('setsPage.emptyHint')}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <GenerateWithAIButton onClick={() => setAiModalOpen(true)} />
             <Button onClick={() => setCreateModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
-              Create set
+              {t('setsPage.createSet')}
             </Button>
             <Button asChild variant="outline">
               <Link href="/sets/import">
                 <Upload className="mr-2 h-4 w-4" />
-                Import set
+                {t('setsPage.importSet')}
               </Link>
             </Button>
           </CardContent>
@@ -57,23 +59,23 @@ export function SetsListClient() {
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-            My Sets
+            {t('setsPage.title')}
           </h1>
-          <p className="text-muted-foreground">Manage and study your flashcard collections.</p>
+          <p className="text-muted-foreground">{t('setsPage.subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <GenerateWithAIButton onClick={() => setAiModalOpen(true)} />
           <Button asChild variant="outline" className="shadow-sm">
             <Link href="/sets/import">
               <Upload className="mr-1.5 sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Import set</span>
-              <span className="sm:hidden">Import</span>
+              <span className="hidden sm:inline">{t('setsPage.importSet')}</span>
+              <span className="sm:hidden">{t('ui.import')}</span>
             </Link>
           </Button>
           <Button onClick={() => setCreateModalOpen(true)}>
             <Plus className="mr-1.5 sm:mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">New set</span>
-            <span className="sm:hidden">New</span>
+            <span className="hidden sm:inline">{t('setsPage.newSet')}</span>
+            <span className="sm:hidden">{t('setsPage.new')}</span>
           </Button>
         </div>
       </div>
@@ -95,15 +97,15 @@ export function SetsListClient() {
                   <Layers className="h-5 w-5 shrink-0 text-primary/70 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3" />
                 </div>
                 <CardDescription className="line-clamp-2">
-                  {set.description ?? 'No description'}
+                  {set.description ?? t('ui.noDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex items-center gap-2">
                 <Badge variant="secondary" className="bg-secondary/50 backdrop-blur-sm">
-                  {set._count.cards} cards
+                  {t('ui.cardsCount', { count: set._count.cards })}
                 </Badge>
                 <Badge variant="outline" className="bg-background/30 backdrop-blur-sm">
-                  {set.visibility.toLowerCase()}
+                  {set.visibility === 'PUBLIC' ? t('ui.public') : t('ui.private')}
                 </Badge>
               </CardContent>
             </Card>
@@ -112,14 +114,14 @@ export function SetsListClient() {
       </div>
       {hasNextPage && (
         <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-          {isFetchingNextPage ? 'Loading…' : 'Load more'}
+          {isFetchingNextPage ? t('ui.loading') : t('setsPage.loadMore')}
         </Button>
       )}
       <AIGenerateModal open={aiModalOpen} onOpenChange={setAiModalOpen} />
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>New flashcard set</DialogTitle>
+            <DialogTitle>{t('setsPage.createTitle')}</DialogTitle>
           </DialogHeader>
           <SetForm
             mode="create"
