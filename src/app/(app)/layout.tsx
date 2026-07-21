@@ -1,26 +1,8 @@
-import { redirect } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { auth } from '@/server/auth/auth';
-import { prisma } from '@/server/db';
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  const userId = session?.user?.id;
-
-  if (!userId) {
-    redirect('/login');
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { id: true },
-  });
-  if (!user) {
-    redirect('/login');
-  }
-
+export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen relative overflow-clip">
       {/* Ambient background blob */}
