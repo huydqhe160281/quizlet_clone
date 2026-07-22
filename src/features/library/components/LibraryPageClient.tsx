@@ -3,9 +3,14 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { Badge } from '@/components/ui/badge';
+import { EmptyStatePanel } from '@/components/shared/EmptyStatePanel';
+import { LoadMoreButton } from '@/components/shared/LoadMoreButton';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { QueryErrorPanel } from '@/components/shared/QueryErrorPanel';
 import { Button } from '@/components/ui/button';
+import { SetCard } from '@/components/shared/SetCard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
 
 type SortOption = 'newest' | 'most_studied' | 'trending';
 
@@ -62,14 +67,11 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
   const sets = data?.pages.flatMap((page) => page.data) ?? [];
   const showEmpty = !isLoading && !isError && sets.length === 0;
 
+  useNavReselectRefetch('/library', refetch);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-2xl sm:text-3xl font-bold tracking-tight text-transparent">
-          {t('library.title')}
-        </h1>
-        <p className="text-sm sm:text-base text-muted-foreground">{t('library.subtitle')}</p>
-      </div>
+      <PageHeader title={t('library.title')} subtitle={t('library.subtitle')} />
       <div className="flex flex-wrap gap-2">
         {(['newest', 'most_studied', 'trending'] as SortOption[]).map((option) => (
           <Button
@@ -85,67 +87,40 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
       </div>
       {isLoading && <p className="text-sm text-muted-foreground">{t('library.loading')}</p>}
       {isError && (
-        <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-          <p className="text-sm text-destructive">
-            {error instanceof Error ? error.message : t('library.loadFailed')}
-          </p>
-          <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
-            {t('ui.retry')}
-          </Button>
-        </div>
+        <QueryErrorPanel
+          message={error instanceof Error ? error.message : t('library.loadFailed')}
+          onRetry={refetch}
+        />
       )}
       {showEmpty && (
-        <div className="rounded-xl border border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">{t('library.emptyTitle')}</p>
-          <p className="mt-1">{t('library.emptyHint')}</p>
-          <Button asChild size="sm" className="mt-3" variant="outline">
-            <Link href="/sets">{t('library.goToMySets')}</Link>
-          </Button>
-        </div>
+        <EmptyStatePanel
+          title={t('library.emptyTitle')}
+          description={t('library.emptyHint')}
+          action={
+            <Button asChild size="sm" variant="outline">
+              <Link href="/sets">{t('library.goToMySets')}</Link>
+            </Button>
+          }
+        />
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sets.map((set) => (
-          <Link
+          <SetCard
             key={set.id}
             href={`/shared/${set.id}`}
-            className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 p-4 sm:p-5 backdrop-blur-sm transition-all hover:border-primary/40 hover:shadow-md block"
-          >
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10 pointer-events-none" />
-            <div className="relative z-10 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold transition-colors group-hover:text-primary line-clamp-2 break-words">
-                {set.title}
-              </h3>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground break-words">
-                {set.description ?? t('ui.noDescription')}
-              </p>
-              <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-                <Badge
-                  variant="secondary"
-                  className="transition-colors group-hover:bg-primary/10 group-hover:text-primary"
-                >
-                  {t('ui.cardsCount', { count: set._count.cards })}
-                </Badge>
-                <Badge variant="outline">
-                  {t('ui.studiedCount', { count: set._count.studySessions })}
-                </Badge>
-                {set.language && <Badge variant="outline">{set.language}</Badge>}
-              </div>
-            </div>
-          </Link>
+            title={set.title}
+            description={set.description}
+            cardsCount={set._count.cards}
+            studiedCount={set._count.studySessions}
+            language={set.language}
+          />
         ))}
       </div>
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isFetchingNextPage}
-            onClick={() => void fetchNextPage()}
-          >
-            {isFetchingNextPage ? t('ui.loading') : t('ui.loadMore')}
-          </Button>
-        </div>
-      )}
+      <LoadMoreButton
+        hasMore={hasNextPage ?? false}
+        isLoading={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+      />
     </div>
   );
 }

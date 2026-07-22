@@ -1,12 +1,16 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { EmptyStatePanel } from '@/components/shared/EmptyStatePanel';
+import { LoadMoreButton } from '@/components/shared/LoadMoreButton';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { QueryErrorPanel } from '@/components/shared/QueryErrorPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { SetCard } from '@/components/shared/SetCard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
 
 type PublicSetItem = {
   id: string;
@@ -58,14 +62,11 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
 
   const sets = data?.pages.flatMap((page) => page.data) ?? [];
 
+  useNavReselectRefetch('/search', refetch);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
-          {t('searchPage.title')}
-        </h1>
-        <p className="text-muted-foreground">{t('searchPage.subtitle')}</p>
-      </div>
+      <PageHeader title={t('searchPage.title')} subtitle={t('searchPage.subtitle')} />
       <form
         className="flex gap-2"
         onSubmit={(event) => {
@@ -102,80 +103,45 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
           {isSearching ? t('searchPage.searching') : t('searchPage.loadingSets')}
         </p>
       )}
-      {error && (
-        <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-          <p className="text-sm text-destructive">{t('searchPage.loadFailed')}</p>
-          <Button type="button" size="sm" variant="outline" onClick={() => void refetch()}>
-            {t('ui.retry')}
-          </Button>
-        </div>
-      )}
+      {error && <QueryErrorPanel message={t('searchPage.loadFailed')} onRetry={refetch} />}
       {!isLoading && !error && sets.length === 0 && (
-        <div className="rounded-xl border border-border/50 bg-muted/20 p-6 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">
-            {isSearching ? t('searchPage.noMatchTitle') : t('searchPage.emptyTitle')}
-          </p>
-          <p className="mt-1">
-            {isSearching ? t('searchPage.noMatchHint') : t('searchPage.emptyHint')}
-          </p>
-          {isSearching && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="mt-3"
-              onClick={() => {
-                setQuery('');
-                setSubmitted('');
-              }}
-            >
-              {t('searchPage.browseNewest')}
-            </Button>
-          )}
-        </div>
+        <EmptyStatePanel
+          title={isSearching ? t('searchPage.noMatchTitle') : t('searchPage.emptyTitle')}
+          description={isSearching ? t('searchPage.noMatchHint') : t('searchPage.emptyHint')}
+          action={
+            isSearching ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setQuery('');
+                  setSubmitted('');
+                }}
+              >
+                {t('searchPage.browseNewest')}
+              </Button>
+            ) : undefined
+          }
+        />
       )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sets.map((set) => (
-          <Link
+          <SetCard
             key={set.id}
             href={`/shared/${set.id}`}
-            className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm transition-all hover:border-primary/40 hover:shadow-md"
-          >
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl transition-all group-hover:bg-primary/10" />
-            <div className="relative z-10">
-              <h3 className="text-lg font-semibold transition-colors group-hover:text-primary">
-                {set.title}
-              </h3>
-              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                {set.description ?? t('ui.noDescription')}
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {set._count && (
-                  <Badge
-                    variant="secondary"
-                    className="transition-colors group-hover:bg-primary/10 group-hover:text-primary"
-                  >
-                    {t('ui.cardsCount', { count: set._count.cards })}
-                  </Badge>
-                )}
-                {set.language && <Badge variant="outline">{set.language}</Badge>}
-              </div>
-            </div>
-          </Link>
+            title={set.title}
+            description={set.description}
+            cardsCount={set._count?.cards}
+            language={set.language}
+          />
         ))}
       </div>
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isFetchingNextPage}
-            onClick={() => void fetchNextPage()}
-          >
-            {isFetchingNextPage ? t('ui.loading') : t('ui.loadMore')}
-          </Button>
-        </div>
-      )}
+      <LoadMoreButton
+        hasMore={hasNextPage ?? false}
+        isLoading={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+      />
     </div>
   );
 }

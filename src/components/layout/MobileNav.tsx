@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
+import { dispatchNavReselect } from '@/lib/navigation/nav-reselect';
 import { NAV_ICON_MAP } from '@/lib/navigation/navigation-icons';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -17,11 +18,18 @@ export function MobileNav() {
         {APP_NAV_ITEMS.map(({ href, mobileLabelKey, icon, guideTargetId }) => {
           const Icon = NAV_ICON_MAP[icon];
           const active = pathname === href || pathname.startsWith(`${href}/`);
+          const reselectable = pathname === href;
           return (
             <Link
               key={href}
               href={href}
               data-guide={guideTargetId}
+              onClick={(event) => {
+                if (reselectable) {
+                  event.preventDefault();
+                  dispatchNavReselect(href);
+                }
+              }}
               className={cn(
                 'flex flex-1 flex-col items-center gap-1 py-2 px-1 rounded-xl text-[10px] font-semibold transition-all duration-300',
                 active

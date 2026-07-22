@@ -1,6 +1,5 @@
 import { Visibility } from '@prisma/client';
 import { generateText, Output } from 'ai';
-import { revalidateTag } from 'next/cache';
 import type { AiGenerateInput } from '@/features/sets/schemas/ai-generate.schema';
 import {
   buildAiFlashcardOutputSchema,
@@ -11,6 +10,7 @@ import { getOllamaGenerateOptions, getOllamaModel, getOllamaLargeModel } from '@
 import { getZaiModel } from '@/server/ai/zai';
 import { withModelFallback } from '@/server/ai/with-fallback';
 import { prisma } from '@/server/db';
+import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
 const buildSystemPrompt = (cardCount?: number) =>
   `You are a flashcard generator. ${
@@ -89,7 +89,7 @@ export async function generateAiSet(userId: string, input: AiGenerateInput) {
     },
   });
 
-  revalidateTag(`sets-${userId}`);
+  invalidateSetCache(userId, 'PRIVATE');
 
   return set;
 }

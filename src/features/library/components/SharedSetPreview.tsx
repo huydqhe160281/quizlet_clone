@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { QueryErrorPanel } from '@/components/shared/QueryErrorPanel';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SharedSetPreviewProps = {
@@ -62,14 +63,7 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
           )}
         </div>
       </div>
-      {error && (
-        <div className="space-y-2 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
-          <p className="text-sm text-destructive">{error}</p>
-          <Button type="button" size="sm" variant="outline" onClick={() => void duplicate()}>
-            {t('ui.retry')}
-          </Button>
-        </div>
-      )}
+      {error && <QueryErrorPanel message={error} onRetry={duplicate} />}
       <Button onClick={() => void duplicate()} disabled={loading}>
         {loading ? t('shared.duplicating') : t('shared.duplicateToMySets')}
       </Button>

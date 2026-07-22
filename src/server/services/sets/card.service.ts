@@ -1,8 +1,8 @@
 import { ApiError } from '@/lib/api-error';
-import { revalidateTag } from 'next/cache';
 import type { Visibility } from '@prisma/client';
 import type { CreateCardInput, UpdateCardInput } from '@/features/sets/cards/schemas/card.schema';
 import { prisma } from '@/server/db';
+import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
 const getOwnedSet = async (setId: string, userId: string) => {
   const set = await prisma.flashcardSet.findUnique({ where: { id: setId } });
@@ -13,13 +13,6 @@ const getOwnedSet = async (setId: string, userId: string) => {
     throw new ApiError('FORBIDDEN', 'You do not have access to this set', 403);
   }
   return set as typeof set & { visibility: Visibility };
-};
-
-const invalidateSetCache = (userId: string, visibility: Visibility) => {
-  revalidateTag(`sets-${userId}`);
-  if (visibility === 'PUBLIC') {
-    revalidateTag('public-sets');
-  }
 };
 
 export async function getCards(setId: string, userId?: string) {

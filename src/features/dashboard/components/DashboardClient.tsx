@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { DueCardsAlert } from '@/features/dashboard/components/DueCardsAlert';
 import { StatsCards } from '@/features/dashboard/components/StatsCards';
 import { RecentSessions } from '@/features/dashboard/components/RecentSessions';
@@ -46,14 +47,11 @@ export function DashboardClient({ stats, activity, sessions }: DashboardClientPr
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
-      <div className="mb-2 flex flex-col gap-2">
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent">
-          {t('dashboardPage.title')}
-        </h1>
-        <p className="text-base sm:text-lg font-medium text-muted-foreground">
-          {t('dashboardPage.subtitle')}
-        </p>
-      </div>
+      <PageHeader
+        title={t('dashboardPage.title')}
+        subtitle={t('dashboardPage.subtitle')}
+        size="lg"
+      />
 
       <DueCardsAlert dueCount={stats.dueToday} />
       <StatsCards stats={stats} />

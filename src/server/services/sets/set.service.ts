@@ -7,6 +7,7 @@ import type {
   UpdateSetInput,
 } from '@/features/sets/schemas/set.schema';
 import { prisma } from '@/server/db';
+import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
 const setInclude = {
   tags: { include: { tag: true } },
@@ -27,13 +28,6 @@ const assertReadable = (set: { userId: string; visibility: Visibility }, userId?
   }
   if (!userId || set.userId !== userId) {
     throw new ApiError('FORBIDDEN', 'This set is private', 403);
-  }
-};
-
-const invalidateSetCache = (userId: string, visibility: Visibility) => {
-  revalidateTag(`sets-${userId}`);
-  if (visibility === 'PUBLIC') {
-    revalidateTag('public-sets');
   }
 };
 

@@ -1,15 +1,13 @@
 import { parse as parseCsv } from 'papaparse';
-import { revalidateTag } from 'next/cache';
 import { ApiError } from '@/lib/api-error';
 import { prisma } from '@/server/db';
+import { invalidateSetCache } from '@/server/services/sets/set-cache';
 import {
   importJsonSchema,
   importCsvMetaSchema,
   importCardSchema,
   IMPORT_CARD_LIMIT,
   IMPORT_FILE_SIZE_LIMIT_BYTES,
-  type ImportJsonInput,
-  type ImportCsvMeta,
 } from '@/features/sets/schemas/import.schema';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -21,13 +19,6 @@ export type ImportResult = {
 };
 
 type RawCard = { front: string; back: string; example?: string };
-
-const invalidateSetCache = (userId: string, visibility: 'PRIVATE' | 'PUBLIC') => {
-  revalidateTag(`sets-${userId}`);
-  if (visibility === 'PUBLIC') {
-    revalidateTag('public-sets');
-  }
-};
 
 // ── CSV Parsing ───────────────────────────────────────────────────────────────
 

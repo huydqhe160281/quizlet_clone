@@ -1,4 +1,5 @@
 import { withErrorHandler } from '@/lib/api-error';
+import { parseQueryParams } from '@/lib/http/parse-query-params';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { createSetSchema, listSetsQuerySchema } from '@/features/sets/schemas/set.schema';
 import { requireUserId } from '@/server/auth/auth-utils';
@@ -6,7 +7,7 @@ import { createSet, getSets } from '@/server/services/sets/set.service';
 
 export const GET = withErrorHandler(async (req) => {
   const userId = await requireUserId();
-  const params = Object.fromEntries(new URL(req.url).searchParams.entries());
+  const params = parseQueryParams(req);
   const query = listSetsQuerySchema.parse(params);
   const result = await getSets(userId, query);
   return Response.json(result);
