@@ -7,7 +7,7 @@ import { env } from '@/config/env';
 
 const { auth } = NextAuth(authConfig);
 
-const protectedPrefixes = ['/dashboard', '/sets', '/study', '/folders', '/search'];
+const protectedPrefixes = ['/dashboard', '/today', '/sets', '/study', '/folders', '/search'];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;

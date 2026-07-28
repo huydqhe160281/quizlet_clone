@@ -97,7 +97,8 @@ After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLo
 - **Sets & cards** — CRUD, folders, tags, media upload, drag-and-drop reorder
 - **Study modes** — Flashcard, Learn, Write (fuzzy match), Test (MC/T-F/Typing), Draw (CJK stroke practice via hanzi-writer; requires cards marked `type = new-word`)
 - **SM-2** — Spaced repetition queue at `/study` (nav entry temporarily hidden; study from each set)
-- **Dashboard** — Streak, accuracy, activity heatmap, recent sessions
+- **Today (Adaptive Learning Coach)** — Daily goal, prioritized due/weak/new queue, retention insights, and one recommended study CTA at `/today`
+- **Dashboard** — Streak, accuracy, activity heatmap, recent sessions; due-cards alert deep-links to `/today`
 - **Search & library** — Public sets at `/library`, preview at `/shared/[setId]`
 
 ## Deploy to Vercel

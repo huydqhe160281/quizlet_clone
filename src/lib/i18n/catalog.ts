@@ -4,7 +4,14 @@ import { type Locale, DEFAULT_LOCALE, isLocale } from './constants';
 
 export type Catalog = Record<string, unknown>;
 
-const CATALOG_FILES = ['common.json', 'auth.json', 'emails.json', 'guide.json', 'ui.json'] as const;
+const CATALOG_FILES = [
+  'common.json',
+  'auth.json',
+  'emails.json',
+  'guide.json',
+  'ui.json',
+  'today.json',
+] as const;
 
 function readJsonSafe(filePath: string): Catalog | null {
   try {

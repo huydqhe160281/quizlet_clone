@@ -98,20 +98,22 @@ The system SHALL display up to 5 recent study sessions on the Dashboard, **group
 
 ### Requirement: Due Cards Alert
 
-The system SHALL show a "X cards due today" alert on the Dashboard linking to the SM-2 study page.
-**Constraint**: MUST
+The system SHALL display a due-cards alert on the Dashboard when `dueToday > 0`, and its primary action SHALL unconditionally navigate to **`/today`** (Adaptive Learning Coach) instead of the SM-2 study page — this replaces the prior link target for that alert; there is no case where both destinations are offered simultaneously. When `dueToday = 0`, the alert remains hidden (existing behavior).
 
-#### Scenario: Due Cards Available
+**Constraint**: MUST  
+**Verification**: Component test `DueCardsAlert` href target; optional dashboard smoke
 
-- **GIVEN** user has 12 cards with `dueDate <= NOW()`
-- **WHEN** Dashboard loads
-- **THEN** alert shows "12 cards due for review today" with link to `/study`
+#### Scenario: Due alert links to Today
 
-#### Scenario: No Due Cards
+- **GIVEN** dashboard stats with `dueToday = 5`
+- **WHEN** `DueCardsAlert` renders
+- **THEN** the primary CTA links to `/today`
 
-- **GIVEN** user has 0 due cards
-- **WHEN** Dashboard loads
-- **THEN** alert shows a clear empty / “all caught up” state (e.g. "You're all caught up! 🎉" or equivalent) without implying failure
+#### Scenario: No alert when none due
+
+- **GIVEN** `dueToday = 0`
+- **WHEN** Dashboard renders
+- **THEN** due alert is not shown
 
 ---
 

@@ -1,0 +1,32 @@
+{
+  "todayPage": {
+    "title": "Hôm nay",
+    "subtitle": "Kế hoạch học trong ngày — mục tiêu, hàng đợi và hành động tiếp theo.",
+    "goalTitle": "Mục tiêu ngày",
+    "goalProgress": "{completed} / {target} thẻ",
+    "goalRemaining": "Còn {remaining}",
+    "goalMet": "Đã đạt mục tiêu hôm nay!",
+    "editGoal": "Sửa mục tiêu",
+    "goalLabel": "Số thẻ mỗi ngày",
+    "saveGoal": "Lưu",
+    "startCta": "Bắt đầu học đề xuất",
+    "startSpaced": "Ôn thẻ đến hạn (spaced)",
+    "startSetSession": "Học bộ thẻ trọng tâm (Learn)",
+    "startEmpty": "Tới Bộ thẻ của tôi",
+    "queueTitle": "Hàng đợi học",
+    "queueEmptyTitle": "Chưa có thẻ trong hàng đợi hôm nay",
+    "queueEmptyHint": "Tạo bộ thẻ hoặc thêm thẻ, rồi quay lại để nhận hàng đợi cá nhân hóa.",
+    "reasonDue": "Đến hạn",
+    "reasonWeak": "Yếu",
+    "reasonNew": "Mới",
+    "insightsTitle": "Gợi ý ghi nhớ",
+    "reviews7d": "{count} lượt ôn (7 ngày)",
+    "accuracy7d": "Độ chính xác {pct}% (7 ngày)",
+    "streak": "Chuỗi {count} ngày",
+    "weakSetsTitle": "Bộ thẻ cần chú ý",
+    "weakSetCount": "{count} thẻ",
+    "noWeakSets": "Không có bộ thẻ yếu lúc này.",
+    "loadFailed": "Không tải được kế hoạch hôm nay.",
+    "starting": "Đang bắt đầu…"
+  }
+}

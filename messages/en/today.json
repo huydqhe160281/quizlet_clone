@@ -1,0 +1,32 @@
+{
+  "todayPage": {
+    "title": "Today",
+    "subtitle": "Your daily learning plan — goal, queue, and next action.",
+    "goalTitle": "Daily goal",
+    "goalProgress": "{completed} / {target} cards",
+    "goalRemaining": "{remaining} remaining",
+    "goalMet": "Goal met for today!",
+    "editGoal": "Edit goal",
+    "goalLabel": "Cards per day",
+    "saveGoal": "Save",
+    "startCta": "Start recommended study",
+    "startSpaced": "Review due cards (spaced)",
+    "startSetSession": "Study focus set (Learn)",
+    "startEmpty": "Go to My Sets",
+    "queueTitle": "Learning queue",
+    "queueEmptyTitle": "Nothing queued for today",
+    "queueEmptyHint": "Create a set or add cards, then come back for a personalized queue.",
+    "reasonDue": "Due",
+    "reasonWeak": "Weak",
+    "reasonNew": "New",
+    "insightsTitle": "Retention insights",
+    "reviews7d": "{count} reviews (7 days)",
+    "accuracy7d": "{pct}% accuracy (7 days)",
+    "streak": "{count}-day streak",
+    "weakSetsTitle": "Sets needing attention",
+    "weakSetCount": "{count} cards",
+    "noWeakSets": "No weak sets right now.",
+    "loadFailed": "Could not load today’s plan.",
+    "starting": "Starting…"
+  }
+}

@@ -1,9 +1,9 @@
 /** Toggle global Study nav (/study). Set-level study routes stay available. */
 export const STUDY_NAV_ENABLED = false;
 
-export type AppNavItemId = 'dashboard' | 'sets' | 'study' | 'search' | 'library';
+export type AppNavItemId = 'dashboard' | 'today' | 'sets' | 'study' | 'search' | 'library';
 
-export type NavIconKey = 'home' | 'layers' | 'sparkles' | 'search' | 'library';
+export type NavIconKey = 'home' | 'calendar' | 'layers' | 'sparkles' | 'search' | 'library';
 
 export type AppNavItem = {
   id: AppNavItemId;
@@ -23,6 +23,14 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
     mobileLabelKey: 'nav.home',
     guideTargetId: 'nav-dashboard',
     icon: 'home',
+  },
+  {
+    id: 'today',
+    href: '/today',
+    labelKey: 'nav.today',
+    mobileLabelKey: 'nav.today',
+    guideTargetId: 'nav-today',
+    icon: 'calendar',
   },
   {
     id: 'sets',

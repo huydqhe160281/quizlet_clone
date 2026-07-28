@@ -1,8 +1,17 @@
-import { Home, Layers, Library, Search, Sparkles, type LucideIcon } from 'lucide-react';
+import {
+  CalendarDays,
+  Home,
+  Layers,
+  Library,
+  Search,
+  Sparkles,
+  type LucideIcon,
+} from 'lucide-react';
 import type { NavIconKey } from '@/lib/navigation/navigation-data';
 
 export const NAV_ICON_MAP: Record<NavIconKey, LucideIcon> = {
   home: Home,
+  calendar: CalendarDays,
   layers: Layers,
   sparkles: Sparkles,
   search: Search,

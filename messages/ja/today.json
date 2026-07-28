@@ -1,0 +1,32 @@
+{
+  "todayPage": {
+    "title": "今日",
+    "subtitle": "今日の学習プラン — 目標・キュー・次のアクション。",
+    "goalTitle": "今日の目標",
+    "goalProgress": "{completed} / {target} 枚",
+    "goalRemaining": "残り {remaining}",
+    "goalMet": "今日の目標を達成しました！",
+    "editGoal": "目標を編集",
+    "goalLabel": "1日あたりのカード数",
+    "saveGoal": "保存",
+    "startCta": "おすすめの学習を開始",
+    "startSpaced": "期限のカードを復習（間隔反復）",
+    "startSetSession": "重点セットを学習（Learn）",
+    "startEmpty": "マイセットへ",
+    "queueTitle": "学習キュー",
+    "queueEmptyTitle": "今日のキューはありません",
+    "queueEmptyHint": "セットを作成するかカードを追加してから戻ると、パーソナライズされたキューが表示されます。",
+    "reasonDue": "期限",
+    "reasonWeak": "苦手",
+    "reasonNew": "新規",
+    "insightsTitle": "定着インサイト",
+    "reviews7d": "レビュー {count} 回（7日）",
+    "accuracy7d": "正答率 {pct}%（7日）",
+    "streak": "{count} 日連続",
+    "weakSetsTitle": "注意が必要なセット",
+    "weakSetCount": "{count} 枚",
+    "noWeakSets": "苦手セットはありません。",
+    "loadFailed": "今日のプランを読み込めませんでした。",
+    "starting": "開始中…"
+  }
+}

@@ -9,10 +9,17 @@ const OUTPUT = path.join(ROOT, 'src', 'generated', 'guide-config.json');
 const DOCS_GUIDE = path.join(ROOT, 'docs', 'guide');
 const GUIDE_CONFIG_MAX_BYTES = 51_200;
 
-const STUDY_NAV_ENABLED = false;
+const navDataPath = path.join(ROOT, 'src', 'lib', 'navigation', 'navigation-data.ts');
+const navDataSource = fs.readFileSync(navDataPath, 'utf8');
+const studyNavMatch = navDataSource.match(/export const STUDY_NAV_ENABLED\s*=\s*(true|false)/);
+if (!studyNavMatch) {
+  throw new Error('STUDY_NAV_ENABLED not found in navigation-data.ts (SSOT)');
+}
+const STUDY_NAV_ENABLED = studyNavMatch[1] === 'true';
 
 const APP_NAV_ITEMS = [
   { id: 'dashboard', href: '/dashboard', labelKey: 'nav.dashboard', guideTargetId: 'nav-dashboard' },
+  { id: 'today', href: '/today', labelKey: 'nav.today', guideTargetId: 'nav-today' },
   { id: 'sets', href: '/sets', labelKey: 'nav.sets', guideTargetId: 'nav-sets' },
   ...(STUDY_NAV_ENABLED
     ? [{ id: 'study', href: '/study', labelKey: 'nav.study', guideTargetId: 'nav-study' }]

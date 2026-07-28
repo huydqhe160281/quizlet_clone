@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { prisma } from '@/server/db';
 
-const startOfUtcDay = (date: Date) =>
+export const startOfUtcDay = (date: Date) =>
   new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 
 const dayDiff = (a: Date, b: Date) => {

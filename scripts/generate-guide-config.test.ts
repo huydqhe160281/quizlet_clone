@@ -6,7 +6,9 @@ describe('generate-guide-config', () => {
     const config = buildGuideConfig();
     expect(config.version).toBe(1);
     expect(config.menus.length).toBeGreaterThan(0);
-    expect(config.guideTargets.length).toBe(4);
+    expect(config.guideTargets.length).toBe(5);
+    expect(config.guideTargets.some((t) => t.id === 'nav-today')).toBe(true);
+    expect(config.menus.some((m) => m.href === '/today')).toBe(true);
     expect(config.routes.some((route) => route.path === '/dashboard')).toBe(true);
   });
 

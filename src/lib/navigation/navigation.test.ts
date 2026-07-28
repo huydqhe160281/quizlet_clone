@@ -5,6 +5,7 @@ describe('APP_NAV_ITEMS', () => {
   it('exports primary navigation entries', () => {
     const expectedHrefs = [
       '/dashboard',
+      '/today',
       '/sets',
       ...(STUDY_NAV_ENABLED ? ['/study'] : []),
       '/search',

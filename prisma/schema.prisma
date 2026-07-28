@@ -277,6 +277,7 @@ model UserStats {
   totalReviews    Int       @default(0)
   totalCorrect    Int       @default(0)
   lastStudiedDate DateTime?
+  dailyGoalCards  Int       @default(20)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
