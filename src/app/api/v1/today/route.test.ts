@@ -3,7 +3,7 @@ import { ApiError } from '@/lib/api-error';
 
 const requireUserIdMock = vi.hoisted(() => vi.fn());
 const getTodayPlanMock = vi.hoisted(() => vi.fn());
-const updateDailyGoalCardsMock = vi.hoisted(() => vi.fn());
+const updateStudyGoalsMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/server/auth/auth-utils', () => ({
   requireUserId: requireUserIdMock,
@@ -17,7 +17,7 @@ vi.mock('@/server/services/learning/study-goals', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/server/services/learning/study-goals')>();
   return {
     ...actual,
-    updateDailyGoalCards: updateDailyGoalCardsMock,
+    updateStudyGoals: updateStudyGoalsMock,
   };
 });
 
@@ -29,7 +29,7 @@ describe('Today & study-goals API', () => {
     vi.clearAllMocks();
     requireUserIdMock.mockResolvedValue('user-a');
     getTodayPlanMock.mockResolvedValue({
-      goal: { target: 20, completed: 0, remaining: 20, pct: 0 },
+      goal: { target: 20, completed: 0, remaining: 20, pct: 0, preferredTimezone: 'UTC' },
       queue: { items: [], returned: 0, totalEligible: 0 },
       insights: {
         reviewsLast7Days: 0,
@@ -37,9 +37,9 @@ describe('Today & study-goals API', () => {
         currentStreak: 0,
         weakSets: [],
       },
-      recommendation: { kind: 'empty', href: '/sets', setId: null, mode: null },
+      recommendation: { kind: 'empty', href: '/sets', setId: null, mode: null, cardIds: null },
     });
-    updateDailyGoalCardsMock.mockResolvedValue({ dailyGoalCards: 30 });
+    updateStudyGoalsMock.mockResolvedValue({ dailyGoalCards: 30, preferredTimezone: 'UTC' });
   });
 
   it('Scenario: Authenticated aggregate', async () => {
@@ -88,7 +88,7 @@ describe('Today & study-goals API', () => {
     );
     expect(res.status).toBe(200);
     expect(res.headers.get('Cache-Control')).toBe('private, no-store');
-    expect(updateDailyGoalCardsMock).toHaveBeenCalledWith('user-a', 30);
+    expect(updateStudyGoalsMock).toHaveBeenCalledWith('user-a', { dailyGoalCards: 30 });
   });
 
   it('Scenario: Reject out-of-range goal (API)', async () => {
@@ -119,6 +119,6 @@ describe('Today & study-goals API', () => {
       }),
       { params: Promise.resolve({}) }
     );
-    expect(updateDailyGoalCardsMock).toHaveBeenCalledWith('user-a', 25);
+    expect(updateStudyGoalsMock).toHaveBeenCalledWith('user-a', { dailyGoalCards: 25 });
   });
 });

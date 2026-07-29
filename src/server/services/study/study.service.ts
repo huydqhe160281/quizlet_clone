@@ -62,6 +62,41 @@ function settingsMatchStored(stored: unknown, settings?: StudySessionSettings) {
   return JSON.stringify(stored ?? null) === settingsFingerprint(settings);
 }
 
+function cardIdSetEqual(a: Iterable<string>, b: Iterable<string>): boolean {
+  const setA = new Set(a);
+  const setB = new Set(b);
+  if (setA.size !== setB.size) return false;
+  for (const id of setA) {
+    if (!setB.has(id)) return false;
+  }
+  return true;
+}
+
+function resolveSessionCards<T extends { id: string }>(
+  poolCards: T[],
+  cardIds: string[] | undefined
+): T[] {
+  if (cardIds === undefined) {
+    return poolCards;
+  }
+  if (cardIds.length === 0) {
+    throw new ApiError('VALIDATION_ERROR', 'cardIds must be a non-empty array', 400);
+  }
+  const poolById = new Map(poolCards.map((card) => [card.id, card]));
+  const selected: T[] = [];
+  const seen = new Set<string>();
+  for (const id of cardIds) {
+    if (seen.has(id)) continue;
+    const card = poolById.get(id);
+    if (!card) {
+      throw new ApiError('VALIDATION_ERROR', 'cardIds must belong to the set mode pool', 400);
+    }
+    seen.add(id);
+    selected.push(card);
+  }
+  return selected;
+}
+
 async function recordStreakForStudy(userId: string) {
   const { stats, changed } = await recordDailyStudyActivity(userId);
   const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
@@ -110,7 +145,8 @@ export async function createSession(
   userId: string,
   setId: string,
   mode: StudyMode,
-  settings?: StudySessionSettings
+  settings?: StudySessionSettings,
+  cardIds?: string[]
 ) {
   const set = await getOwnedOrPublicSet(setId, userId);
   const poolCards =
@@ -124,21 +160,30 @@ export async function createSession(
     );
   }
 
-  // Idempotent resume: same user+set+mode+settings incomplete session (multi-tab / TTL miss).
-  const existing = await prisma.studySession.findFirst({
+  const targetCards = resolveSessionCards(poolCards, cardIds);
+  const targetIds = targetCards.map((card) => card.id);
+
+  // Idempotent resume: scan incompletes; match settings + sessionCards membership.
+  const incompletes = await prisma.studySession.findMany({
     where: { userId, setId, mode, completedAt: null },
     include: sessionCardsInclude,
     orderBy: { startedAt: 'desc' },
   });
 
-  if (existing && settingsMatchStored(existing.settings, settings)) {
+  const matching = incompletes.find((session) => {
+    if (!settingsMatchStored(session.settings, settings)) return false;
+    const sessionIds = session.sessionCards.map((row) => row.cardId);
+    return cardIdSetEqual(sessionIds, targetIds);
+  });
+
+  if (matching) {
     const streak = await recordStreakForStudy(userId);
-    return { session: existing, streak };
+    return { session: matching, streak };
   }
 
   // Respect randomize setting — default true for backward compat when no settings
   const shouldShuffle = settings ? settings.randomize : true;
-  const cards = shouldShuffle ? shuffle(poolCards) : [...poolCards];
+  const cards = shouldShuffle ? shuffle(targetCards) : [...targetCards];
 
   const streak = await recordStreakForStudy(userId);
 

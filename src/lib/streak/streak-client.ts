@@ -50,10 +50,12 @@ export function isStreakCacheFresh(
 }
 
 export function notifyStreakUpdated(detail: StreakUpdatedDetail): void {
-  if (typeof window === 'undefined' || !detail.changed) {
+  if (typeof window === 'undefined') {
     return;
   }
 
+  // Always broadcast authoritative server snapshots so UI can recover from a
+  // stale localStorage "0" cache even when `changed` is false (already studied today).
   window.dispatchEvent(new CustomEvent(STREAK_UPDATED_EVENT, { detail }));
 }
 

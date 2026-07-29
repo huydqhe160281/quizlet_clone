@@ -19,7 +19,8 @@ export const POST = withErrorHandler(async (req) => {
       userId,
       input.setId,
       input.mode,
-      input.settings
+      input.settings,
+      input.cardIds
     );
     return Response.json({ data: session, streak }, { status: 201 });
   } catch (error) {

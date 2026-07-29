@@ -4,7 +4,64 @@
 
 TBD - created by archiving change flashcard-app-system-design. Update Purpose after archive.
 
+## Engine Layer Map
+
+| Layer     | Area     | Component/Symbol         |
+| --------- | -------- | ------------------------ |
+| Service   | `study/` | `createSession`          |
+| Interface | API      | `createSessionSchema`    |
+| Interface | Client   | `createStudySessionOnce` |
+
 ## Requirements
+
+### Requirement: Optional Session Card Subset
+
+`POST /api/v1/study/sessions` SHALL accept optional top-level `cardIds: string[]` (not inside `StudySessionSettings`). When omitted, behavior is unchanged (full mode pool). When provided, the array MUST be non-empty and every id MUST belong to the target set's mode pool; otherwise respond **400**. Incomplete-session resume SHALL scan incompletes for `userId+setId+mode` (not latest-only), then resume the newest row where settings match **and** `sessionCards` membership equals the requested subset (order-independent) when `cardIds` is provided; when omitted, resume the newest incomplete whose membership equals the full mode pool. `createStudySessionOnce` SHALL include sorted `cardIds` in its dedupe cache key and POST body.
+
+**Constraint**: MUST  
+**Verification**: `study.service.test.ts` + `create-session-once` tests
+
+#### Scenario: Omitted cardIds keeps full pool
+
+- **GIVEN** set A has 10 cards
+- **WHEN** createSession LEARN without cardIds
+- **THEN** session has 10 session cards
+
+#### Scenario: Subset materializes only those cards
+
+- **GIVEN** set A has cards c1..c10
+- **WHEN** createSession LEARN with `cardIds = [c1, c2]`
+- **THEN** session has exactly 2 session cards for c1 and c2
+
+#### Scenario: Empty cardIds rejected
+
+- **GIVEN** an authenticated createSession request
+- **WHEN** body includes `cardIds: []`
+- **THEN** the API returns 400 and creates no session
+
+#### Scenario: Resume matches same subset
+
+- **GIVEN** an incomplete LEARN session for set A with cards `{c1, c2}` and a newer incomplete with `{c3}`
+- **WHEN** createSession is called with `cardIds = [c1, c2]` and matching settings
+- **THEN** the `{c1, c2}` session is resumed (not the newer `{c3}` session, and not duplicated)
+
+#### Scenario: Different subset does not resume
+
+- **GIVEN** an incomplete LEARN session for set A with cards `{c1, c2}`
+- **WHEN** createSession is called with `cardIds = [c3]`
+- **THEN** a new session is created (no false resume)
+
+#### Scenario: Reject foreign cardIds
+
+- **GIVEN** `cardIds` containing an id not in set A
+- **WHEN** createSession(set A, LEARN, cardIds) runs
+- **THEN** the API/service returns 400 and creates no session
+
+#### Scenario: Client cache distinguishes subsets
+
+- **GIVEN** two rapid `createStudySessionOnce` calls for the same set/mode with different `cardIds`
+- **WHEN** both execute within the dedupe TTL
+- **THEN** they do not share a cache entry (distinct POSTs / results)
 
 ### Requirement: Flashcard Mode
 

@@ -8,6 +8,7 @@ const prismaMock = vi.hoisted(() => ({
   studySession: {
     create: vi.fn(),
     findFirst: vi.fn(),
+    findMany: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn(),
@@ -48,6 +49,7 @@ describe('study.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.studySession.findFirst.mockResolvedValue(null);
+    prismaMock.studySession.findMany.mockResolvedValue([]);
     prismaMock.$transaction.mockImplementation(async (arg: unknown) => {
       if (typeof arg === 'function') {
         return (arg as (tx: typeof prismaMock) => unknown)(prismaMock);
@@ -102,9 +104,9 @@ describe('study.service', () => {
       totalCards: 1,
       mode: 'LEARN',
       settings: null,
-      sessionCards: [],
+      sessionCards: [{ cardId: 'card-1' }],
     };
-    prismaMock.studySession.findFirst.mockResolvedValue(existing);
+    prismaMock.studySession.findMany.mockResolvedValue([existing]);
 
     const { session } = await createSession('user-a', 'set-1', 'LEARN');
 
@@ -120,11 +122,13 @@ describe('study.service', () => {
       cards: [{ id: 'card-1', sortOrder: 0, type: null }],
     });
 
-    prismaMock.studySession.findFirst.mockResolvedValue({
-      id: 'session-old',
-      settings: { randomize: false },
-      sessionCards: [],
-    });
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        id: 'session-old',
+        settings: { randomize: false },
+        sessionCards: [{ cardId: 'card-1' }],
+      },
+    ]);
     prismaMock.studySession.create.mockResolvedValue({
       id: 'session-new',
       totalCards: 1,
@@ -140,6 +144,167 @@ describe('study.service', () => {
     });
 
     expect(session.id).toBe('session-new');
+    expect(prismaMock.studySession.create).toHaveBeenCalled();
+  });
+
+  it('Scenario: Omitted cardIds keeps full pool', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: Array.from({ length: 10 }, (_, i) => ({
+        id: `card-${i}`,
+        sortOrder: i,
+        type: null,
+      })),
+    });
+    prismaMock.studySession.findMany.mockResolvedValue([]);
+    prismaMock.studySession.create.mockResolvedValue({
+      id: 's-full',
+      totalCards: 10,
+      mode: 'LEARN',
+    });
+
+    await createSession('user-a', 'set-1', 'LEARN');
+    const createArg = prismaMock.studySession.create.mock.calls[0]?.[0] as {
+      data: { totalCards: number; sessionCards: { create: unknown[] } };
+    };
+    expect(createArg.data.totalCards).toBe(10);
+    expect(createArg.data.sessionCards.create).toHaveLength(10);
+  });
+
+  it('Scenario: Subset materializes only those cards', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: Array.from({ length: 10 }, (_, i) => ({
+        id: `c${i + 1}`,
+        sortOrder: i,
+        type: null,
+      })),
+    });
+    prismaMock.studySession.findMany.mockResolvedValue([]);
+    prismaMock.studySession.create.mockResolvedValue({ id: 's-sub', totalCards: 2, mode: 'LEARN' });
+
+    await createSession('user-a', 'set-1', 'LEARN', undefined, ['c1', 'c2']);
+    const createArg = prismaMock.studySession.create.mock.calls[0]?.[0] as {
+      data: { sessionCards: { create: Array<{ cardId: string }> } };
+    };
+    const ids = createArg.data.sessionCards.create.map((row) => row.cardId).sort();
+    expect(ids).toEqual(['c1', 'c2']);
+  });
+
+  it('Scenario: Empty cardIds rejected', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [{ id: 'c1', sortOrder: 0, type: null }],
+    });
+    await expect(createSession('user-a', 'set-1', 'LEARN', undefined, [])).rejects.toMatchObject({
+      status: 400,
+    });
+  });
+
+  it('Scenario: Resume matches same subset', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [
+        { id: 'c1', sortOrder: 0, type: null },
+        { id: 'c2', sortOrder: 1, type: null },
+        { id: 'c3', sortOrder: 2, type: null },
+      ],
+    });
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        id: 'newer-c3',
+        settings: null,
+        sessionCards: [{ cardId: 'c3' }],
+        startedAt: new Date('2026-07-28T12:00:00.000Z'),
+      },
+      {
+        id: 'older-c1c2',
+        settings: null,
+        sessionCards: [{ cardId: 'c1' }, { cardId: 'c2' }],
+        startedAt: new Date('2026-07-28T11:00:00.000Z'),
+      },
+    ]);
+
+    const { session } = await createSession('user-a', 'set-1', 'LEARN', undefined, ['c1', 'c2']);
+    expect(session.id).toBe('older-c1c2');
+    expect(prismaMock.studySession.create).not.toHaveBeenCalled();
+  });
+
+  it('Scenario: Different subset does not resume', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [
+        { id: 'c1', sortOrder: 0, type: null },
+        { id: 'c2', sortOrder: 1, type: null },
+        { id: 'c3', sortOrder: 2, type: null },
+      ],
+    });
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        id: 'subset-12',
+        settings: null,
+        sessionCards: [{ cardId: 'c1' }, { cardId: 'c2' }],
+      },
+    ]);
+    prismaMock.studySession.create.mockResolvedValue({
+      id: 'new-c3',
+      totalCards: 1,
+      mode: 'LEARN',
+    });
+
+    const { session } = await createSession('user-a', 'set-1', 'LEARN', undefined, ['c3']);
+    expect(session.id).toBe('new-c3');
+    expect(prismaMock.studySession.create).toHaveBeenCalled();
+  });
+
+  it('Scenario: Reject foreign cardIds', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [{ id: 'c1', sortOrder: 0, type: null }],
+    });
+    await expect(
+      createSession('user-a', 'set-1', 'LEARN', undefined, ['foreign'])
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it('Scenario: Full-set incomplete does not resume for subset Today CTA', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [
+        { id: 'c1', sortOrder: 0, type: null },
+        { id: 'c2', sortOrder: 1, type: null },
+        { id: 'c3', sortOrder: 2, type: null },
+      ],
+    });
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        id: 'full-incomplete',
+        settings: null,
+        sessionCards: [{ cardId: 'c1' }, { cardId: 'c2' }, { cardId: 'c3' }],
+      },
+    ]);
+    prismaMock.studySession.create.mockResolvedValue({
+      id: 'subset-new',
+      totalCards: 2,
+      mode: 'LEARN',
+    });
+
+    const { session } = await createSession('user-a', 'set-1', 'LEARN', undefined, ['c1', 'c2']);
+    expect(session.id).toBe('subset-new');
     expect(prismaMock.studySession.create).toHaveBeenCalled();
   });
 

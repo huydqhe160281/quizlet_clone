@@ -27,6 +27,9 @@
     "weakSetCount": "{count} 枚",
     "noWeakSets": "苦手セットはありません。",
     "loadFailed": "今日のプランを読み込めませんでした。",
-    "starting": "開始中…"
+    "starting": "開始中…",
+    "timezoneLabel": "タイムゾーン",
+    "streakUtcNote": "連続日数は UTC のままの場合があります。目標とインサイトは選択したタイムゾーンを使います。",
+    "startSetSessionFocus": "重点カード {count} 枚を学習（Learn）"
   }
 }

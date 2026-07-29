@@ -34,6 +34,7 @@ export const createSessionSchema = z.object({
   setId: z.string().cuid(),
   mode: studyModeSchema,
   settings: studySessionSettingsSchema.optional(),
+  cardIds: z.array(z.string().cuid()).min(1).optional(),
 });
 
 export const completeSessionSchema = z.object({

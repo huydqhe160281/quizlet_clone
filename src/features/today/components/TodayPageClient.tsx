@@ -9,32 +9,54 @@ import { QueryErrorPanel } from '@/components/shared/QueryErrorPanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useQueryClient } from '@tanstack/react-query';
 import { createStudySessionOnce } from '@/features/study/lib/create-session-once';
-import { useTodayPlan, useUpdateStudyGoal } from '@/features/today/hooks/useTodayPlan';
+import { useTodayPlan, useUpdateStudyGoals } from '@/features/today/hooks/useTodayPlan';
+import { todayKeys } from '@/features/today/query-keys';
 import type { QueueReason, Recommendation } from '@/features/today/types';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
-import { GOAL_MAX, GOAL_MIN, GOAL_DEFAULT } from '@/features/today/constants';
+import { notifyStreakUpdated } from '@/lib/streak/streak-client';
+import {
+  GOAL_MAX,
+  GOAL_MIN,
+  GOAL_DEFAULT,
+  DEFAULT_PREFERRED_TIMEZONE,
+  PREFERRED_TIMEZONE_OPTIONS,
+} from '@/features/today/constants';
 
-function reasonLabel(t: (key: string) => string, reason: QueueReason): string {
+function reasonLabel(
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  reason: QueueReason
+): string {
   if (reason === 'due') return t('todayPage.reasonDue');
   if (reason === 'weak') return t('todayPage.reasonWeak');
   return t('todayPage.reasonNew');
 }
 
-function ctaLabel(t: (key: string) => string, rec: Recommendation): string {
+function ctaLabel(
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  rec: Recommendation
+): string {
   if (rec.kind === 'spaced') return t('todayPage.startSpaced');
-  if (rec.kind === 'set-session') return t('todayPage.startSetSession');
+  if (rec.kind === 'set-session') {
+    const count = rec.cardIds?.length ?? 0;
+    if (count > 0) return t('todayPage.startSetSessionFocus', { count });
+    return t('todayPage.startSetSession');
+  }
   return t('todayPage.startEmpty');
 }
 
 export function TodayPageClient() {
   const t = useTranslations();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data, isLoading, isError, error, refetch } = useTodayPlan();
-  const updateGoal = useUpdateStudyGoal();
+  const updateGoals = useUpdateStudyGoals();
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalDraft, setGoalDraft] = useState(GOAL_DEFAULT);
+  const [timezoneDraft, setTimezoneDraft] = useState(DEFAULT_PREFERRED_TIMEZONE);
+  const [timezoneTouched, setTimezoneTouched] = useState(false);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
 
@@ -54,9 +76,19 @@ export function TodayPageClient() {
       return;
     }
     if (rec.kind === 'set-session' && rec.setId) {
+      const cardIds = rec.cardIds;
+      if (!cardIds || cardIds.length === 0) {
+        setStartError(t('todayPage.loadFailed'));
+        return;
+      }
       setStarting(true);
       try {
-        const result = await createStudySessionOnce(rec.setId, 'LEARN');
+        const result = await createStudySessionOnce(rec.setId, 'LEARN', undefined, cardIds);
+        if (result.streak) {
+          notifyStreakUpdated(result.streak);
+        }
+        // Streak / goal progress may have changed on session create — refresh Today on return.
+        void queryClient.invalidateQueries({ queryKey: todayKeys.plan() });
         router.push(`/sets/${rec.setId}/learn?sessionId=${result.data.id}`);
       } catch (err) {
         setStartError(err instanceof Error ? err.message : t('todayPage.loadFailed'));
@@ -106,6 +138,10 @@ export function TodayPageClient() {
                 ? t('todayPage.goalMet')
                 : t('todayPage.goalRemaining', { remaining: goal.remaining })}
             </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t('todayPage.timezoneLabel')}: {goal.preferredTimezone}
+            </p>
+            <p className="text-xs text-muted-foreground">{t('todayPage.streakUtcNote')}</p>
           </div>
           <Button
             type="button"
@@ -113,6 +149,13 @@ export function TodayPageClient() {
             variant="outline"
             onClick={() => {
               setGoalDraft(goal.target);
+              const storedTz = goal.preferredTimezone || DEFAULT_PREFERRED_TIMEZONE;
+              setTimezoneDraft(
+                (PREFERRED_TIMEZONE_OPTIONS as readonly string[]).includes(storedTz)
+                  ? storedTz
+                  : DEFAULT_PREFERRED_TIMEZONE
+              );
+              setTimezoneTouched(false);
               setEditingGoal((v) => !v);
             }}
           >
@@ -130,7 +173,15 @@ export function TodayPageClient() {
             className="flex flex-wrap items-end gap-2"
             onSubmit={(event) => {
               event.preventDefault();
-              void updateGoal.mutateAsync(goalDraft).then(() => setEditingGoal(false));
+              // Only PATCH timezone when the select was changed — avoids clobbering a
+              // valid non-curated IANA zone that fell back to UTC for display.
+              const patch: { dailyGoalCards: number; preferredTimezone?: string } = {
+                dailyGoalCards: goalDraft,
+              };
+              if (timezoneTouched) {
+                patch.preferredTimezone = timezoneDraft;
+              }
+              void updateGoals.mutateAsync(patch).then(() => setEditingGoal(false));
             }}
           >
             <label className="space-y-1 text-sm">
@@ -144,7 +195,25 @@ export function TodayPageClient() {
                 className="w-28"
               />
             </label>
-            <Button type="submit" size="sm" disabled={updateGoal.isPending}>
+            <label className="space-y-1 text-sm">
+              <span className="text-muted-foreground">{t('todayPage.timezoneLabel')}</span>
+              <select
+                className="flex h-9 w-full min-w-[12rem] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                value={timezoneDraft}
+                onChange={(e) => {
+                  setTimezoneDraft(e.target.value);
+                  setTimezoneTouched(true);
+                }}
+                aria-label={t('todayPage.timezoneLabel')}
+              >
+                {PREFERRED_TIMEZONE_OPTIONS.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Button type="submit" size="sm" disabled={updateGoals.isPending}>
               {t('todayPage.saveGoal')}
             </Button>
           </form>

@@ -35,7 +35,9 @@ export function StreakBadge({ className }: { className?: string }) {
     };
 
     const cached = readStreakCache(userId);
-    if (isStreakCacheFresh(userId, cached)) {
+    // Never trust a fresh "0" cache — session create may have bumped streak
+    // without a prior event (e.g. Today CTA before notify wired).
+    if (isStreakCacheFresh(userId, cached) && cached.currentStreak > 0) {
       applyStreak(cached);
     } else {
       void fetchStreakSnapshot(userId)
@@ -45,7 +47,7 @@ export function StreakBadge({ className }: { className?: string }) {
 
     const onStreakUpdated = (event: Event) => {
       const detail = (event as CustomEvent<StreakUpdatedDetail>).detail;
-      if (!detail?.changed) {
+      if (!detail) {
         return;
       }
       writeStreakCache(userId, detail);

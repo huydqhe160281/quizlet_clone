@@ -36,18 +36,47 @@ describe('createStudySessionOnce', () => {
     expect(b.data.id).toBe('session-1');
   });
 
-  it('reuses ready result within TTL', async () => {
+  it('Scenario: Client cache distinguishes subsets', async () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({
-        data: { id: 'session-2', sessionCards: [] },
+        data: { id: 'session-x', sessionCards: [] },
       }),
     }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await createStudySessionOnce('set-1', 'FLASHCARD');
-    await createStudySessionOnce('set-1', 'FLASHCARD');
+    await createStudySessionOnce('set-1', 'LEARN', undefined, ['c1']);
+    await createStudySessionOnce('set-1', 'LEARN', undefined, ['c2']);
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const body0 = JSON.parse(
+      String((fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body)
+    ) as {
+      cardIds: string[];
+    };
+    const body1 = JSON.parse(
+      String((fetchMock.mock.calls[1] as unknown as [string, { body: string }])[1].body)
+    ) as {
+      cardIds: string[];
+    };
+    expect(body0.cardIds).toEqual(['c1']);
+    expect(body1.cardIds).toEqual(['c2']);
+  });
+
+  it('posts sorted cardIds regardless of input order', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        data: { id: 'session-sorted', sessionCards: [] },
+      }),
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await createStudySessionOnce('set-1', 'LEARN', undefined, ['c2', 'c1']);
+
+    const body = JSON.parse(
+      String((fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body)
+    ) as { cardIds: string[] };
+    expect(body.cardIds).toEqual(['c1', 'c2']);
   });
 });

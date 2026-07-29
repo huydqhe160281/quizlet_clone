@@ -61,10 +61,17 @@ describe('recommendation', () => {
     expect(typeof rec).toBe('object');
   });
 
-  it('Scenario: Reused endpoint only', () => {
-    const rec = buildRecommendation([item('1', 'set-a')], 1);
-    expect(rec.href).toBe('/sets/set-a/learn');
-    // Client must POST /api/v1/study/sessions — recommendation never invents a new endpoint.
-    expect(rec.href.includes('/api/')).toBe(false);
+  it('Scenario: set-session includes queue cardIds', () => {
+    const items = [item('c1', 'set-a'), item('c2', 'set-a'), item('c3', 'set-a')];
+    const rec = buildRecommendation(items, 3);
+    expect(rec.kind).toBe('set-session');
+    expect(rec.cardIds).toEqual(['c1', 'c2', 'c3']);
+  });
+
+  it('Scenario: spaced has no cardIds', () => {
+    const items = [item('1', 'set-a'), item('2', 'set-b')];
+    const rec = buildRecommendation(items, 2);
+    expect(rec.kind).toBe('spaced');
+    expect(rec.cardIds).toBeNull();
   });
 });

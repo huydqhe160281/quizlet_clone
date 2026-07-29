@@ -31,22 +31,33 @@ type CacheEntry =
 const createCache = new Map<string, CacheEntry>();
 const CREATE_CACHE_TTL_MS = 15_000;
 
-function cacheKey(setId: string, mode: string, settings?: StudySessionSettings) {
-  return `${setId}|${mode}|${JSON.stringify(settings ?? null)}`;
+function sortedCardIdsOrNull(cardIds?: string[]): string[] | null {
+  return cardIds ? [...cardIds].sort() : null;
+}
+
+function cacheKey(
+  setId: string,
+  mode: string,
+  settings?: StudySessionSettings,
+  cardIds?: string[]
+) {
+  return `${setId}|${mode}|${JSON.stringify(settings ?? null)}|${JSON.stringify(sortedCardIdsOrNull(cardIds))}`;
 }
 
 /**
- * Creates a study session once per set+mode+settings within a short TTL.
+ * Creates a study session once per set+mode+settings+cardIds within a short TTL.
  * Concurrent callers (e.g. React Strict Mode double-mount) share one POST.
  */
 export async function createStudySessionOnce(
   setId: string,
   mode: string,
-  settings?: StudySessionSettings
+  settings?: StudySessionSettings,
+  cardIds?: string[]
 ): Promise<CreateSessionResult> {
-  const key = cacheKey(setId, mode, settings);
+  const key = cacheKey(setId, mode, settings, cardIds);
   const now = Date.now();
   const hit = createCache.get(key);
+  const sortedCardIds = sortedCardIdsOrNull(cardIds);
 
   if (hit?.kind === 'pending') {
     return hit.promise;
@@ -59,7 +70,12 @@ export async function createStudySessionOnce(
     const response = await fetch('/api/v1/study/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ setId, mode, ...(settings ? { settings } : {}) }),
+      body: JSON.stringify({
+        setId,
+        mode,
+        ...(settings ? { settings } : {}),
+        ...(sortedCardIds ? { cardIds: sortedCardIds } : {}),
+      }),
     });
 
     if (!response.ok) {

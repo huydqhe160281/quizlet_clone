@@ -20,23 +20,40 @@ export function useTodayPlan() {
   });
 }
 
-export function useUpdateStudyGoal() {
+export type StudyGoalsPatchInput = {
+  dailyGoalCards?: number;
+  preferredTimezone?: string;
+};
+
+export function useUpdateStudyGoals() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dailyGoalCards: number) => {
+    mutationFn: async (patch: StudyGoalsPatchInput) => {
       const response = await fetch('/api/v1/user/study-goals', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dailyGoalCards }),
+        body: JSON.stringify(patch),
       });
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { message?: string } | null;
         throw new Error(payload?.message ?? 'Failed to update goal');
       }
-      return response.json() as Promise<{ dailyGoalCards: number }>;
+      return response.json() as Promise<{
+        dailyGoalCards: number;
+        preferredTimezone: string;
+      }>;
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: todayKeys.plan() });
     },
   });
+}
+
+/** @deprecated Prefer useUpdateStudyGoals */
+export function useUpdateStudyGoal() {
+  const mutation = useUpdateStudyGoals();
+  return {
+    ...mutation,
+    mutateAsync: (dailyGoalCards: number) => mutation.mutateAsync({ dailyGoalCards }),
+  };
 }

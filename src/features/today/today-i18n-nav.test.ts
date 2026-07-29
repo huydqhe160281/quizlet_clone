@@ -19,6 +19,13 @@ describe('Today i18n & nav', () => {
     expect([...en].sort()).toEqual([...ja].sort());
   });
 
+  it('Scenario: Locale catalog parity (new keys)', () => {
+    const en = loadTodayKeys('en');
+    expect(en.has('todayPage.timezoneLabel')).toBe(true);
+    expect(en.has('todayPage.startSetSessionFocus')).toBe(true);
+    expect(en.has('todayPage.streakUtcNote')).toBe(true);
+  });
+
   it('Scenario: Today visible in nav', () => {
     const today = APP_NAV_ITEMS.find((item) => item.id === 'today');
     expect(today).toBeDefined();

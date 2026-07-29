@@ -9,7 +9,7 @@ export function buildRecommendation(
   totalEligible: number
 ): Recommendation {
   if (totalEligible === 0 || items.length === 0) {
-    return { kind: 'empty', href: '/sets', setId: null, mode: null };
+    return { kind: 'empty', href: '/sets', setId: null, mode: null, cardIds: null };
   }
 
   const setIds = new Set(items.map((item) => item.setId));
@@ -19,18 +19,21 @@ export function buildRecommendation(
       href: '/study?source=today',
       setId: null,
       mode: null,
+      cardIds: null,
     };
   }
 
   const setId = items[0]?.setId;
   if (!setId) {
-    return { kind: 'empty', href: '/sets', setId: null, mode: null };
+    return { kind: 'empty', href: '/sets', setId: null, mode: null, cardIds: null };
   }
 
+  const cardIds = items.map((item) => item.cardId);
   return {
     kind: 'set-session',
     href: `/sets/${setId}/learn`,
     setId,
     mode: 'LEARN',
+    cardIds,
   };
 }

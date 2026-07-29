@@ -18,7 +18,12 @@ export async function getTodayPlan(
     getLearningQueue(userId, { limit, now }),
   ]);
 
-  const insights = await getRetentionInsights(userId, queue.membershipForInsights, now);
+  const insights = await getRetentionInsights(
+    userId,
+    queue.membershipForInsights,
+    now,
+    goal.preferredTimezone
+  );
   const recommendation = buildRecommendation(queue.items, queue.totalEligible);
 
   return {

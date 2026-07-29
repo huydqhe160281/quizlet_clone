@@ -27,6 +27,9 @@
     "weakSetCount": "{count} cards",
     "noWeakSets": "No weak sets right now.",
     "loadFailed": "Could not load today’s plan.",
-    "starting": "Starting…"
+    "starting": "Starting…",
+    "timezoneLabel": "Timezone",
+    "streakUtcNote": "Streak may still use UTC days; goals and insights use your timezone.",
+    "startSetSessionFocus": "Study {count} focus cards (Learn)"
   }
 }

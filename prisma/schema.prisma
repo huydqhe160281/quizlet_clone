@@ -278,6 +278,7 @@ model UserStats {
   totalCorrect    Int       @default(0)
   lastStudiedDate DateTime?
   dailyGoalCards  Int       @default(20)
+  preferredTimezone String  @default("UTC")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

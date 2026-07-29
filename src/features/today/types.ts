@@ -18,6 +18,7 @@ export type GoalProgress = {
   completed: number;
   remaining: number;
   pct: number;
+  preferredTimezone: string;
 };
 
 export type WeakSetInsight = {
@@ -38,6 +39,7 @@ export type Recommendation = {
   href: string;
   setId: string | null;
   mode: 'LEARN' | null;
+  cardIds: string[] | null;
 };
 
 export type TodayPlan = {

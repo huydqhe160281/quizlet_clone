@@ -89,6 +89,14 @@ Loading this endpoint MUST NOT insert `StudySession` rows.
 6. Slice to `limit`; set `totalEligible` to the pre-slice length (this is the exact field name used everywhere — spec, design brief, and this doc all say `totalEligible`, never "total"/"count").
 7. Build `membershipForInsights` as the uncapped due+weak candidate list (exclude `new`) for `insights.weakSets` — do **not** aggregate weak sets from capped `queue.items`.
 
+### Phase 2 additions
+
+- `UserStats.preferredTimezone` (default `UTC`); goal + insights windows use `startOfZonedDay` / `nextZonedDay` (Intl).
+- `GET /api/v1/today` includes `goal.preferredTimezone`.
+- `PATCH /api/v1/user/study-goals` accepts at-least-one of `dailyGoalCards` | `preferredTimezone`.
+- `set-session` recommendation includes `cardIds`; `createSession` optional top-level `cardIds` with membership-based resume scan.
+- `createStudySessionOnce` cache key / POST include sorted `cardIds`.
+
 Reason tag priority if multiple apply: **due > weak > new**.
 
 ## 5. Goals

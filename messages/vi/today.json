@@ -27,6 +27,9 @@
     "weakSetCount": "{count} thẻ",
     "noWeakSets": "Không có bộ thẻ yếu lúc này.",
     "loadFailed": "Không tải được kế hoạch hôm nay.",
-    "starting": "Đang bắt đầu…"
+    "starting": "Đang bắt đầu…",
+    "timezoneLabel": "Múi giờ",
+    "streakUtcNote": "Chuỗi ngày có thể vẫn theo UTC; mục tiêu và insights dùng múi giờ của bạn.",
+    "startSetSessionFocus": "Học {count} thẻ trọng tâm (Learn)"
   }
 }

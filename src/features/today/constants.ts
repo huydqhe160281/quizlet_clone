@@ -18,3 +18,20 @@ export const RANK_BOOST_NEW = 1;
 export const RANK_EASE_PIVOT = 2.5;
 
 export const WEAK_SETS_LIMIT = 3;
+
+/** Default IANA timezone for coach day boundaries (Phase 2). */
+export const DEFAULT_PREFERRED_TIMEZONE = 'UTC';
+
+/** Curated timezone options for Today UI (must pass Intl timeZone probe). */
+export const PREFERRED_TIMEZONE_OPTIONS = [
+  'UTC',
+  'Asia/Ho_Chi_Minh',
+  'Asia/Tokyo',
+  'Asia/Singapore',
+  'Asia/Bangkok',
+  'Asia/Shanghai',
+  'Europe/London',
+  'Europe/Paris',
+  'America/New_York',
+  'America/Los_Angeles',
+] as const;
