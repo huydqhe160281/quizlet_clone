@@ -1,0 +1,13 @@
+{
+  "pwa": {
+    "offlineTitle": "Bạn đang ngoại tuyến",
+    "offlineBody": "Tính năng học cần kết nối mạng. Thử lại khi bạn đã online.",
+    "offlinePrerequisite": "Hãy mở QuizFree khi có mạng ít nhất một lần để cài shell offline.",
+    "reload": "Thử lại",
+    "updateAvailable": "Đã có phiên bản mới.",
+    "updateReload": "Tải lại để cập nhật",
+    "updateReloadWarning": "Tải lại có thể làm mất câu trả lời đang học dở.",
+    "studyNeedsNetwork": "Học và đồng bộ cần kết nối mạng trong phiên bản này.",
+    "installIosHint": "Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree."
+  }
+}

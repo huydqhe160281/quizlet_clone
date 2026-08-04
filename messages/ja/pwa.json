@@ -1,0 +1,13 @@
+{
+  "pwa": {
+    "offlineTitle": "オフラインです",
+    "offlineBody": "学習機能にはネットワーク接続が必要です。オンラインに戻ったら再試行してください。",
+    "offlinePrerequisite": "オフライン用シェルを入れるため、一度はオンラインで QuizFree を開いてください。",
+    "reload": "再試行",
+    "updateAvailable": "新しいバージョンがあります。",
+    "updateReload": "再読み込みして更新",
+    "updateReloadWarning": "再読み込みすると学習途中の回答が失われる場合があります。",
+    "studyNeedsNetwork": "このバージョンでは学習と同期に接続が必要です。",
+    "installIosHint": "iPhone/iPad: 共有 → ホーム画面に追加 で QuizFree をインストールできます。"
+  }
+}

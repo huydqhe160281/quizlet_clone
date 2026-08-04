@@ -5,7 +5,7 @@
 - Next.js App Router SSR/RSC; locale resolved on the server before paint.
 - **Cookie-only locale** — no `/[locale]` segment; URLs unchanged (Q2).
 - Locale switch: update cookie (+ preference API if logged in), then **`router.refresh()`**. Hard reload is a last resort and must not interrupt an active study session without confirmation.
-- Provider order in root layout: `AuthSessionProvider` → `ThemeProvider` → **`LocaleProvider`** (locale from server prop / cookie) → children — avoids hydration mismatch when cookie ≠ default `vi`.
+- Provider order in root layout: `ThemeProvider` → `QueryProvider` → `AuthSessionProvider` → **`LocaleProvider`** → **`PwaProvider`** (Serwist register/update toast) → children — PWA must sit inside LocaleProvider so `pwa.*` translations resolve.
 
 ## 2. Component Structure
 

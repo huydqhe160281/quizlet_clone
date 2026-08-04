@@ -191,10 +191,10 @@ The system SHALL serve `sitemap.xml` via `src/app/sitemap.ts`.
 
 ### Requirement: Web App Manifest (REQ-007)
 
-The system SHALL serve `manifest.webmanifest` via `src/app/manifest.ts`.
+The system SHALL continue serving `manifest.webmanifest` via `src/app/manifest.ts` as the **sole** install manifest SSOT. Phase 1 PWA work MUST NOT add a conflicting `public/manifest.json`. Optional additive fields (`scope`, `id`, icon purpose tweaks) MAY be applied if required for installability audits, without changing the route ownership.
 
 **Constraint**: MUST  
-**Verification**: `pnpm build` lists `○ /manifest.webmanifest`
+**Verification**: `pnpm build` lists `○ /manifest.webmanifest`; repo has no second static manifest introduced by PWA work
 
 #### Scenario: Manifest fields
 
@@ -202,6 +202,18 @@ The system SHALL serve `manifest.webmanifest` via `src/app/manifest.ts`.
 - **WHEN** `/manifest.webmanifest` is requested
 - **THEN** JSON includes `name`, `short_name` (QuizFree), `description`, `start_url: '/'`, `display: 'standalone'`, `lang: 'vi'`, `theme_color`, `background_color`
 - **AND** `icons` reference `/icon.png` at 512×512 with `any` and `maskable` purpose
+
+#### Scenario: No duplicate static manifest
+
+- **GIVEN** offline-pwa Phase 1 is implemented
+- **WHEN** the repository is inspected for install manifests
+- **THEN** install metadata is still produced by the Next manifest route and not duplicated as a hand-maintained `public/manifest.json`
+
+#### Scenario: Manifest fields remain installable
+
+- **GIVEN** the manifest handler runs after Phase 1
+- **WHEN** `/manifest.webmanifest` is requested
+- **THEN** JSON still includes `name`, `short_name`, `start_url`, `display: 'standalone'`, theme/background colors, and icons suitable for install
 
 ---
 

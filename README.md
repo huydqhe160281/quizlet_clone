@@ -2,7 +2,9 @@
 
 Personal flashcard app with spaced repetition, four study modes, public library, and dashboard stats.
 
-**Stack:** Next.js 15 · TypeScript · Prisma · PostgreSQL (Supabase) · NextAuth v5 · Vercel
+**Stack:** Next.js 15 · TypeScript · Prisma · PostgreSQL (Supabase) · NextAuth v5 · Vercel · Serwist PWA shell (production)
+
+Installable web app shell: production builds register a service worker with an `/offline.html` fallback. Study modes still require network (offline study deferred). See `docs/qa/offline-pwa-smoke-test.md`.
 
 ## Quick Start
 
@@ -18,21 +20,22 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment Variables
 
-| Variable                                    | Description                                      |
-| ------------------------------------------- | ------------------------------------------------ |
-| `DATABASE_URL`                              | Pooled Postgres URL (port **6543**, PgBouncer)   |
-| `DIRECT_DATABASE_URL`                       | Direct Postgres URL (port **5432**, migrations)  |
-| `NEXTAUTH_SECRET`                           | JWT signing secret                               |
-| `NEXTAUTH_URL`                              | App URL                                          |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (optional)                          |
-| `SUPABASE_URL` / keys                       | Media upload via presigned URLs                  |
-| `SUPABASE_MEDIA_BUCKET`                     | Storage bucket name (default: `flashcard-media`) |
-| `RESEND_API_KEY`                            | Password reset emails (optional in dev)          |
-| `OLLAMA_BASE_URL`                           | Ollama API URL (required in production)          |
-| `OLLAMA_MODEL`                              | Ollama model name (required in production)       |
-| `OLLAMA_MODEL_LARGE`                        | Optional larger model for high-card requests     |
-| `ZAI_API_KEY`                               | Z.ai API key (fallback if Ollama fails)          |
-| `ZAI_MODEL`                                 | Z.ai model name (default: `glm-5.2`)             |
+| Variable                                    | Description                                                        |
+| ------------------------------------------- | ------------------------------------------------------------------ |
+| `DATABASE_URL`                              | Pooled Postgres URL (port **6543**, PgBouncer)                     |
+| `DIRECT_DATABASE_URL`                       | Direct Postgres URL (port **5432**, migrations)                    |
+| `NEXTAUTH_SECRET`                           | JWT signing secret                                                 |
+| `NEXTAUTH_URL`                              | App URL                                                            |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth (optional)                                            |
+| `SUPABASE_URL` / keys                       | Media upload via presigned URLs                                    |
+| `SUPABASE_MEDIA_BUCKET`                     | Storage bucket name (default: `flashcard-media`)                   |
+| `RESEND_API_KEY`                            | Password reset emails (optional in dev)                            |
+| `OLLAMA_BASE_URL`                           | Ollama API URL (required in production)                            |
+| `OLLAMA_MODEL`                              | Ollama model name (required in production)                         |
+| `OLLAMA_MODEL_LARGE`                        | Optional larger model for high-card requests                       |
+| `ZAI_API_KEY`                               | Z.ai API key (fallback if Ollama fails)                            |
+| `ZAI_MODEL`                                 | Z.ai model name (default: `glm-5.2`)                               |
+| `NEXT_PUBLIC_PWA_DEV`                       | Set to `1` to enable Serwist SW during `next dev` (off by default) |
 
 ### AI Set Generation (Ollama)
 

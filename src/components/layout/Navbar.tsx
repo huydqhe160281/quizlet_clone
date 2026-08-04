@@ -17,21 +17,12 @@ import {
 import { StreakBadge } from '@/components/layout/StreakBadge';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
-import { SUPPORTED_LOCALES, APP_LOCALE_COOKIE, type Locale } from '@/lib/i18n/constants';
+import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/constants';
+import { persistLocaleClient } from '@/lib/i18n/client-locale';
 import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
 
 function writeLocaleCookie(locale: Locale) {
-  const maxAge = 60 * 60 * 24 * 365;
-  const secure = typeof window !== 'undefined' && window.location.protocol === 'https:';
-  document.cookie = [
-    `${APP_LOCALE_COOKIE}=${locale}`,
-    'Path=/',
-    'SameSite=Lax',
-    `Max-Age=${maxAge}`,
-    secure ? 'Secure' : '',
-  ]
-    .filter(Boolean)
-    .join('; ');
+  persistLocaleClient(locale);
 }
 
 export function Navbar() {

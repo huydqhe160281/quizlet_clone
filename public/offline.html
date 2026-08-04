@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Offline | QuizFree</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --fg: #0a0a0a;
+        --muted: #525252;
+        --bg0: #fafafa;
+        --bg1: #f4f4f5;
+        --primary: #7c3aed;
+        --primary-fg: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg: #fafafa;
+          --muted: #a3a3a3;
+          --bg0: #0a0a0a;
+          --bg1: #171717;
+          --primary: #8b5cf6;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        color: var(--fg);
+        background: linear-gradient(to bottom, var(--bg0), var(--bg1));
+      }
+      main {
+        margin: 0 auto;
+        max-width: 32rem;
+        min-height: 70vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.5rem;
+        padding: 4rem 1.5rem;
+      }
+      h1 {
+        margin: 0;
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.025em;
+      }
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .sm {
+        font-size: 0.875rem;
+      }
+      button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 2.5rem;
+        padding: 0 1rem;
+        border: 0;
+        border-radius: 0.375rem;
+        background: var(--primary);
+        color: var(--primary-fg);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button:hover {
+        filter: brightness(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="stack">
+        <h1 id="title">Bạn đang ngoại tuyến</h1>
+        <p id="body">Tính năng học cần kết nối mạng. Thử lại khi bạn đã online.</p>
+        <p id="study" class="sm">Học và đồng bộ cần kết nối mạng trong phiên bản này.</p>
+        <p id="prereq" class="sm">
+          Hãy mở QuizFree khi có mạng ít nhất một lần để cài shell offline.
+        </p>
+        <p id="ios" class="sm">
+          Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree.
+        </p>
+      </div>
+      <div>
+        <button id="reload" type="button">Thử lại</button>
+      </div>
+    </main>
+    <script>
+      (function () {
+        // Keep in sync with messages/{vi,en,ja}/pwa.json
+        var COPY = {
+          vi: {
+            offlineTitle: 'Bạn đang ngoại tuyến',
+            offlineBody: 'Tính năng học cần kết nối mạng. Thử lại khi bạn đã online.',
+            offlinePrerequisite:
+              'Hãy mở QuizFree khi có mạng ít nhất một lần để cài shell offline.',
+            reload: 'Thử lại',
+            studyNeedsNetwork: 'Học và đồng bộ cần kết nối mạng trong phiên bản này.',
+            installIosHint:
+              'Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree.',
+          },
+          en: {
+            offlineTitle: "You're offline",
+            offlineBody:
+              "Study features need a network connection. You can retry when you're back online.",
+            offlinePrerequisite:
+              'Visit QuizFree online at least once so the offline shell can be installed.',
+            reload: 'Try again',
+            studyNeedsNetwork: 'Learning and sync require connectivity in this version.',
+            installIosHint:
+              'On iPhone/iPad: Share → Add to Home Screen to install QuizFree.',
+          },
+          ja: {
+            offlineTitle: 'オフラインです',
+            offlineBody:
+              '学習機能にはネットワーク接続が必要です。オンラインに戻ったら再試行してください。',
+            offlinePrerequisite:
+              'オフライン用シェルを入れるため、一度はオンラインで QuizFree を開いてください。',
+            reload: '再試行',
+            studyNeedsNetwork: 'このバージョンでは学習と同期に接続が必要です。',
+            installIosHint:
+              'iPhone/iPad: 共有 → ホーム画面に追加 で QuizFree をインストールできます。',
+          },
+        };
+
+        function readLocale() {
+          var match = document.cookie.match(/(?:^|; )app-locale=([^;]*)/);
+          var raw = match ? decodeURIComponent(match[1]) : '';
+          if (raw === 'en' || raw === 'ja' || raw === 'vi') return raw;
+          try {
+            var stored = localStorage.getItem('app-locale');
+            if (stored === 'en' || stored === 'ja' || stored === 'vi') return stored;
+          } catch (e) {}
+          // Product default is Vietnamese (do not follow browser language).
+          return 'vi';
+        }
+
+        function apply() {
+          var locale = readLocale();
+          var copy = COPY[locale] || COPY.vi;
+          document.documentElement.lang = locale;
+          document.title = copy.offlineTitle + ' | QuizFree';
+          document.getElementById('title').textContent = copy.offlineTitle;
+          document.getElementById('body').textContent = copy.offlineBody;
+          document.getElementById('study').textContent = copy.studyNeedsNetwork;
+          document.getElementById('prereq').textContent = copy.offlinePrerequisite;
+          document.getElementById('ios').textContent = copy.installIosHint;
+          document.getElementById('reload').textContent = copy.reload;
+        }
+
+        apply();
+        document.getElementById('reload').addEventListener('click', function () {
+          window.location.reload();
+        });
+      })();
+    </script>
+  </body>
+</html>

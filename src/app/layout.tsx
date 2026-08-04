@@ -15,6 +15,7 @@ import { siteConfig } from '@/lib/seo/site-config';
 import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 import { loadCatalog } from '@/lib/i18n/catalog';
 import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
+import { PwaProvider } from '@/features/pwa/PwaProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -59,11 +60,13 @@ export default async function RootLayout({
           <QueryProvider>
             <AuthSessionProvider>
               <LocaleProvider locale={locale} catalog={catalog}>
-                <LoadingOverlayProvider>
-                  <ErrorBoundary>
-                    <GuideProviders>{children}</GuideProviders>
-                  </ErrorBoundary>
-                </LoadingOverlayProvider>
+                <PwaProvider>
+                  <LoadingOverlayProvider>
+                    <ErrorBoundary>
+                      <GuideProviders>{children}</GuideProviders>
+                    </ErrorBoundary>
+                  </LoadingOverlayProvider>
+                </PwaProvider>
               </LocaleProvider>
             </AuthSessionProvider>
           </QueryProvider>

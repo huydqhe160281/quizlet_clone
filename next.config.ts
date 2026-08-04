@@ -1,8 +1,28 @@
 import type { NextConfig } from 'next';
+import { spawnSync } from 'node:child_process';
 import bundleAnalyzer from '@next/bundle-analyzer';
+import withSerwistInit from '@serwist/next';
+import { REQUIRED_WORKER_SRC_CSP } from './src/features/pwa/sw-policy';
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
+});
+
+const revision =
+  spawnSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf-8' }).stdout?.trim() ||
+  crypto.randomUUID();
+
+const disableSerwist =
+  process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_PWA_DEV !== '1';
+
+const withSerwist = withSerwistInit({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: disableSerwist,
+  register: false,
+  reloadOnOnline: false,
+  cacheOnNavigation: false,
+  additionalPrecacheEntries: [{ url: '/offline.html', revision }],
 });
 
 const securityHeaders = [
@@ -19,6 +39,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https://*.supabase.co",
       "font-src 'self'",
       "connect-src 'self' https://*.supabase.co",
+      REQUIRED_WORKER_SRC_CSP,
     ].join('; '),
   },
 ];
@@ -39,4 +60,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+export default withBundleAnalyzer(withSerwist(nextConfig));

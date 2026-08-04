@@ -1,0 +1,13 @@
+{
+  "pwa": {
+    "offlineTitle": "You're offline",
+    "offlineBody": "Study features need a network connection. You can retry when you're back online.",
+    "offlinePrerequisite": "Visit QuizFree online at least once so the offline shell can be installed.",
+    "reload": "Try again",
+    "updateAvailable": "A new version is ready.",
+    "updateReload": "Reload to update",
+    "updateReloadWarning": "Reloading may lose in-progress study answers.",
+    "studyNeedsNetwork": "Learning and sync require connectivity in this version.",
+    "installIosHint": "On iPhone/iPad: Share → Add to Home Screen to install QuizFree."
+  }
+}

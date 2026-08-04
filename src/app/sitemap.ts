@@ -8,8 +8,6 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl();
 
-  const publicSets = await getPublicSetSitemapEntries();
-
   const staticEntries: MetadataRoute.Sitemap = sitemapStaticPaths.map((path) => ({
     url: `${baseUrl}${path || '/'}`,
     lastModified: new Date(),
@@ -17,12 +15,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === '' ? 1 : 0.8,
   }));
 
-  const sharedEntries: MetadataRoute.Sitemap = publicSets.map((set) => ({
-    url: `${baseUrl}/shared/${set.id}`,
-    lastModified: set.updatedAt,
-    changeFrequency: 'weekly',
-    priority: 0.7,
-  }));
-
-  return [...staticEntries, ...sharedEntries];
+  try {
+    const publicSets = await getPublicSetSitemapEntries();
+    const sharedEntries: MetadataRoute.Sitemap = publicSets.map((set) => ({
+      url: `${baseUrl}/shared/${set.id}`,
+      lastModified: set.updatedAt,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    }));
+    return [...staticEntries, ...sharedEntries];
+  } catch (error) {
+    // Build/prerender must not fail hard when DB is unreachable (local/CI).
+    console.warn('[sitemap] public set entries skipped:', error);
+    return staticEntries;
+  }
 }

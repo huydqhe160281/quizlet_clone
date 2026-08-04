@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { type Locale, DEFAULT_LOCALE } from '@/lib/i18n/constants';
 import { t, type CatalogMessages } from '@/lib/i18n/t';
 
@@ -24,6 +24,15 @@ export function LocaleProvider({ locale, catalog, children }: LocaleProviderProp
       t(catalog, key, interpolations),
     [catalog]
   );
+
+  // Mirror server locale into localStorage so offline.html can read it.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('app-locale', locale || DEFAULT_LOCALE);
+    } catch {
+      // ignore
+    }
+  }, [locale]);
 
   const value = useMemo(
     () => ({
