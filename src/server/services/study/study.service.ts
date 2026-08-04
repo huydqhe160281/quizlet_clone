@@ -1,4 +1,4 @@
-import type { Grade, Prisma, StudyMode } from '@prisma/client';
+import { Grade, Prisma, type StudyMode } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { calculateSm2, gradeToSm2 } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
@@ -110,17 +110,50 @@ async function recordStreakForStudy(userId: string) {
 type SessionAnswerInput = {
   cardId: string;
   isCorrect: boolean;
+  clientMutationId?: string;
 };
 
 function dedupeAnswers(answers: SessionAnswerInput[]) {
-  const latestByCardId = new Map<string, boolean>();
-  answers.forEach(({ cardId, isCorrect }) => {
-    latestByCardId.set(cardId, isCorrect);
+  const latestByCardId = new Map<string, SessionAnswerInput>();
+  answers.forEach((answer) => {
+    latestByCardId.set(answer.cardId, answer);
   });
-  return Array.from(latestByCardId.entries()).map(([cardId, isCorrect]) => ({
-    cardId,
-    isCorrect,
-  }));
+  return Array.from(latestByCardId.values());
+}
+
+async function filterUnprocessedAnswers(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  answers: SessionAnswerInput[]
+): Promise<SessionAnswerInput[]> {
+  const ids = answers
+    .map((answer) => answer.clientMutationId)
+    .filter((id): id is string => Boolean(id));
+  if (ids.length === 0) {
+    return answers;
+  }
+
+  const existing = await tx.processedMutation.findMany({
+    where: { userId, clientMutationId: { in: ids } },
+    select: { clientMutationId: true },
+  });
+  const processed = new Set(existing.map((row) => row.clientMutationId));
+  return answers.filter(
+    (answer) => !answer.clientMutationId || !processed.has(answer.clientMutationId)
+  );
+}
+
+async function claimAnswerMutationIds(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  answers: SessionAnswerInput[]
+) {
+  const rows = answers
+    .map((answer) => answer.clientMutationId)
+    .filter((id): id is string => Boolean(id))
+    .map((clientMutationId) => ({ clientMutationId, userId }));
+  if (rows.length === 0) return;
+  await tx.processedMutation.createMany({ data: rows, skipDuplicates: true });
 }
 
 async function assertAnswersBelongToSession(
@@ -178,7 +211,10 @@ export async function createSession(
 
   if (matching) {
     const streak = await recordStreakForStudy(userId);
-    return { session: matching, streak };
+    return {
+      session: { ...matching, set: { id: set.id, title: set.title } },
+      streak,
+    };
   }
 
   // Respect randomize setting — default true for backward compat when no settings
@@ -201,7 +237,10 @@ export async function createSession(
     include: sessionCardsInclude,
   });
 
-  return { session, streak };
+  return {
+    session: { ...session, set: { id: set.id, title: set.title } },
+    streak,
+  };
 }
 
 export async function getSessionCards(sessionId: string, userId: string) {
@@ -218,7 +257,10 @@ export async function getSessionCards(sessionId: string, userId: string) {
 export async function getOwnedSessionForStudy(sessionId: string, userId: string) {
   const session = await prisma.studySession.findUnique({
     where: { id: sessionId },
-    include: sessionCardsInclude,
+    include: {
+      ...sessionCardsInclude,
+      set: { select: { id: true, title: true } },
+    },
   });
 
   if (!session) {
@@ -257,7 +299,7 @@ export async function recordSessionAnswer(
 export async function recordSessionAnswersBatch(
   sessionId: string,
   userId: string,
-  answers: Array<{ cardId: string; isCorrect: boolean }>
+  answers: SessionAnswerInput[]
 ) {
   return prisma.$transaction(async (tx) => {
     const session = await tx.studySession.findUnique({
@@ -271,12 +313,20 @@ export async function recordSessionAnswersBatch(
     if (session.userId !== userId) {
       throw new ApiError('FORBIDDEN', 'You do not have access to this session', 403);
     }
-    // Late beacons/retries after completion are safe no-ops.
-    if (session.completedAt) {
+
+    const survivors = await filterUnprocessedAnswers(tx, userId, answers);
+    if (survivors.length === 0) {
       return { recorded: 0 };
     }
 
-    const normalizedAnswers = dedupeAnswers(answers);
+    // Late beacons/retries after completion are safe no-ops for fully-deduped
+    // batches; remaining survivors on a completed session are distinguishable.
+    if (session.completedAt) {
+      return { recorded: 0, reason: 'session_already_completed' as const };
+    }
+
+    await claimAnswerMutationIds(tx, userId, survivors);
+    const normalizedAnswers = dedupeAnswers(survivors);
     await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
 
     const now = new Date();
@@ -296,60 +346,102 @@ export async function recordSessionAnswersBatch(
 export async function completeSession(
   sessionId: string,
   userId: string,
-  answers: SessionAnswerInput[] = []
+  answers: SessionAnswerInput[] = [],
+  clientMutationId?: string
 ) {
-  const session = await prisma.$transaction(async (tx) => {
-    const ownership = await tx.studySession.findUnique({
-      where: { id: sessionId },
-      select: { userId: true, totalCards: true, completedAt: true },
-    });
-    if (!ownership) {
-      throw new ApiError('NOT_FOUND', 'Session not found', 404);
-    }
-    if (ownership.userId !== userId) {
-      throw new ApiError('FORBIDDEN', 'You do not have access to this session', 403);
-    }
-
-    if (!ownership.completedAt) {
-      const normalizedAnswers = dedupeAnswers(answers);
-      await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
-
-      if (normalizedAnswers.length > 0) {
-        const now = new Date();
-        await Promise.all(
-          normalizedAnswers.map(({ cardId, isCorrect }) =>
-            tx.sessionCard.updateMany({
-              where: { sessionId, cardId },
-              data: { isCorrect, answeredAt: now },
-            })
-          )
-        );
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      if (clientMutationId) {
+        await tx.processedMutation.create({
+          data: { clientMutationId, userId },
+        });
       }
+
+      const ownership = await tx.studySession.findUnique({
+        where: { id: sessionId },
+        select: { userId: true, totalCards: true, completedAt: true },
+      });
+      if (!ownership) {
+        throw new ApiError('NOT_FOUND', 'Session not found', 404);
+      }
+      if (ownership.userId !== userId) {
+        throw new ApiError('FORBIDDEN', 'You do not have access to this session', 403);
+      }
+
+      const survivors = await filterUnprocessedAnswers(tx, userId, answers);
+      if (survivors.length > 0 && !ownership.completedAt) {
+        await claimAnswerMutationIds(tx, userId, survivors);
+        const normalizedAnswers = dedupeAnswers(survivors);
+        await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
+
+        if (normalizedAnswers.length > 0) {
+          const now = new Date();
+          await Promise.all(
+            normalizedAnswers.map(({ cardId, isCorrect }) =>
+              tx.sessionCard.updateMany({
+                where: { sessionId, cardId },
+                data: { isCorrect, answeredAt: now },
+              })
+            )
+          );
+        }
+      }
+
+      const correctCount = await tx.sessionCard.count({
+        where: { sessionId, isCorrect: true },
+      });
+      const score = ownership.totalCards > 0 ? correctCount / ownership.totalCards : 0;
+      const completedAt = new Date();
+
+      const updateResult = await tx.studySession.updateMany({
+        where: { id: sessionId, completedAt: null },
+        data: { completedAt, correctCount, score },
+      });
+
+      const finalSession = await tx.studySession.findUnique({ where: { id: sessionId } });
+      if (!finalSession) {
+        throw new ApiError('NOT_FOUND', 'Session not found', 404);
+      }
+
+      return {
+        session: finalSession,
+        alreadyCompleted: updateResult.count === 0,
+      };
+    });
+
+    // Fresh claim that actually completed the session records streak.
+    // Claim-miss returns earlier without streak; alreadyCompleted (lost the updateMany)
+    // also skips streak to avoid double-crediting concurrent completions.
+    if (result.alreadyCompleted) {
+      return {
+        session: result.session,
+        alreadyCompleted: true as const,
+      };
     }
 
-    const correctCount = await tx.sessionCard.count({
-      where: { sessionId, isCorrect: true },
-    });
-    const score = ownership.totalCards > 0 ? correctCount / ownership.totalCards : 0;
-    const completedAt = new Date();
-
-    // Idempotent under concurrent completion requests.
-    await tx.studySession.updateMany({
-      where: { id: sessionId, completedAt: null },
-      data: { completedAt, correctCount, score },
-    });
-
-    const finalSession = await tx.studySession.findUnique({ where: { id: sessionId } });
-    if (!finalSession) {
-      throw new ApiError('NOT_FOUND', 'Session not found', 404);
+    const streak = await recordStreakForStudy(userId);
+    return {
+      session: result.session,
+      streak,
+      alreadyCompleted: false as const,
+    };
+  } catch (error) {
+    if (
+      clientMutationId &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      const session = await prisma.studySession.findUnique({ where: { id: sessionId } });
+      if (!session) {
+        throw new ApiError('NOT_FOUND', 'Session not found', 404);
+      }
+      if (session.userId !== userId) {
+        throw new ApiError('FORBIDDEN', 'You do not have access to this session', 403);
+      }
+      return { session, alreadyCompleted: false as const };
     }
-
-    return finalSession;
-  });
-
-  // Safety net for resume-via-?sessionId paths that skip createSession streak recording.
-  const streak = await recordStreakForStudy(userId);
-  return { session, streak };
+    throw error;
+  }
 }
 
 export async function getDueCards(userId: string) {
@@ -416,7 +508,8 @@ export async function reviewCard(
   userId: string,
   cardId: string,
   grade: Grade,
-  responseMs?: number
+  responseMs?: number,
+  clientMutationId?: string
 ) {
   const card = await prisma.flashcard.findUnique({
     where: { id: cardId },
@@ -443,38 +536,66 @@ export async function reviewCard(
   const sm2 = calculateSm2(current, gradeToSm2(grade));
   const isCorrect = grade === 'GOOD' || grade === 'EASY';
 
-  const progress = await prisma.cardProgress.upsert({
-    where: { userId_cardId: { userId, cardId } },
-    create: {
-      userId,
+  try {
+    const progress = await prisma.$transaction(async (tx) => {
+      if (clientMutationId) {
+        await tx.processedMutation.create({
+          data: { clientMutationId, userId },
+        });
+      }
+
+      const upserted = await tx.cardProgress.upsert({
+        where: { userId_cardId: { userId, cardId } },
+        create: {
+          userId,
+          cardId,
+          repetitions: sm2.repetitions,
+          easeFactor: sm2.easeFactor,
+          interval: sm2.interval,
+          dueDate: sm2.nextDueDate,
+          reviewCount: 1,
+          lastReviewed: new Date(),
+        },
+        update: {
+          repetitions: sm2.repetitions,
+          easeFactor: sm2.easeFactor,
+          interval: sm2.interval,
+          dueDate: sm2.nextDueDate,
+          reviewCount: { increment: 1 },
+          lastReviewed: new Date(),
+        },
+      });
+
+      await tx.reviewHistory.create({
+        data: { userId, cardId, grade, responseMs },
+      });
+
+      return upserted;
+    });
+
+    await recordReviewStats(userId, isCorrect);
+
+    return {
+      applied: true as const,
       cardId,
-      repetitions: sm2.repetitions,
-      easeFactor: sm2.easeFactor,
-      interval: sm2.interval,
-      dueDate: sm2.nextDueDate,
-      reviewCount: 1,
-      lastReviewed: new Date(),
-    },
-    update: {
-      repetitions: sm2.repetitions,
-      easeFactor: sm2.easeFactor,
-      interval: sm2.interval,
-      dueDate: sm2.nextDueDate,
-      reviewCount: { increment: 1 },
-      lastReviewed: new Date(),
-    },
-  });
-
-  await prisma.reviewHistory.create({
-    data: { userId, cardId, grade, responseMs },
-  });
-
-  await recordReviewStats(userId, isCorrect);
-
-  return {
-    cardId,
-    newInterval: progress.interval,
-    newEaseFactor: progress.easeFactor,
-    nextDueDate: progress.dueDate.toISOString(),
-  };
+      newInterval: progress.interval,
+      newEaseFactor: progress.easeFactor,
+      nextDueDate: progress.dueDate.toISOString(),
+    };
+  } catch (error) {
+    if (
+      clientMutationId &&
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      return {
+        applied: false as const,
+        cardId,
+        newInterval: existing?.interval ?? 0,
+        newEaseFactor: existing?.easeFactor ?? 2.5,
+        nextDueDate: (existing?.dueDate ?? new Date()).toISOString(),
+      };
+    }
+    throw error;
+  }
 }

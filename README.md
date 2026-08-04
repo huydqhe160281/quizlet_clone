@@ -4,7 +4,7 @@ Personal flashcard app with spaced repetition, four study modes, public library,
 
 **Stack:** Next.js 15 · TypeScript · Prisma · PostgreSQL (Supabase) · NextAuth v5 · Vercel · Serwist PWA shell (production)
 
-Installable web app shell: production builds register a service worker with an `/offline.html` fallback. Study modes still require network (offline study deferred). See `docs/qa/offline-pwa-smoke-test.md`.
+Installable web app shell: production builds register a service worker with an `/offline.html` fallback. Phase 2 offline study sync caches recent session cards in IndexedDB and queues answers/reviews for replay (API still NetworkOnly). See `docs/qa/offline-pwa-smoke-test.md` and `docs/qa/offline-study-sync-smoke-test.md`.
 
 ## Quick Start
 

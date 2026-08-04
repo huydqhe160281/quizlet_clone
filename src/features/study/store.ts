@@ -12,6 +12,7 @@ import {
   STUDY_SESSION_SETTINGS_DEFAULTS,
   LEGACY_SESSION_SETTINGS_FALLBACK,
 } from '@/features/study/schemas/study.schema';
+import type { StampedPendingAnswer } from '@/features/study-offline/types';
 
 export type StudyCard = {
   sessionCardId: string;
@@ -21,6 +22,8 @@ export type StudyCard = {
   example: string | null;
   imageUrl: string | null;
 };
+
+export type { StampedPendingAnswer };
 
 // ── Round-level tracking ──────────────────────────────────────────────────────
 export type RoundResult = {
@@ -52,7 +55,7 @@ type StudyState = {
   correctInRound: number;
 
   // Buffered answers — flushed to server on complete/unmount/unload
-  pendingAnswers: Array<{ cardId: string; isCorrect: boolean }>;
+  pendingAnswers: StampedPendingAnswer[];
 
   // Actions
   setLoading: (loading: boolean) => void;
@@ -66,8 +69,13 @@ type StudyState = {
   }) => void;
   /** Record an answer for a cardId. Returns true if the round just completed. */
   recordRoundAnswer: (cardId: string, isCorrect: boolean) => boolean;
-  /** Buffer an answer locally — flushed to server in batch. */
+  /** Buffer a newly recorded answer — mints clientMutationId once. */
   addPendingAnswer: (cardId: string, isCorrect: boolean) => void;
+  /**
+   * Prepend already-stamped answers (no remint). Used after a failed flush so
+   * older answers sort ahead of any answers recorded during the in-flight window.
+   */
+  requeuePendingAnswers: (answers: StampedPendingAnswer[]) => void;
   clearPendingAnswers: () => void;
   nextCard: () => void;
   prevCard: () => void;
@@ -94,7 +102,7 @@ const initialState = {
   roundIndex: 0,
   roundResults: [] as RoundResult[],
   correctInRound: 0,
-  pendingAnswers: [] as Array<{ cardId: string; isCorrect: boolean }>,
+  pendingAnswers: [] as StampedPendingAnswer[],
 };
 
 export const useStudyStore = create<StudyState>((set, get) => ({
@@ -175,7 +183,20 @@ export const useStudyStore = create<StudyState>((set, get) => ({
 
   addPendingAnswer: (cardId, isCorrect) => {
     set((state) => ({
-      pendingAnswers: [...state.pendingAnswers, { cardId, isCorrect }],
+      pendingAnswers: [
+        ...state.pendingAnswers,
+        {
+          cardId,
+          isCorrect,
+          clientMutationId: crypto.randomUUID(),
+          clientTimestamp: Date.now(),
+        },
+      ],
+    }));
+  },
+  requeuePendingAnswers: (answers) => {
+    set((state) => ({
+      pendingAnswers: [...answers, ...state.pendingAnswers],
     }));
   },
   clearPendingAnswers: () => set({ pendingAnswers: [] }),

@@ -161,7 +161,7 @@ describe('TodayPageClient', () => {
 
   it('Scenario: CTA passes cardIds', async () => {
     createStudySessionOnceMock.mockResolvedValue({
-      data: { id: 'existing-session', sessionCards: [] },
+      data: { id: 'existing-session', sessionCards: [], set: { id: 'set-a', title: 'Set A' } },
       streak: { currentStreak: 1, longestStreak: 1, changed: true },
     });
     useTodayPlanMock.mockReturnValue({
@@ -206,7 +206,7 @@ describe('TodayPageClient', () => {
 
   it('Scenario: Resume incomplete LEARN session', async () => {
     createStudySessionOnceMock.mockResolvedValue({
-      data: { id: 'existing-session', sessionCards: [] },
+      data: { id: 'existing-session', sessionCards: [], set: { id: 'set-a', title: 'Set A' } },
     });
     useTodayPlanMock.mockReturnValue({
       data: {

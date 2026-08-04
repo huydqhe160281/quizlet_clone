@@ -4,6 +4,8 @@ const prismaMock = vi.hoisted(() => ({
   flashcard: { findUnique: vi.fn() },
   cardProgress: { findUnique: vi.fn(), upsert: vi.fn() },
   reviewHistory: { create: vi.fn() },
+  processedMutation: { create: vi.fn() },
+  $transaction: vi.fn(),
 }));
 
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
@@ -13,6 +15,7 @@ vi.mock('@/server/services/user/stats.service', () => ({
 }));
 
 import { reviewCard } from '@/server/services/study/study.service';
+import { recordReviewStats } from '@/server/services/user/stats.service';
 
 describe('study spaced repetition review', () => {
   beforeEach(() => {
@@ -28,6 +31,13 @@ describe('study spaced repetition review', () => {
       dueDate: new Date('2026-06-18T00:00:00.000Z'),
     });
     prismaMock.reviewHistory.create.mockResolvedValue({ id: 'history-1' });
+    prismaMock.processedMutation.create.mockResolvedValue({});
+    prismaMock.$transaction.mockImplementation(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return (arg as (tx: typeof prismaMock) => unknown)(prismaMock);
+      }
+      return Promise.all(arg as Promise<unknown>[]);
+    });
   });
 
   it('test_review_submission_creates_history: stores progress and review history', async () => {
@@ -38,6 +48,8 @@ describe('study spaced repetition review', () => {
     });
     expect(result.cardId).toBe('card-1');
     expect(result.newInterval).toBe(1);
+    expect(result.applied).toBe(true);
+    expect(recordReviewStats).toHaveBeenCalledWith('user-a', true);
   });
 
   it('test_review_forbidden: rejects reviewing another users card', async () => {

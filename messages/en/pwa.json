@@ -8,6 +8,12 @@
     "updateReload": "Reload to update",
     "updateReloadWarning": "Reloading may lose in-progress study answers.",
     "studyNeedsNetwork": "Learning and sync require connectivity in this version.",
-    "installIosHint": "On iPhone/iPad: Share → Add to Home Screen to install QuizFree."
+    "installIosHint": "On iPhone/iPad: Share → Add to Home Screen to install QuizFree.",
+    "syncPending": "{count} pending to sync",
+    "syncFailed": "{count} failed",
+    "syncNow": "Sync now",
+    "syncSynced": "✓ Synced",
+    "syncFailedSessionComplete": "Session completion could not be synced. Sync now or keep studying — your progress is saved on this device.",
+    "syncDismissFailed": "Dismiss"
   }
 }

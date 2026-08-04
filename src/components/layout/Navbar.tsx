@@ -20,6 +20,7 @@ import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/constants';
 import { persistLocaleClient } from '@/lib/i18n/client-locale';
 import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
+import { flushPendingMutationsBeforeSignOut } from '@/features/study-offline/flush-before-signout';
 
 function writeLocaleCookie(locale: Locale) {
   persistLocaleClient(locale);
@@ -32,6 +33,11 @@ export function Navbar() {
   const t = useTranslations();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+
+  const handleSignOut = async () => {
+    await flushPendingMutationsBeforeSignOut(session?.user?.id).catch(() => {});
+    void signOut({ callbackUrl: '/' });
+  };
 
   const onSelectLocale = (next: Locale) => {
     if (next === locale || pending) return;
@@ -96,7 +102,9 @@ export function Navbar() {
                 variant="ghost"
                 size="sm"
                 className="rounded-xl hover:bg-muted/80 font-semibold transition-all duration-300"
-                onClick={() => void signOut({ callbackUrl: '/' })}
+                onClick={() => {
+                  void handleSignOut();
+                }}
               >
                 {t('nav.signOut')}
               </Button>
@@ -174,7 +182,9 @@ export function Navbar() {
 
                   <div className="border-t border-border/40 mt-1 pt-1">
                     <DropdownMenuItem
-                      onClick={() => void signOut({ callbackUrl: '/' })}
+                      onClick={() => {
+                        void handleSignOut();
+                      }}
                       className="gap-2.5 text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <LogOut className="h-4 w-4" />

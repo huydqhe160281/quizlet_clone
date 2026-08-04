@@ -31,6 +31,6 @@ Browser
 
 ## Non-goals
 
-- Offline study / IndexedDB card stores / Background Sync → deferred `offline-study-sync`
+- Offline study / IndexedDB card stores / Background Sync → see [offline-study-sync](./offline-study-sync.md)
 - Push notifications
 - Caching authenticated API JSON

@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { StudyOfflineSyncStatus } from '@/features/study-offline/StudyOfflineSyncStatus';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 function StudyLoadingFallback() {
@@ -26,6 +27,7 @@ export function SpacedRepetitionPageClient() {
   return (
     <div className="space-y-6">
       <PageHeader title={t('studyUi.spacedTitle')} subtitle={t('studyUi.spacedSubtitle')} />
+      <StudyOfflineSyncStatus />
       <SpacedRepetitionStudy />
     </div>
   );

@@ -20,7 +20,11 @@ describe('createStudySessionOnce', () => {
         return {
           ok: true,
           json: async () => ({
-            data: { id: 'session-1', sessionCards: [] },
+            data: {
+              id: 'session-1',
+              sessionCards: [],
+              set: { id: 'set-1', title: 'Set' },
+            },
           }),
         };
       })
@@ -40,7 +44,7 @@ describe('createStudySessionOnce', () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({
-        data: { id: 'session-x', sessionCards: [] },
+        data: { id: 'session-x', sessionCards: [], set: { id: 'set-1', title: 'Set' } },
       }),
     }));
     vi.stubGlobal('fetch', fetchMock);
@@ -67,7 +71,11 @@ describe('createStudySessionOnce', () => {
     const fetchMock = vi.fn(async () => ({
       ok: true,
       json: async () => ({
-        data: { id: 'session-sorted', sessionCards: [] },
+        data: {
+          id: 'session-sorted',
+          sessionCards: [],
+          set: { id: 'set-1', title: 'Set' },
+        },
       }),
     }));
     vi.stubGlobal('fetch', fetchMock);

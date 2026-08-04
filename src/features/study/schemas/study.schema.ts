@@ -50,6 +50,7 @@ export const recordAnswerSchema = z.object({
 export const batchAnswerItemSchema = z.object({
   cardId: z.string().cuid(),
   isCorrect: z.boolean(),
+  clientMutationId: z.string().uuid().optional(),
 });
 
 export const batchAnswersSchema = z.object({
@@ -58,12 +59,14 @@ export const batchAnswersSchema = z.object({
 
 export const completeSessionWithAnswersSchema = completeSessionSchema.extend({
   answers: z.array(batchAnswerItemSchema).optional(),
+  clientMutationId: z.string().uuid().optional(),
 });
 
 export const reviewSchema = z.object({
   cardId: z.string().cuid(),
   grade: z.enum(['AGAIN', 'HARD', 'GOOD', 'EASY']),
   responseMs: z.number().int().min(0).optional(),
+  clientMutationId: z.string().uuid().optional(),
 });
 
 export type StudyModeValue = z.infer<typeof studyModeSchema>;

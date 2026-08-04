@@ -8,6 +8,12 @@
     "updateReload": "再読み込みして更新",
     "updateReloadWarning": "再読み込みすると学習途中の回答が失われる場合があります。",
     "studyNeedsNetwork": "このバージョンでは学習と同期に接続が必要です。",
-    "installIosHint": "iPhone/iPad: 共有 → ホーム画面に追加 で QuizFree をインストールできます。"
+    "installIosHint": "iPhone/iPad: 共有 → ホーム画面に追加 で QuizFree をインストールできます。",
+    "syncPending": "未同期 {count} 件",
+    "syncFailed": "失敗 {count} 件",
+    "syncNow": "今すぐ同期",
+    "syncSynced": "✓ 同期済み",
+    "syncFailedSessionComplete": "セッション完了を同期できませんでした。今すぐ同期するか学習を続けてください — 進捗はこの端末に保存されています。",
+    "syncDismissFailed": "閉じる"
   }
 }

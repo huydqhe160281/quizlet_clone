@@ -36,8 +36,13 @@ export const PATCH = withErrorHandler(async (req, { params }) => {
   // Complete session — also flushes any remaining pending answers in one request
   if ('correctCount' in body) {
     const input = completeSessionWithAnswersSchema.parse(body);
-    const { session, streak } = await completeSession(sessionId, userId, input.answers ?? []);
-    return Response.json({ data: session, streak });
+    const { session, streak, alreadyCompleted } = await completeSession(
+      sessionId,
+      userId,
+      input.answers ?? [],
+      input.clientMutationId
+    );
+    return Response.json({ data: session, streak, alreadyCompleted });
   }
 
   // Legacy single-answer path (kept for backward compatibility)

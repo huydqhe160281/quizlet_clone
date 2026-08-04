@@ -45,17 +45,31 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  accounts       Account[]
-  sessions       Session[]
-  sets           FlashcardSet[]
-  folders        Folder[]
-  studySessions  StudySession[]
-  cardProgress   CardProgress[]
-  reviewHistory  ReviewHistory[]
-  stats          UserStats?
+  accounts             Account[]
+  sessions             Session[]
+  sets                 FlashcardSet[]
+  folders              Folder[]
+  studySessions        StudySession[]
+  cardProgress         CardProgress[]
+  reviewHistory        ReviewHistory[]
+  stats                UserStats?
+  processedMutations   ProcessedMutation[]
 
   @@index([email])
   @@map("users")
+}
+
+model ProcessedMutation {
+  id               String   @id @default(cuid())
+  clientMutationId String
+  userId           String
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clientMutationId, userId])
+  @@index([createdAt])
+  @@map("processed_mutations")
 }
 
 model Account {

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
+import { StudyOfflineSyncStatus } from '@/features/study-offline/StudyOfflineSyncStatus';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +43,8 @@ export function StudyModeShell({
         <p className="text-sm font-bold text-muted-foreground">{modeLabel}</p>
         {badge}
       </div>
+
+      <StudyOfflineSyncStatus />
 
       {progress && (
         <StudyProgress

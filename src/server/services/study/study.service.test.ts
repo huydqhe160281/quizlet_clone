@@ -20,6 +20,22 @@ const prismaMock = vi.hoisted(() => ({
     updateMany: vi.fn(),
     count: vi.fn(),
   },
+  processedMutation: {
+    findMany: vi.fn(),
+    create: vi.fn(),
+    createMany: vi.fn(),
+  },
+  cardProgress: {
+    findUnique: vi.fn(),
+    upsert: vi.fn(),
+  },
+  reviewHistory: {
+    create: vi.fn(),
+  },
+  flashcard: {
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+  },
 }));
 
 vi.mock('@/server/db', () => ({
@@ -50,6 +66,9 @@ describe('study.service', () => {
     vi.clearAllMocks();
     prismaMock.studySession.findFirst.mockResolvedValue(null);
     prismaMock.studySession.findMany.mockResolvedValue([]);
+    prismaMock.processedMutation.findMany.mockResolvedValue([]);
+    prismaMock.processedMutation.createMany.mockResolvedValue({ count: 0 });
+    prismaMock.processedMutation.create.mockResolvedValue({});
     prismaMock.$transaction.mockImplementation(async (arg: unknown) => {
       if (typeof arg === 'function') {
         return (arg as (tx: typeof prismaMock) => unknown)(prismaMock);
@@ -334,7 +353,7 @@ describe('study.service', () => {
     ]);
 
     expect(session.score).toBe(0.5);
-    expect(streak.currentStreak).toBe(1);
+    expect(streak?.currentStreak).toBe(1);
     expect(recordDailyStudyActivity).toHaveBeenCalledWith('user-a');
     expect(prismaMock.studySession.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -357,7 +376,7 @@ describe('study.service', () => {
       { cardId: 'card-1', isCorrect: true },
     ]);
 
-    expect(result).toEqual({ recorded: 0 });
+    expect(result).toEqual({ recorded: 0, reason: 'session_already_completed' });
     expect(prismaMock.sessionCard.updateMany).not.toHaveBeenCalled();
   });
 

@@ -16,6 +16,7 @@ export type CreatedStudySession = {
   id: string;
   settings?: unknown;
   sessionCards: SessionCardResponse[];
+  set: { id: string; title: string };
 };
 
 export type CreateSessionResult = {

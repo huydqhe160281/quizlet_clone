@@ -16,6 +16,7 @@ import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 import { loadCatalog } from '@/lib/i18n/catalog';
 import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
 import { PwaProvider } from '@/features/pwa/PwaProvider';
+import { StudyOfflineSyncProvider } from '@/features/study-offline/StudyOfflineSyncProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -61,11 +62,13 @@ export default async function RootLayout({
             <AuthSessionProvider>
               <LocaleProvider locale={locale} catalog={catalog}>
                 <PwaProvider>
-                  <LoadingOverlayProvider>
-                    <ErrorBoundary>
-                      <GuideProviders>{children}</GuideProviders>
-                    </ErrorBoundary>
-                  </LoadingOverlayProvider>
+                  <StudyOfflineSyncProvider>
+                    <LoadingOverlayProvider>
+                      <ErrorBoundary>
+                        <GuideProviders>{children}</GuideProviders>
+                      </ErrorBoundary>
+                    </LoadingOverlayProvider>
+                  </StudyOfflineSyncProvider>
                 </PwaProvider>
               </LocaleProvider>
             </AuthSessionProvider>

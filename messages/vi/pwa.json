@@ -8,6 +8,12 @@
     "updateReload": "Tải lại để cập nhật",
     "updateReloadWarning": "Tải lại có thể làm mất câu trả lời đang học dở.",
     "studyNeedsNetwork": "Học và đồng bộ cần kết nối mạng trong phiên bản này.",
-    "installIosHint": "Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree."
+    "installIosHint": "Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree.",
+    "syncPending": "{count} thay đổi chờ đồng bộ",
+    "syncFailed": "{count} thất bại",
+    "syncNow": "Đồng bộ ngay",
+    "syncSynced": "✓ Đã đồng bộ",
+    "syncFailedSessionComplete": "Không đồng bộ được lần hoàn thành phiên học. Đồng bộ ngay hoặc tiếp tục học — tiến độ đã được lưu trên thiết bị này.",
+    "syncDismissFailed": "Bỏ qua"
   }
 }

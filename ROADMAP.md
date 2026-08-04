@@ -8,6 +8,8 @@
 
 - **2026-07-29 — adaptive-learning-coach-phase-2**: Preferred IANA timezone for goal/insights day windows; Today LEARN `cardIds` subset on `createSession` + streak UI refresh. Archived: `openspec/changes/archive/2026-07-29-adaptive-learning-coach-phase-2/`. Specs synced (`daily-study-goals`, `retention-insights`, `recommended-study-session`, `study-modes`, `today-learning-page`).
 
+- **2026-08-04 — offline-study-sync** (Phase 2): IndexedDB study cache (LRU 5) + durable mutation queue + idempotent replay; sync status UX. Archived: `openspec/changes/archive/2026-08-04-offline-study-sync/`. Specs synced (`offline-study-cache`, `offline-mutation-queue`, `offline-sync-replay`).
+
 - **2026-08-04 — offline-pwa** (Phase 1): Serwist SW + `/offline.html` shell; NetworkOnly documents; no API cache; update toast. Archived: `openspec/changes/archive/2026-08-04-offline-pwa/`. Specs synced (`pwa-service-worker`, `offline-fallback-ux`, `seo-metadata-config`). Deferred follow-up: `offline-study-sync`.
 
 ## In progress

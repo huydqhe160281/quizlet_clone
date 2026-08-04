@@ -15,6 +15,12 @@ export const POST = withErrorHandler(async (req) => {
 
   const body = await req.json();
   const input = reviewSchema.parse(body);
-  const result = await reviewCard(userId, input.cardId, input.grade, input.responseMs);
+  const result = await reviewCard(
+    userId,
+    input.cardId,
+    input.grade,
+    input.responseMs,
+    input.clientMutationId
+  );
   return Response.json({ data: result });
 });
