@@ -150,7 +150,6 @@ export function LearnMode({ setId }: LearnModeProps) {
     const isCorrect = isMultipleChoice ? option === mcCorrectAnswer : option === currentCard.back;
     if (isCorrect) {
       setFeedback(t('studyUi.feedbackCorrect'));
-      speakStudyText(mcPrompt, 'en-US');
     } else {
       const correctAnswer = isMultipleChoice ? mcCorrectAnswer : currentCard.back;
       setFeedback(t('studyUi.incorrectWithAnswer', { answer: correctAnswer }));
