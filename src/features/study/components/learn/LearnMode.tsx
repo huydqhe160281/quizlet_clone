@@ -15,6 +15,7 @@ import {
   studyContinueKey,
   studyProgressWhileFeedback,
 } from '@/features/study/lib/study-continue-label';
+import { playCorrectFeedbackSound } from '@/features/study/lib/study-feedback-sound';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
@@ -131,6 +132,10 @@ export function LearnMode({ setId }: LearnModeProps) {
 
   const recordAnswer = (isCorrect: boolean) => {
     if (!currentCard) return;
+
+    if (isCorrect) {
+      playCorrectFeedbackSound();
+    }
 
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
