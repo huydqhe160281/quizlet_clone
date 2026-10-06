@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronRight, HelpCircle, Volume2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,11 @@ import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
+/** Brief pause so correct-answer feedback is visible before auto-advance. */
+export const LEARN_CORRECT_AUTO_ADVANCE_MS = 1000;
+/** Longer pause on incorrect answers; Continue still advances immediately. */
+export const LEARN_INCORRECT_AUTO_ADVANCE_MS = 5000;
+
 type LearnModeProps = {
   setId: string;
 };
@@ -38,6 +43,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   const [lastRoundIndex, setLastRoundIndex] = useState(0);
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
+  const isAdvancingRef = useRef(false);
 
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
@@ -70,6 +76,13 @@ export function LearnMode({ setId }: LearnModeProps) {
   const mcCorrectAnswer = learnMcq?.correctAnswer ?? currentCard?.back ?? '';
   const options = learnMcq?.options ?? [];
 
+  const resetQuestionState = () => {
+    setFeedback(null);
+    setSelected(null);
+    setAnswer('');
+    setIsCorrectAnswer(null);
+  };
+
   const finishIfLast = () => {
     if (roundEndedThisStep) {
       if (study.isComplete) {
@@ -86,12 +99,35 @@ export function LearnMode({ setId }: LearnModeProps) {
     resetQuestionState();
   };
 
-  const resetQuestionState = () => {
-    setFeedback(null);
-    setSelected(null);
-    setAnswer('');
-    setIsCorrectAnswer(null);
+  const finishIfLastRef = useRef(finishIfLast);
+  finishIfLastRef.current = finishIfLast;
+
+  const advanceAfterAnswer = () => {
+    if (isAdvancingRef.current) {
+      return;
+    }
+    isAdvancingRef.current = true;
+    finishIfLastRef.current();
   };
+
+  useEffect(() => {
+    if (selected === null || isCorrectAnswer === null) {
+      isAdvancingRef.current = false;
+      return;
+    }
+
+    const delayMs = isCorrectAnswer
+      ? LEARN_CORRECT_AUTO_ADVANCE_MS
+      : LEARN_INCORRECT_AUTO_ADVANCE_MS;
+
+    const timerId = window.setTimeout(() => {
+      advanceAfterAnswer();
+    }, delayMs);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [selected, isCorrectAnswer]);
 
   const recordAnswer = (isCorrect: boolean) => {
     if (!currentCard) return;
@@ -317,7 +353,7 @@ export function LearnMode({ setId }: LearnModeProps) {
               {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
             </div>
           </div>
-          <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
+          <Button type="button" className="shrink-0 font-bold" onClick={advanceAfterAnswer}>
             {t(studyContinueKey(roundEndedThisStep))}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
