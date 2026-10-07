@@ -134,7 +134,7 @@ Users can import flashcards from JSON or CSV files or copy-paste text in the Imp
   ```json
   [{ "front": "question", "back": "answer", "example": "optional sample sentence" }]
   ```
-- **Constraints**: Maximum of 500 cards per set, and maximum file size of 2MB.
+- **Constraints**: Maximum of 2000 cards per set, and maximum file size of 2MB.
 
 ### 2. Password Reset & Resend Setup
 

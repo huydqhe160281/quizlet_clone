@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Suspense, useState } from 'react';
-import { ArrowLeft, Copy, Pencil, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, Copy, Pencil, Scissors, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,28 +13,62 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { RedirectingNotice } from '@/components/shared/RedirectingNotice';
 import { CardEditor } from '@/features/sets/cards/components/CardEditor';
 import { StudyLauncher } from '@/features/study/components/StudyLauncher';
 import { useSet, useSetMutations, useCards } from '@/features/sets/hooks/useSets';
 import { ImportSetWizard } from '@/features/sets/components/ImportSetWizard';
 import { SetForm } from '@/features/sets/components/SetForm';
+import { MAX_SPLIT_PARTS } from '@/features/sets/schemas/set.schema';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SetDetailClientProps = {
   setId: string;
 };
 
+const DEFAULT_CHUNK_SIZE = 20;
+
+function defaultChunkSizeFor(cardCount: number): number {
+  if (cardCount < 2) {
+    return 1;
+  }
+  return Math.min(DEFAULT_CHUNK_SIZE, cardCount - 1);
+}
+
 export function SetDetailClient({ setId }: SetDetailClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const [importOpen, setImportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [splitOpen, setSplitOpen] = useState(false);
+  const [chunkSizeInput, setChunkSizeInput] = useState(String(DEFAULT_CHUNK_SIZE));
+  const [splitError, setSplitError] = useState<string | null>(null);
   const { data: set, isLoading, error: setError } = useSet(setId);
   const { data: cards, error: cardsError } = useCards(setId);
-  const { deleteSet, duplicateSet } = useSetMutations();
+  const { deleteSet, duplicateSet, splitSet } = useSetMutations();
   const loadError = setError ?? cardsError;
   const newWordCount = cards?.filter((card) => card.type === 'new-word').length ?? 0;
+  const cardCount = set?._count.cards ?? 0;
+
+  const chunkSize =
+    /^\d+$/.test(chunkSizeInput.trim()) && Number.isInteger(Number(chunkSizeInput))
+      ? Number(chunkSizeInput)
+      : NaN;
+  const splitPreview =
+    Number.isInteger(chunkSize) && chunkSize >= 1 && chunkSize < cardCount
+      ? Math.ceil(cardCount / chunkSize)
+      : null;
+  const exceedsPartCap = splitPreview !== null && splitPreview > MAX_SPLIT_PARTS;
+  const maxChunkSize = Math.max(cardCount - 1, 0);
+  const canSubmitSplit =
+    cardCount > 1 &&
+    Number.isInteger(chunkSize) &&
+    chunkSize >= 1 &&
+    chunkSize < cardCount &&
+    !exceedsPartCap &&
+    !splitSet.isPending;
 
   if (loadError) {
     return (
@@ -141,6 +175,96 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
             <Copy className="h-4 w-4" />
             <span className="hidden sm:inline">{t('ui.duplicate')}</span>
           </Button>
+          <Dialog
+            open={splitOpen}
+            onOpenChange={(open) => {
+              setSplitOpen(open);
+              if (open) {
+                setChunkSizeInput(String(defaultChunkSizeFor(cardCount)));
+                setSplitError(null);
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5" aria-label={t('ui.split')}>
+                <Scissors className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('ui.split')}</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[420px]">
+              <DialogHeader>
+                <DialogTitle>{t('setsPage.splitTitle')}</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-muted-foreground">{t('setsPage.splitHint')}</p>
+              {cardCount === 0 ? (
+                <p className="text-sm text-destructive">{t('setsPage.splitEmpty')}</p>
+              ) : cardCount < 2 ? (
+                <p className="text-sm text-destructive">{t('setsPage.splitTooFew')}</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="split-chunk-size">{t('setsPage.splitChunkSize')}</Label>
+                    <Input
+                      id="split-chunk-size"
+                      type="number"
+                      min={1}
+                      max={maxChunkSize || 1}
+                      value={chunkSizeInput}
+                      onChange={(event) => {
+                        setChunkSizeInput(event.target.value);
+                        setSplitError(null);
+                      }}
+                    />
+                  </div>
+                  {splitPreview !== null && !exceedsPartCap ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('setsPage.splitPreview', { count: splitPreview })}
+                    </p>
+                  ) : exceedsPartCap ? (
+                    <p className="text-sm text-destructive">
+                      {t('setsPage.splitTooManyParts', { max: MAX_SPLIT_PARTS })}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-destructive">
+                      {t('setsPage.splitInvalid', { max: maxChunkSize || 1 })}
+                    </p>
+                  )}
+                  {splitError && <p className="text-sm text-destructive">{splitError}</p>}
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setSplitOpen(false)}>
+                      {t('ui.cancel')}
+                    </Button>
+                    <Button
+                      disabled={!canSubmitSplit}
+                      onClick={() => {
+                        if (splitSet.isPending || !canSubmitSplit) {
+                          return;
+                        }
+                        setSplitError(null);
+                        splitSet.mutate(
+                          { setId, chunkSize },
+                          {
+                            onSuccess: (result) => {
+                              setSplitOpen(false);
+                              const firstId = result.data[0]?.id;
+                              if (firstId) {
+                                router.push(`/sets/${firstId}`);
+                              } else {
+                                router.push('/sets');
+                              }
+                            },
+                            onError: () => setSplitError(t('setsPage.splitFailed')),
+                          }
+                        );
+                      }}
+                    >
+                      {splitSet.isPending ? t('setsPage.splitting') : t('setsPage.splitConfirm')}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
           {/* Visually separated destructive action */}
           <div className="ml-auto sm:ml-0">
             <Button

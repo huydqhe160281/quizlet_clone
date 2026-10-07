@@ -173,7 +173,7 @@ The system SHALL accept a JSON payload and create or update a FlashcardSet with 
 
 #### Scenario: JSON Card Limit Exceeded
 
-- **GIVEN** an import payload with 501 cards
+- **GIVEN** an import payload with 2001 cards
 - **WHEN** POST `/api/v1/sets/import`
 - **THEN** API returns 400 `{ error: "CARD_LIMIT_EXCEEDED" }` and no set is created
 
@@ -206,7 +206,7 @@ The system SHALL parse UTF-8 CSV with columns `front`, `back`, optional `example
 
 ### Requirement: Import Payload Limits
 
-The system SHALL reject imports exceeding 500 cards or 2MB file size (CSV multipart).
+The system SHALL reject imports exceeding 2000 cards or 2MB file size (CSV multipart).
 **Constraint**: MUST
 
 #### Scenario: File Size Exceeded

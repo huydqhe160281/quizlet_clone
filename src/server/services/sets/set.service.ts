@@ -6,8 +6,19 @@ import type {
   ListSetsQuery,
   UpdateSetInput,
 } from '@/features/sets/schemas/set.schema';
+import { MAX_SPLIT_PARTS } from '@/features/sets/schemas/set.schema';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
+
+const SET_TITLE_MAX = 200;
+
+function splitPartTitle(sourceTitle: string, partIndex: number, partCount: number): string {
+  const suffix = ` (${partIndex + 1}/${partCount})`;
+  const maxBase = SET_TITLE_MAX - suffix.length;
+  const base =
+    sourceTitle.length > maxBase ? sourceTitle.slice(0, Math.max(maxBase, 0)) : sourceTitle;
+  return `${base}${suffix}`;
+}
 
 const setInclude = {
   tags: { include: { tag: true } },
@@ -185,4 +196,77 @@ export async function duplicateSet(setId: string, userId: string) {
 
   invalidateSetCache(userId, set.visibility);
   return set;
+}
+
+export async function splitSet(setId: string, userId: string, chunkSize: number) {
+  const source = await prisma.flashcardSet.findUnique({
+    where: { id: setId },
+    include: { cards: { orderBy: { sortOrder: 'asc' } } },
+  });
+
+  if (!source) {
+    throw new ApiError('NOT_FOUND', 'Set not found', 404);
+  }
+
+  assertOwner(source, userId);
+
+  const totalCards = source.cards.length;
+  if (totalCards === 0) {
+    throw new ApiError('VALIDATION_ERROR', 'Set has no cards to split', 400);
+  }
+
+  if (!Number.isInteger(chunkSize) || chunkSize < 1) {
+    throw new ApiError('VALIDATION_ERROR', 'chunkSize must be a positive integer', 400);
+  }
+
+  if (chunkSize >= totalCards) {
+    throw new ApiError(
+      'VALIDATION_ERROR',
+      'chunkSize must be less than the total number of cards',
+      400
+    );
+  }
+
+  const partCount = Math.ceil(totalCards / chunkSize);
+  if (partCount > MAX_SPLIT_PARTS) {
+    throw new ApiError(
+      'VALIDATION_ERROR',
+      `Split would create more than ${MAX_SPLIT_PARTS} sets`,
+      400
+    );
+  }
+
+  const sets = await prisma.$transaction(async (tx) => {
+    const created: SetWithMeta[] = [];
+    for (let partIndex = 0; partIndex < partCount; partIndex += 1) {
+      const chunk = source.cards.slice(partIndex * chunkSize, (partIndex + 1) * chunkSize);
+      const set = await tx.flashcardSet.create({
+        data: {
+          title: splitPartTitle(source.title, partIndex, partCount),
+          description: source.description,
+          language: source.language,
+          visibility: 'PRIVATE',
+          coverImage: source.coverImage,
+          userId,
+          cards: {
+            create: chunk.map((card, index) => ({
+              front: card.front,
+              back: card.back,
+              example: card.example,
+              imageUrl: card.imageUrl,
+              audioUrl: card.audioUrl,
+              type: card.type,
+              sortOrder: index,
+            })),
+          },
+        },
+        include: setInclude,
+      });
+      created.push(set);
+    }
+    return created;
+  });
+
+  invalidateSetCache(userId, 'PRIVATE');
+  return sets;
 }

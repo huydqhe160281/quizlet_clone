@@ -34,7 +34,7 @@ describe('importJsonSchema', () => {
   });
 
   // ── test_import_json_card_limit_exceeded ──────────────────────────────────
-  it('rejects when cards exceed CARD_LIMIT (501 cards)', () => {
+  it(`rejects when cards exceed CARD_LIMIT (${IMPORT_CARD_LIMIT + 1} cards)`, () => {
     const cards = Array.from({ length: IMPORT_CARD_LIMIT + 1 }, (_, i) => ({
       front: `Front ${i}`,
       back: `Back ${i}`,
@@ -44,7 +44,7 @@ describe('importJsonSchema', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const msg = result.error.issues[0]?.message ?? '';
-      expect(msg).toContain('500');
+      expect(msg).toContain(String(IMPORT_CARD_LIMIT));
     }
   });
 

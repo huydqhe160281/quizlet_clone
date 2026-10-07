@@ -123,6 +123,21 @@ export function useSetMutations() {
     onSuccess: invalidateSets,
   });
 
+  const splitSet = useMutation({
+    mutationFn: async ({ setId, chunkSize }: { setId: string; chunkSize: number }) => {
+      const response = await fetch(`/api/v1/sets/${setId}/split`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chunkSize }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to split set');
+      }
+      return (await response.json()) as { data: FlashcardSetSummary[] };
+    },
+    onSuccess: invalidateSets,
+  });
+
   const createCard = useMutation({
     mutationFn: async ({
       setId,
@@ -303,6 +318,7 @@ export function useSetMutations() {
     updateSet,
     deleteSet,
     duplicateSet,
+    splitSet,
     createCard,
     updateCard,
     deleteCard,

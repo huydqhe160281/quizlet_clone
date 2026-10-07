@@ -8,7 +8,7 @@ export const importCardSchema = z.object({
 });
 
 // ── JSON import body ──────────────────────────────────────────────────────────
-const CARD_LIMIT = 500;
+const CARD_LIMIT = 2000;
 
 export const importJsonSchema = z.object({
   format: z.literal('json'),

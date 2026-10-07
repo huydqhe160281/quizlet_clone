@@ -20,6 +20,14 @@ export const listSetsQuerySchema = z.object({
   folderId: z.string().cuid().optional(),
 });
 
+/** Cap child sets per split to avoid abuse (chunkSize=1 on huge sets). */
+export const MAX_SPLIT_PARTS = 100;
+
+export const splitSetSchema = z.object({
+  chunkSize: z.number().int().positive(),
+});
+
 export type CreateSetInput = z.infer<typeof createSetSchema>;
 export type UpdateSetInput = z.infer<typeof updateSetSchema>;
 export type ListSetsQuery = z.infer<typeof listSetsQuerySchema>;
+export type SplitSetInput = z.infer<typeof splitSetSchema>;
