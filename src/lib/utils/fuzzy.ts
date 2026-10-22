@@ -1,7 +1,12 @@
 export const FUZZY_THRESHOLD = 0.85;
 
+// Diacritics are meaningful (Vietnamese tones, Japanese dakuten: má ≠ mà, か ≠ が),
+// so only case and whitespace are normalized. NFC keeps each accented letter a
+// single code point for the Jaro-Winkler comparison.
 const normalize = (value: string): string =>
-  value.trim().toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+  value.trim().replace(/\s+/g, ' ').toLowerCase().normalize('NFC');
+
+const stripMarks = (value: string): string => value.normalize('NFD').replace(/\p{M}/gu, '');
 
 const jaro = (s1: string, s2: string): number => {
   if (s1 === s2) {
@@ -68,7 +73,12 @@ export function jaroWinkler(a: string, b: string): number {
 }
 
 export function fuzzyMatch(input: string, expected: string, threshold = FUZZY_THRESHOLD): boolean {
-  return jaroWinkler(input, expected) >= threshold;
+  const a = normalize(input);
+  const b = normalize(expected);
+  if (a === b) return true;
+  // Answers that differ only in diacritics are different words, not typos.
+  if (stripMarks(a) === stripMarks(b)) return false;
+  return jaroWinkler(a, b) >= threshold;
 }
 
 export function fuzzySimilarity(input: string, expected: string): number {

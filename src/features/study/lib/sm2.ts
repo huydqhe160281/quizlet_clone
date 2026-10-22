@@ -59,3 +59,11 @@ export function gradeToSm2(grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY'): Sm2Grade 
   const map = { AGAIN: 0, HARD: 1, GOOD: 2, EASY: 3 } as const;
   return map[grade];
 }
+
+/**
+ * Single rule for whether a review counts as correct (accuracy, totals, requeue).
+ * HARD counts as not correct, matching the learning queue's "weak" definition.
+ */
+export function isCorrectGrade(grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY'): boolean {
+  return grade === 'GOOD' || grade === 'EASY';
+}

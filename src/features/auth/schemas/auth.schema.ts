@@ -3,7 +3,11 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-  rememberMe: z.coerce.boolean().optional().default(false),
+  // The credentials form posts strings; z.coerce.boolean() would turn "false" into true.
+  rememberMe: z
+    .union([z.boolean(), z.enum(['true', 'false'])])
+    .optional()
+    .transform((value) => value === true || value === 'true'),
 });
 
 export const registerSchema = z.object({

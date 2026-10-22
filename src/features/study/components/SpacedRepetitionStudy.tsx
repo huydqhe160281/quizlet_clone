@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -25,6 +25,7 @@ import { StudyProgress } from '@/features/study/components/shared/StudyProgress'
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useDueCards, useSubmitReview } from '@/features/study/hooks/useSpacedRepetition';
 import { generateLearnOptions } from '@/features/study/lib/test-generator';
+import { isCorrectGrade } from '@/features/study/lib/sm2';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
@@ -88,6 +89,9 @@ export function SpacedRepetitionStudy() {
     );
   }, [currentCard, cards]);
 
+  const gradingRef = useRef(false);
+  const [isGrading, setIsGrading] = useState(false);
+
   const handleStart = () => {
     if (totalCards === 0) return;
     let initialDeck = cards.map((c) => c.cardId);
@@ -109,11 +113,19 @@ export function SpacedRepetitionStudy() {
   };
 
   const handleGrade = async (grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY') => {
-    if (!currentCard) return;
-    await submitReview(currentCard.cardId, grade);
+    // One grade per card: a double tap must not apply SM-2 twice or skip a card.
+    if (!currentCard || gradingRef.current) return;
+    gradingRef.current = true;
+    setIsGrading(true);
+    try {
+      await submitReview(currentCard.cardId, grade);
+    } finally {
+      gradingRef.current = false;
+      setIsGrading(false);
+    }
     resetFlip();
 
-    const isCorrect = grade !== 'AGAIN';
+    const isCorrect = isCorrectGrade(grade);
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
       setCorrectInRound((c) => c + 1);
@@ -402,6 +414,7 @@ export function SpacedRepetitionStudy() {
             onHard={() => void handleGrade('HARD')}
             onGood={() => void handleGrade('GOOD')}
             onEasy={() => void handleGrade('EASY')}
+            disabled={isGrading}
           />
         </>
       ) : settings.style === 'multiple_choice' ? (

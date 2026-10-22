@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { resolveAuthUrl } from './env';
 
 describe('resolveAuthUrl', () => {
@@ -79,5 +79,32 @@ describe('resolveAuthUrl', () => {
     Object.assign(process.env, { NODE_ENV: 'production' });
 
     expect(() => resolveAuthUrl()).toThrowError(/Missing required environment variable/);
+  });
+});
+
+describe('env AI settings', () => {
+  const originalEnv = process.env;
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('importing env does not throw in production when OLLAMA_* is missing', async () => {
+    process.env = {
+      ...originalEnv,
+      NODE_ENV: 'production',
+      AUTH_URL: 'https://app.example.com',
+      NEXTAUTH_SECRET: 'secret',
+    };
+    delete process.env.OLLAMA_BASE_URL;
+    delete process.env.OLLAMA_MODEL;
+    vi.resetModules();
+
+    const { env } = await import('./env');
+
+    expect(env.authUrl).toBe('https://app.example.com');
+    // Only the AI feature itself fails, when it reads the setting.
+    expect(() => env.ollamaModel).toThrow('OLLAMA_MODEL');
+    expect(() => env.ollamaBaseUrl).toThrow('OLLAMA_BASE_URL');
   });
 });

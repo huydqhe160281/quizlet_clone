@@ -10,6 +10,7 @@ import {
   type CreatedStudySession,
 } from '@/features/study/lib/create-session-once';
 import { notifyStreakUpdated, type StreakUpdatedDetail } from '@/lib/streak/streak-client';
+import { notifyStudyActivity } from '@/lib/study-activity';
 import { useStudyStore, type StudyCard, type StampedPendingAnswer } from '@/features/study/store';
 import { beaconSessionAnswers } from '@/features/study/lib/answer-beacon';
 import { getCachedSet, upsertCachedSet } from '@/features/study-offline/cache';
@@ -107,6 +108,7 @@ async function persistSessionCompletion(
   if (payload?.alreadyCompleted === true) {
     throw new SessionAlreadyCompletedError();
   }
+  notifyStudyActivity();
   if (payload?.streak) {
     notifyStreakUpdated(payload.streak);
   }

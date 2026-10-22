@@ -109,19 +109,22 @@ export async function reorderCards(setId: string, userId: string, cardIds: strin
     throw new ApiError('VALIDATION_ERROR', 'Card list mismatch', 400);
   }
 
+  if (new Set(cardIds).size !== cardIds.length) {
+    throw new ApiError('VALIDATION_ERROR', 'Duplicate card id in reorder list', 400);
+  }
+
   const existingIds = new Set(cards.map((card) => card.id));
   if (cardIds.some((id) => !existingIds.has(id))) {
     throw new ApiError('VALIDATION_ERROR', 'Invalid card id in reorder list', 400);
   }
 
-  await prisma.$transaction(
-    cardIds.map((id, index) =>
-      prisma.flashcard.update({
-        where: { id },
-        data: { sortOrder: index },
-      })
-    )
-  );
+  // One UPDATE for the whole list instead of one statement per card.
+  await prisma.$executeRaw`
+    UPDATE flashcards AS f
+    SET "sortOrder" = v.ord - 1
+    FROM unnest(${cardIds}::text[]) WITH ORDINALITY AS v(id, ord)
+    WHERE f.id = v.id AND f."setId" = ${setId}
+  `;
 
   invalidateSetCache(userId, set.visibility);
 

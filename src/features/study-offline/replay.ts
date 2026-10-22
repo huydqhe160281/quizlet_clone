@@ -2,8 +2,10 @@ import {
   getReplayableMutations,
   markMutationFailed,
   markMutationSynced,
+  recordMutationAttempt,
 } from '@/features/study-offline/queue';
 import type { QueuedMutation } from '@/features/study-offline/types';
+import { notifyStudyActivity } from '@/lib/study-activity';
 
 export type ReplayResult = {
   synced: number;
@@ -46,15 +48,45 @@ async function readRetryAfter(response: Response): Promise<number> {
   return body.details?.retryAfter ?? 5;
 }
 
-async function dispatchMutation(
-  mutation: QueuedMutation & { localId: number }
-): Promise<
+type DispatchOutcome =
   | { kind: 'synced' }
   | { kind: 'failed' }
   | { kind: 'halt-network' }
   | { kind: 'halt-401' }
-  | { kind: 'halt-429'; retryAfterSec: number }
-> {
+  | { kind: 'halt-429'; retryAfterSec: number };
+
+/** A 5xx is retried on later replays at most this many times before dead-lettering. */
+export const MAX_REPLAY_ATTEMPTS = 5;
+
+/**
+ * Shared non-OK handling for every mutation kind.
+ * - 401: halt (keep rows until the user signs in again)
+ * - 429: halt and schedule one retry
+ * - 408: transient, halt like a network error
+ * - other 4xx: permanent (bad payload, gone, forbidden) → dead-letter so one row
+ *   cannot block the whole queue forever
+ * - 5xx: transient, retried up to MAX_REPLAY_ATTEMPTS, then dead-lettered
+ */
+async function handleFailedResponse(response: Response, localId: number): Promise<DispatchOutcome> {
+  const { status } = response;
+  if (status === 401) return { kind: 'halt-401' };
+  if (status === 429) return { kind: 'halt-429', retryAfterSec: await readRetryAfter(response) };
+  if (status === 408) return { kind: 'halt-network' };
+  if (status >= 400 && status < 500) {
+    await markMutationFailed(localId, `http_${status}`);
+    return { kind: 'failed' };
+  }
+  const attempts = await recordMutationAttempt(localId);
+  if (attempts >= MAX_REPLAY_ATTEMPTS) {
+    await markMutationFailed(localId, `http_${status}_after_${attempts}_attempts`);
+    return { kind: 'failed' };
+  }
+  return { kind: 'halt-network' };
+}
+
+async function dispatchMutation(
+  mutation: QueuedMutation & { localId: number }
+): Promise<DispatchOutcome> {
   const { kind, payload, clientMutationId, localId } = mutation;
 
   try {
@@ -74,17 +106,7 @@ async function dispatchMutation(
         }),
       });
 
-      if (response.status === 401) return { kind: 'halt-401' };
-      if (response.status === 429) {
-        return { kind: 'halt-429', retryAfterSec: await readRetryAfter(response) };
-      }
-      if (response.status === 404 || response.status === 403) {
-        await markMutationFailed(localId, `http_${response.status}`);
-        return { kind: 'failed' };
-      }
-      if (!response.ok) {
-        return { kind: 'halt-network' };
-      }
+      if (!response.ok) return handleFailedResponse(response, localId);
 
       const body = (await response.json()) as {
         data?: { recorded?: number; reason?: string };
@@ -109,17 +131,7 @@ async function dispatchMutation(
         }),
       });
 
-      if (response.status === 401) return { kind: 'halt-401' };
-      if (response.status === 429) {
-        return { kind: 'halt-429', retryAfterSec: await readRetryAfter(response) };
-      }
-      if (response.status === 404 || response.status === 403) {
-        await markMutationFailed(localId, `http_${response.status}`);
-        return { kind: 'failed' };
-      }
-      if (!response.ok) {
-        return { kind: 'halt-network' };
-      }
+      if (!response.ok) return handleFailedResponse(response, localId);
 
       const body = (await response.json()) as { alreadyCompleted?: boolean };
       if (body.alreadyCompleted === true) {
@@ -141,17 +153,7 @@ async function dispatchMutation(
       }),
     });
 
-    if (response.status === 401) return { kind: 'halt-401' };
-    if (response.status === 429) {
-      return { kind: 'halt-429', retryAfterSec: await readRetryAfter(response) };
-    }
-    if (response.status === 404 || response.status === 403) {
-      await markMutationFailed(localId, `http_${response.status}`);
-      return { kind: 'failed' };
-    }
-    if (!response.ok) {
-      return { kind: 'halt-network' };
-    }
+    if (!response.ok) return handleFailedResponse(response, localId);
 
     await markMutationSynced(localId);
     return { kind: 'synced' };
@@ -201,9 +203,11 @@ async function runReplay(userId: string): Promise<ReplayResult> {
  */
 export async function replayPendingMutations(userId: string): Promise<ReplayResult> {
   const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined;
-  if (!locks?.request) {
-    return runReplay(userId);
+  const result = locks?.request
+    ? await locks.request('study-offline-replay', () => runReplay(userId))
+    : await runReplay(userId);
+  if (result.synced > 0) {
+    notifyStudyActivity();
   }
-
-  return locks.request('study-offline-replay', () => runReplay(userId));
+  return result;
 }

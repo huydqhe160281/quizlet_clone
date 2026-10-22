@@ -1,3 +1,4 @@
+import { clearCachedSetsForUser } from '@/features/study-offline/cache';
 import { replayPendingMutations } from '@/features/study-offline/replay';
 
 const FLUSH_TIMEOUT_MS = 5_000;
@@ -20,4 +21,15 @@ export async function flushPendingMutationsBeforeSignOut(
       setTimeout(resolve, FLUSH_TIMEOUT_MS);
     }),
   ]);
+}
+
+/**
+ * Sign-out preparation: flush the queue, then delete this user's cached card content.
+ * Must run before `signOut()`: its full-page redirect means the provider never sees an
+ * `unauthenticated` status in this tab, so its own cleanup would not run.
+ */
+export async function prepareOfflineDataForSignOut(userId: string | undefined): Promise<void> {
+  if (!userId) return;
+  await flushPendingMutationsBeforeSignOut(userId);
+  await clearCachedSetsForUser(userId).catch(() => undefined);
 }

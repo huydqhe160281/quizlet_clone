@@ -54,35 +54,39 @@ describe('forgot-password devResetUrl logic', () => {
 });
 
 // ── test_remember_me_extends_max_age ─────────────────────────────────────────
-describe('rememberMe maxAge logic', () => {
-  const SESSION_MAX_AGE_REMEMBER = 30 * 24 * 60 * 60; // 30 days
-  const SESSION_MAX_AGE_DEFAULT = 24 * 60 * 60; // 24 hours
+// Exercises the real login schema and jwt callback (the credentials form posts strings).
+describe('rememberMe → session lifetime', () => {
+  const DAY = 24 * 60 * 60;
 
-  it('sets maxAge to 30 days when rememberMe=true', () => {
-    const token = { rememberMe: true };
-    const session = { maxAge: 0 };
+  async function tokenExpiryForFormValue(rememberMe: string | undefined) {
+    const { loginSchema } = await import('@/features/auth/schemas/auth.schema');
+    const { authConfig } = await import('@/server/auth/auth.config');
+    const parsed = loginSchema.parse({ email: 'a@example.com', password: 'x', rememberMe });
+    const jwt = authConfig.callbacks!.jwt! as unknown as (args: {
+      token: Record<string, unknown>;
+      user?: Record<string, unknown>;
+    }) => Record<string, unknown>;
+    const now = Math.floor(Date.now() / 1000);
+    const token = jwt({ token: {}, user: { id: 'u1', rememberMe: parsed.rememberMe } });
+    return Number(token.exp) - now;
+  }
 
-    if (token.rememberMe) {
-      session.maxAge = SESSION_MAX_AGE_REMEMBER;
-    } else {
-      session.maxAge = SESSION_MAX_AGE_DEFAULT;
-    }
-
-    expect(session.maxAge).toBe(SESSION_MAX_AGE_REMEMBER);
-    expect(session.maxAge).toBe(30 * 24 * 60 * 60);
+  it('the string "false" from the login form means not remembered (24h)', async () => {
+    const ttl = await tokenExpiryForFormValue('false');
+    expect(ttl).toBeGreaterThan(DAY - 5);
+    expect(ttl).toBeLessThanOrEqual(DAY);
   });
 
-  it('sets maxAge to 24 hours when rememberMe=false', () => {
-    const token = { rememberMe: false };
-    const session = { maxAge: 0 };
+  it('the string "true" keeps the 30-day session', async () => {
+    const ttl = await tokenExpiryForFormValue('true');
+    expect(ttl).toBeGreaterThan(30 * DAY - 5);
+  });
 
-    if (token.rememberMe) {
-      session.maxAge = SESSION_MAX_AGE_REMEMBER;
-    } else {
-      session.maxAge = SESSION_MAX_AGE_DEFAULT;
-    }
-
-    expect(session.maxAge).toBe(SESSION_MAX_AGE_DEFAULT);
-    expect(session.maxAge).toBe(24 * 60 * 60);
+  it('a missing value defaults to not remembered', async () => {
+    const { loginSchema } = await import('@/features/auth/schemas/auth.schema');
+    expect(loginSchema.parse({ email: 'a@example.com', password: 'x' }).rememberMe).toBe(false);
+    expect(
+      loginSchema.safeParse({ email: 'a@example.com', password: 'x', rememberMe: 'yes' }).success
+    ).toBe(false);
   });
 });

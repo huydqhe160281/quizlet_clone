@@ -194,6 +194,7 @@ describe('set.service', () => {
           example: null,
           imageUrl: null,
           audioUrl: null,
+          type: 'new-word',
           sortOrder: 0,
         },
       ],
@@ -217,7 +218,17 @@ describe('set.service', () => {
           userId: 'user-b',
           visibility: 'PRIVATE',
           cards: {
-            create: [expect.objectContaining({ front: 'hello', back: 'xin chào', sortOrder: 0 })],
+            createMany: {
+              data: [
+                // type is preserved so Draw mode works on the copy
+                expect.objectContaining({
+                  front: 'hello',
+                  back: 'xin chào',
+                  type: 'new-word',
+                  sortOrder: 0,
+                }),
+              ],
+            },
           },
         }),
       })
@@ -272,6 +283,11 @@ describe('set.service', () => {
     const result = await splitSet('source-set', 'user-a', 20);
 
     expect(result).toHaveLength(3);
+    // Large splits must not hit Prisma's 5s interactive-transaction default.
+    expect(prismaMock.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({ timeout: 30_000 })
+    );
     expect(prismaMock.flashcardSet.create).toHaveBeenCalledTimes(3);
     expect(prismaMock.flashcardSet.create).toHaveBeenNthCalledWith(
       1,
@@ -284,17 +300,25 @@ describe('set.service', () => {
           coverImage: 'cover.png',
           userId: 'user-a',
           cards: {
-            create: expect.arrayContaining([
-              expect.objectContaining({ front: 'f0', type: 'new-word', sortOrder: 0 }),
-              expect.objectContaining({ front: 'f19', sortOrder: 19 }),
-            ]),
+            createMany: {
+              data: expect.arrayContaining([
+                expect.objectContaining({ front: 'f0', type: 'new-word', sortOrder: 0 }),
+                expect.objectContaining({ front: 'f19', sortOrder: 19 }),
+              ]),
+            },
           },
         }),
       })
     );
-    expect(prismaMock.flashcardSet.create.mock.calls[0]?.[0].data.cards.create).toHaveLength(20);
-    expect(prismaMock.flashcardSet.create.mock.calls[1]?.[0].data.cards.create).toHaveLength(20);
-    expect(prismaMock.flashcardSet.create.mock.calls[2]?.[0].data.cards.create).toHaveLength(5);
+    expect(
+      prismaMock.flashcardSet.create.mock.calls[0]?.[0].data.cards.createMany.data
+    ).toHaveLength(20);
+    expect(
+      prismaMock.flashcardSet.create.mock.calls[1]?.[0].data.cards.createMany.data
+    ).toHaveLength(20);
+    expect(
+      prismaMock.flashcardSet.create.mock.calls[2]?.[0].data.cards.createMany.data
+    ).toHaveLength(5);
     expect(prismaMock.flashcardSet.create).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({

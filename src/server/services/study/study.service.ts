@@ -1,6 +1,6 @@
 import { Grade, Prisma, type StudyMode } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
-import { calculateSm2, gradeToSm2 } from '@/features/study/lib/sm2';
+import { calculateSm2, gradeToSm2, isCorrectGrade } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
 import {
   getEffectiveStreak,
@@ -120,6 +120,19 @@ async function recordStreakForStudy(userId: string) {
   };
 }
 
+/**
+ * A P2002 counts as an already-applied replay only when it comes from the
+ * processed_mutations unique key — not e.g. a card_progress (userId, cardId) race.
+ */
+export function isProcessedMutationConflict(error: unknown): boolean {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+    return false;
+  }
+  const target = (error.meta as { target?: unknown } | undefined)?.target;
+  const text = Array.isArray(target) ? target.join(',') : String(target ?? '');
+  return text.includes('clientMutationId') || text.includes('processed_mutations');
+}
+
 type SessionAnswerInput = {
   cardId: string;
   isCorrect: boolean;
@@ -169,22 +182,24 @@ async function claimAnswerMutationIds(
   await tx.processedMutation.createMany({ data: rows, skipDuplicates: true });
 }
 
-async function assertAnswersBelongToSession(
+/**
+ * Keep only answers whose card is still in the session. A card deleted mid-session
+ * cascades its SessionCard away; failing the whole batch would also drop the valid
+ * answers and leave the session impossible to complete.
+ */
+async function answersStillInSession(
   tx: Prisma.TransactionClient,
   sessionId: string,
   answers: SessionAnswerInput[]
-) {
-  if (answers.length === 0) return;
+): Promise<SessionAnswerInput[]> {
+  if (answers.length === 0) return answers;
 
-  const cardIds = answers.map((answer) => answer.cardId);
   const rows = await tx.sessionCard.findMany({
-    where: { sessionId, cardId: { in: cardIds } },
+    where: { sessionId, cardId: { in: answers.map((answer) => answer.cardId) } },
     select: { cardId: true },
   });
-
-  if (rows.length !== cardIds.length) {
-    throw new ApiError('NOT_FOUND', 'Card not in session', 404);
-  }
+  const present = new Set(rows.map((row) => row.cardId));
+  return answers.filter((answer) => present.has(answer.cardId));
 }
 
 export async function createSession(
@@ -244,7 +259,9 @@ export async function createSession(
       totalCards: cards.length,
       settings: settings ? (settings as object) : undefined,
       sessionCards: {
-        create: cards.map((card) => ({ cardId: card.id })),
+        // One INSERT for the whole deck (up to 2000 cards). Client-generated cuids keep
+        // the shuffled order for the `id asc` read.
+        createMany: { data: cards.map((card) => ({ cardId: card.id })) },
       },
     },
     include: sessionCardsInclude,
@@ -339,8 +356,7 @@ export async function recordSessionAnswersBatch(
     }
 
     await claimAnswerMutationIds(tx, userId, survivors);
-    const normalizedAnswers = dedupeAnswers(survivors);
-    await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
+    const normalizedAnswers = await answersStillInSession(tx, sessionId, dedupeAnswers(survivors));
 
     const now = new Date();
     await Promise.all(
@@ -372,7 +388,7 @@ export async function completeSession(
 
       const ownership = await tx.studySession.findUnique({
         where: { id: sessionId },
-        select: { userId: true, totalCards: true, completedAt: true },
+        select: { userId: true, completedAt: true },
       });
       if (!ownership) {
         throw new ApiError('NOT_FOUND', 'Session not found', 404);
@@ -384,8 +400,11 @@ export async function completeSession(
       const survivors = await filterUnprocessedAnswers(tx, userId, answers);
       if (survivors.length > 0 && !ownership.completedAt) {
         await claimAnswerMutationIds(tx, userId, survivors);
-        const normalizedAnswers = dedupeAnswers(survivors);
-        await assertAnswersBelongToSession(tx, sessionId, normalizedAnswers);
+        const normalizedAnswers = await answersStillInSession(
+          tx,
+          sessionId,
+          dedupeAnswers(survivors)
+        );
 
         if (normalizedAnswers.length > 0) {
           const now = new Date();
@@ -403,12 +422,14 @@ export async function completeSession(
       const correctCount = await tx.sessionCard.count({
         where: { sessionId, isCorrect: true },
       });
-      const score = ownership.totalCards > 0 ? correctCount / ownership.totalCards : 0;
+      // Score against the cards that still exist: deleted cards cascade out of the session.
+      const totalCards = await tx.sessionCard.count({ where: { sessionId } });
+      const score = totalCards > 0 ? correctCount / totalCards : 0;
       const completedAt = new Date();
 
       const updateResult = await tx.studySession.updateMany({
         where: { id: sessionId, completedAt: null },
-        data: { completedAt, correctCount, score },
+        data: { completedAt, correctCount, score, totalCards },
       });
 
       const finalSession = await tx.studySession.findUnique({ where: { id: sessionId } });
@@ -439,11 +460,7 @@ export async function completeSession(
       alreadyCompleted: false as const,
     };
   } catch (error) {
-    if (
-      clientMutationId &&
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
+    if (clientMutationId && isProcessedMutationConflict(error)) {
       const session = await prisma.studySession.findUnique({ where: { id: sessionId } });
       if (!session) {
         throw new ApiError('NOT_FOUND', 'Session not found', 404);
@@ -526,7 +543,7 @@ export async function reviewCard(
 ) {
   const card = await prisma.flashcard.findUnique({
     where: { id: cardId },
-    include: { set: true },
+    select: { id: true, set: { select: { userId: true } } },
   });
 
   if (!card) {
@@ -536,18 +553,7 @@ export async function reviewCard(
     throw new ApiError('FORBIDDEN', 'You can only review your own cards', 403);
   }
 
-  const existing = await prisma.cardProgress.findUnique({
-    where: { userId_cardId: { userId, cardId } },
-  });
-
-  const current = {
-    repetitions: existing?.repetitions ?? 0,
-    easeFactor: existing?.easeFactor ?? 2.5,
-    interval: existing?.interval ?? 0,
-  };
-
-  const sm2 = calculateSm2(current, gradeToSm2(grade));
-  const isCorrect = grade === 'GOOD' || grade === 'EASY';
+  const isCorrect = isCorrectGrade(grade);
 
   try {
     const progress = await prisma.$transaction(async (tx) => {
@@ -556,6 +562,21 @@ export async function reviewCard(
           data: { clientMutationId, userId },
         });
       }
+
+      // Lock the progress row so concurrent reviews of the same card serialize and
+      // each computes SM-2 from the latest committed state (no lost update).
+      await tx.$queryRaw`SELECT 1 FROM card_progress WHERE "userId" = ${userId} AND "cardId" = ${cardId} FOR UPDATE`;
+      const existing = await tx.cardProgress.findUnique({
+        where: { userId_cardId: { userId, cardId } },
+      });
+      const sm2 = calculateSm2(
+        {
+          repetitions: existing?.repetitions ?? 0,
+          easeFactor: existing?.easeFactor ?? 2.5,
+          interval: existing?.interval ?? 0,
+        },
+        gradeToSm2(grade)
+      );
 
       const upserted = await tx.cardProgress.upsert({
         where: { userId_cardId: { userId, cardId } },
@@ -596,11 +617,10 @@ export async function reviewCard(
       nextDueDate: progress.dueDate.toISOString(),
     };
   } catch (error) {
-    if (
-      clientMutationId &&
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
+    if (clientMutationId && isProcessedMutationConflict(error)) {
+      const existing = await prisma.cardProgress.findUnique({
+        where: { userId_cardId: { userId, cardId } },
+      });
       return {
         applied: false as const,
         cardId,

@@ -45,6 +45,9 @@ export function LearnMode({ setId }: LearnModeProps) {
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
   const isAdvancingRef = useRef(false);
+  // The store moves to the next round synchronously on a round's last answer;
+  // keep the answered card (and its options) on screen until the learner advances.
+  const [answeredCard, setAnsweredCard] = useState<StudyCard | null>(null);
 
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
@@ -53,7 +56,7 @@ export function LearnMode({ setId }: LearnModeProps) {
       .filter((c): c is StudyCard => !!c);
   }, [study.currentRound, study.cards]);
 
-  const currentCard = roundCards[study.currentIndex];
+  const currentCard = answeredCard ?? roundCards[study.currentIndex];
   const isMultipleChoice = study.settings?.presentation !== 'default';
   const mcDirection = study.settings?.mcDirection ?? 'front_to_back';
 
@@ -78,6 +81,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   const options = learnMcq?.options ?? [];
 
   const resetQuestionState = () => {
+    setAnsweredCard(null);
     setFeedback(null);
     setSelected(null);
     setAnswer('');
@@ -141,6 +145,7 @@ export function LearnMode({ setId }: LearnModeProps) {
     setLastRoundTotal(roundCards.length);
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
     setIsCorrectAnswer(isCorrect);
+    setAnsweredCard(currentCard);
 
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
     study.recordAnswer(currentCard.cardId, isCorrect);

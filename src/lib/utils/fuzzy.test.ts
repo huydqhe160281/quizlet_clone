@@ -13,6 +13,27 @@ describe('fuzzy matching', () => {
     expect(fuzzyMatch('democarcy', 'democracy')).toBe(true);
   });
 
+  it('treats Vietnamese tone marks as meaningful', () => {
+    expect(fuzzyMatch('má', 'mà')).toBe(false);
+    expect(fuzzyMatch('ma', 'mà')).toBe(false);
+    expect(fuzzyMatch('con meo', 'con mèo')).toBe(false);
+    expect(fuzzyMatch('đất nuớc', 'đất nước')).toBe(false);
+  });
+
+  it('treats Japanese dakuten/handakuten as meaningful', () => {
+    expect(fuzzyMatch('かき', 'かぎ')).toBe(false);
+    expect(fuzzyMatch('はん', 'ぱん')).toBe(false);
+  });
+
+  it('still tolerates case, spacing, and ordinary typos with diacritics intact', () => {
+    expect(fuzzyMatch('  Đất   Nước ', 'đất nước')).toBe(true);
+    expect(fuzzyMatch('thành phố hồ chí mnh', 'thành phố hồ chí minh')).toBe(true);
+  });
+
+  it('matches regardless of Unicode composition (NFC vs NFD input)', () => {
+    expect(fuzzyMatch('mà'.normalize('NFD'), 'mà'.normalize('NFC'))).toBe(true);
+  });
+
   it('test_fuzzy_match_wrong: rejects unrelated answers', () => {
     expect(fuzzyMatch('dictator', 'democracy')).toBe(false);
     expect(fuzzySimilarity('dictator', 'democracy')).toBeLessThan(0.85);

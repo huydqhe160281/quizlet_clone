@@ -114,6 +114,14 @@ async function hydrateSetsByIds(ids: string[], userId?: string | null) {
     .filter((set): set is NonNullable<typeof set> => Boolean(set));
 }
 
+/**
+ * `lower(title) LIKE 'q%'` can use the sets_title_prefix_idx (text_pattern_ops) index;
+ * ILIKE cannot. LIKE wildcards in the user's query are escaped so they match literally.
+ */
+export function titlePrefixPattern(q: string): string {
+  return `${q.toLowerCase().replace(/[\\%_]/g, (ch) => `\\${ch}`)}%`;
+}
+
 export async function searchPublicSets(query: SearchQuery, userId?: string | null) {
   const limit = query.limit + 1;
   const rankExpr = Prisma.sql`ts_rank(search_vector, plainto_tsquery('english', ${query.q}))`;
@@ -155,7 +163,7 @@ export async function searchPublicSets(query: SearchQuery, userId?: string | nul
     WHERE ${visibilityFilter}
       AND (
         search_vector @@ plainto_tsquery('english', ${query.q})
-        OR title ILIKE ${query.q + '%'}
+        OR lower(title) LIKE ${titlePrefixPattern(query.q)}
       )
       ${languageFilter}
       ${tagFilter}

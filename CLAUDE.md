@@ -24,7 +24,7 @@ pnpm generate:guide           # regenerate src/generated/guide-config.json (comm
 pnpm generate:guide:check     # fails if the committed guide config is stale
 ```
 
-Pre-commit hook runs `lint-staged` (eslint --fix + prettier). `DATABASE_URL` is the pooled PgBouncer URL (port 6543); `DIRECT_DATABASE_URL` is for migrations.
+Pre-commit hook runs `lint-staged` (eslint --fix + prettier). `prisma migrate dev` generates `DROP INDEX` for the raw-SQL search indexes `sets_search_idx` / `sets_title_prefix_idx` (they can't be declared in `schema.prisma`); delete those lines from the generated migration — `scripts/search-index-guard.test.ts` fails if a migration leaves them dropped. `DATABASE_URL` is the pooled PgBouncer URL (port 6543); `DIRECT_DATABASE_URL` is for migrations.
 
 ## Architecture
 

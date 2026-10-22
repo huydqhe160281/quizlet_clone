@@ -231,10 +231,10 @@ describe('study.service', () => {
 
     await createSession('user-a', 'set-1', 'LEARN');
     const createArg = prismaMock.studySession.create.mock.calls[0]?.[0] as {
-      data: { totalCards: number; sessionCards: { create: unknown[] } };
+      data: { totalCards: number; sessionCards: { createMany: { data: unknown[] } } };
     };
     expect(createArg.data.totalCards).toBe(10);
-    expect(createArg.data.sessionCards.create).toHaveLength(10);
+    expect(createArg.data.sessionCards.createMany.data).toHaveLength(10);
   });
 
   it('Scenario: Subset materializes only those cards', async () => {
@@ -253,9 +253,9 @@ describe('study.service', () => {
 
     await createSession('user-a', 'set-1', 'LEARN', undefined, ['c1', 'c2']);
     const createArg = prismaMock.studySession.create.mock.calls[0]?.[0] as {
-      data: { sessionCards: { create: Array<{ cardId: string }> } };
+      data: { sessionCards: { createMany: { data: Array<{ cardId: string }> } } };
     };
-    const ids = createArg.data.sessionCards.create.map((row) => row.cardId).sort();
+    const ids = createArg.data.sessionCards.createMany.data.map((row) => row.cardId).sort();
     expect(ids).toEqual(['c1', 'c2']);
   });
 
@@ -388,7 +388,8 @@ describe('study.service', () => {
         score: 0.5,
         completedAt: new Date(),
       });
-    prismaMock.sessionCard.count.mockResolvedValue(2);
+    // correct answers, then live session-card total
+    prismaMock.sessionCard.count.mockResolvedValueOnce(2).mockResolvedValueOnce(4);
     prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
     prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
@@ -409,6 +410,50 @@ describe('study.service', () => {
         }),
       })
     );
+  });
+
+  it('completeSession: a card deleted mid-session does not block completion', async () => {
+    prismaMock.studySession.findUnique
+      .mockResolvedValueOnce({ id: 'session-1', userId: 'user-a', completedAt: null })
+      .mockResolvedValueOnce({ id: 'session-1', userId: 'user-a', completedAt: new Date() });
+    // card-gone was deleted: its SessionCard cascaded away.
+    prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
+    prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.sessionCard.count.mockResolvedValueOnce(1).mockResolvedValueOnce(3);
+    prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
+
+    await completeSession('session-1', 'user-a', [
+      { cardId: 'card-1', isCorrect: true },
+      { cardId: 'card-gone', isCorrect: true },
+    ]);
+
+    expect(prismaMock.sessionCard.updateMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.sessionCard.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { sessionId: 'session-1', cardId: 'card-1' } })
+    );
+    // Score uses the 3 cards still in the session.
+    expect(prismaMock.studySession.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ correctCount: 1, totalCards: 3, score: 1 / 3 }),
+      })
+    );
+  });
+
+  it('recordSessionAnswersBatch: records surviving answers when one card was deleted', async () => {
+    prismaMock.studySession.findUnique.mockResolvedValue({
+      id: 'session-1',
+      userId: 'user-a',
+      completedAt: null,
+    });
+    prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
+    prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await recordSessionAnswersBatch('session-1', 'user-a', [
+      { cardId: 'card-1', isCorrect: true },
+      { cardId: 'card-gone', isCorrect: false },
+    ]);
+
+    expect(result).toEqual({ recorded: 1 });
   });
 
   it('recordSessionAnswersBatch: no-op for completed sessions', async () => {
@@ -563,11 +608,13 @@ describe('study.service', () => {
           mode: 'DRAW',
           totalCards: 3,
           sessionCards: {
-            create: expect.arrayContaining([
-              { cardId: 'card-1' },
-              { cardId: 'card-3' },
-              { cardId: 'card-4' },
-            ]),
+            createMany: {
+              data: expect.arrayContaining([
+                { cardId: 'card-1' },
+                { cardId: 'card-3' },
+                { cardId: 'card-4' },
+              ]),
+            },
           },
         }),
       })

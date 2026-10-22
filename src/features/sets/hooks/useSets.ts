@@ -44,12 +44,14 @@ export function useCards(setId: string) {
 export function useSetMutations() {
   const queryClient = useQueryClient();
 
+  // List only: the `setKeys.all` prefix also matched every cached detail and card list,
+  // so e.g. renaming a set refetched an open 2000-card editor.
   const invalidateSets = () => {
-    void queryClient.invalidateQueries({ queryKey: setKeys.all });
+    void queryClient.invalidateQueries({ queryKey: setKeys.list() });
   };
 
   const invalidateSetData = (setId: string) => {
-    void queryClient.invalidateQueries({ queryKey: setKeys.all });
+    void queryClient.invalidateQueries({ queryKey: setKeys.list() });
     void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
     void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
   };

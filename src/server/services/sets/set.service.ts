@@ -12,6 +12,8 @@ import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
 const SET_TITLE_MAX = 200;
 
+export const SPLIT_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 30_000 } as const;
+
 function splitPartTitle(sourceTitle: string, partIndex: number, partCount: number): string {
   const suffix = ` (${partIndex + 1}/${partCount})`;
   const maxBase = SET_TITLE_MAX - suffix.length;
@@ -181,14 +183,18 @@ export async function duplicateSet(setId: string, userId: string) {
       coverImage: source.coverImage,
       userId,
       cards: {
-        create: source.cards.map((card, index) => ({
-          front: card.front,
-          back: card.back,
-          example: card.example,
-          imageUrl: card.imageUrl,
-          audioUrl: card.audioUrl,
-          sortOrder: index,
-        })),
+        // createMany: one INSERT for all cards instead of one per card.
+        createMany: {
+          data: source.cards.map((card, index) => ({
+            front: card.front,
+            back: card.back,
+            example: card.example,
+            imageUrl: card.imageUrl,
+            audioUrl: card.audioUrl,
+            type: card.type,
+            sortOrder: index,
+          })),
+        },
       },
     },
     include: setInclude,
@@ -249,15 +255,17 @@ export async function splitSet(setId: string, userId: string, chunkSize: number)
           coverImage: source.coverImage,
           userId,
           cards: {
-            create: chunk.map((card, index) => ({
-              front: card.front,
-              back: card.back,
-              example: card.example,
-              imageUrl: card.imageUrl,
-              audioUrl: card.audioUrl,
-              type: card.type,
-              sortOrder: index,
-            })),
+            createMany: {
+              data: chunk.map((card, index) => ({
+                front: card.front,
+                back: card.back,
+                example: card.example,
+                imageUrl: card.imageUrl,
+                audioUrl: card.audioUrl,
+                type: card.type,
+                sortOrder: index,
+              })),
+            },
           },
         },
         include: setInclude,
@@ -265,7 +273,8 @@ export async function splitSet(setId: string, userId: string, chunkSize: number)
       created.push(set);
     }
     return created;
-  });
+    // Up to MAX_SPLIT_PARTS sequential inserts: Prisma's 5s default is too tight.
+  }, SPLIT_TRANSACTION_OPTIONS);
 
   invalidateSetCache(userId, 'PRIVATE');
   return sets;

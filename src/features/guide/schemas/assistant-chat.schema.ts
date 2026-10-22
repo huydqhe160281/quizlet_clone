@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { ASSISTANT_MAX_MESSAGE_CHARS } from '@/features/guide/constants';
+import {
+  ASSISTANT_MAX_HISTORY_MESSAGES,
+  ASSISTANT_MAX_MESSAGE_CHARS,
+  ASSISTANT_MAX_PATHNAME_CHARS,
+} from '@/features/guide/constants';
 
 const ASSISTANT_HISTORY_MAX_CHARS = 16_000;
 
@@ -13,20 +17,21 @@ const assistantChatMessageSchema = z.object({
   content: z.string().min(1).max(ASSISTANT_HISTORY_MAX_CHARS),
 });
 
-const systemChatMessageSchema = z.object({
-  role: z.literal('system'),
-  content: z.string().min(1).max(ASSISTANT_HISTORY_MAX_CHARS),
-});
-
+// No client "system" role: the server owns the system prompt, and accepting it
+// would let any caller override the guide's instructions.
 export const assistantMessageSchema = z.discriminatedUnion('role', [
   userChatMessageSchema,
   assistantChatMessageSchema,
-  systemChatMessageSchema,
 ]);
 
 export const assistantChatRequestSchema = z.object({
-  messages: z.array(assistantMessageSchema).min(1),
-  pathname: z.string().optional(),
+  messages: z.array(assistantMessageSchema).min(1).max(ASSISTANT_MAX_HISTORY_MESSAGES),
+  // Interpolated into the system prompt: keep it a short app path.
+  pathname: z
+    .string()
+    .max(ASSISTANT_MAX_PATHNAME_CHARS)
+    .regex(/^\/[\w\-./[\]]*$/)
+    .optional(),
 });
 
 export type AssistantChatRequest = z.infer<typeof assistantChatRequestSchema>;

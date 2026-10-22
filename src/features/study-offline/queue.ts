@@ -41,6 +41,12 @@ export async function enqueueMutation(
 
   try {
     const db = await getStudyOfflineDb();
+    // The same stamped mutation can be enqueued twice (failed flush + unmount retry).
+    // The server dedupes, but duplicate rows inflate the pending count and replay work.
+    const existing = await db.getAllFromIndex('mutations', 'by-userId', userId);
+    if (existing.some((queued) => queued.clientMutationId === clientMutationId)) {
+      return;
+    }
     await db.add('mutations', row);
   } catch (error) {
     logQueueError('enqueueMutation', error);
@@ -144,12 +150,29 @@ export async function findPendingSessionCompleteId(
   }
 }
 
-/** Dismiss failed session-complete notices (does not delete pending rows). */
+/** Count one transient replay failure; returns the new total. */
+export async function recordMutationAttempt(localId: number): Promise<number> {
+  try {
+    const db = await getStudyOfflineDb();
+    const row = await db.get('mutations', localId);
+    if (!row) return 0;
+    const attempts = (row.attempts ?? 0) + 1;
+    await db.put('mutations', { ...row, attempts });
+    return attempts;
+  } catch (error) {
+    logQueueError('recordMutationAttempt', error);
+    return 0;
+  }
+}
+
+/**
+ * Dismiss every failed notice (answers, reviews, completions); pending rows stay.
+ * Failed rows are never replayed, so keeping any kind would pin the "N failed" badge.
+ */
 export async function dismissFailedMutations(userId: string): Promise<void> {
   try {
     const failed = await getFailedMutations(userId);
-    const sessionCompleteFailed = failed.filter((row) => row.kind === 'session-complete');
-    await Promise.all(sessionCompleteFailed.map((row) => markMutationSynced(row.localId)));
+    await Promise.all(failed.map((row) => markMutationSynced(row.localId)));
   } catch (error) {
     logQueueError('dismissFailedMutations', error);
   }

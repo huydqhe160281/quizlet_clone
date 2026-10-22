@@ -9,7 +9,7 @@ type RateLimitOptions = {
 type RateLimitEntry = { count: number; resetAt: number };
 type RateLimitDecision = { limited: boolean; retryAfterSec: number };
 
-const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions) => {
+export const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions) => {
   const cache = new LRUCache<string, RateLimitEntry>({ max: 5000 });
 
   const checkLocal = (key: string): RateLimitDecision => {
@@ -36,49 +36,32 @@ const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions) => {
 
   return {
     async check(key: string): Promise<RateLimitDecision> {
-      const now = Date.now();
-      const nextResetAt = new Date(now + intervalMs);
+      const now = new Date();
+      const nextResetAt = new Date(now.getTime() + intervalMs);
 
       try {
-        const result = await prisma.$transaction(async (tx) => {
-          const existing = await tx.rateLimitBucket.findUnique({
-            where: { key },
-            select: { count: true, resetAt: true },
-          });
+        // One atomic statement: concurrent requests cannot all read "under the limit"
+        // (the old read-then-update let parallel bursts through), and it costs one
+        // round trip instead of an interactive transaction.
+        const rows = await prisma.$queryRaw<Array<{ count: number; resetAt: Date }>>`
+          INSERT INTO rate_limit_buckets ("key", "count", "resetAt", "updatedAt")
+          VALUES (${key}, 1, ${nextResetAt}, ${now})
+          ON CONFLICT ("key") DO UPDATE SET
+            "count" = CASE WHEN rate_limit_buckets."resetAt" <= ${now} THEN 1
+                           ELSE rate_limit_buckets."count" + 1 END,
+            "resetAt" = CASE WHEN rate_limit_buckets."resetAt" <= ${now} THEN ${nextResetAt}
+                             ELSE rate_limit_buckets."resetAt" END,
+            "updatedAt" = ${now}
+          RETURNING "count", "resetAt"
+        `;
+        const bucket = rows[0];
+        if (!bucket) throw new Error('rate limit upsert returned no row');
 
-          if (!existing || existing.resetAt.getTime() <= now) {
-            const upserted = await tx.rateLimitBucket.upsert({
-              where: { key },
-              create: {
-                key,
-                count: 1,
-                resetAt: nextResetAt,
-              },
-              update: {
-                count: 1,
-                resetAt: nextResetAt,
-              },
-              select: { count: true, resetAt: true },
-            });
-            return {
-              limited: false,
-              retryAfterSec: Math.max(1, Math.ceil((upserted.resetAt.getTime() - now) / 1000)),
-            } satisfies RateLimitDecision;
-          }
-
-          const retryAfterSec = Math.max(1, Math.ceil((existing.resetAt.getTime() - now) / 1000));
-          if (existing.count >= maxRequests) {
-            return { limited: true, retryAfterSec } satisfies RateLimitDecision;
-          }
-
-          await tx.rateLimitBucket.update({
-            where: { key },
-            data: { count: { increment: 1 } },
-          });
-          return { limited: false, retryAfterSec } satisfies RateLimitDecision;
-        });
-
-        return result;
+        const retryAfterSec = Math.max(
+          1,
+          Math.ceil((new Date(bucket.resetAt).getTime() - now.getTime()) / 1000)
+        );
+        return { limited: Number(bucket.count) > maxRequests, retryAfterSec };
       } catch {
         // Fallback keeps API available if DB is transiently unavailable.
         return checkLocal(key);
@@ -95,6 +78,11 @@ export const aiGenerateRateLimit = createRateLimiter({ intervalMs: 3_600_000, ma
 export const assistantGuestRateLimit = createRateLimiter({
   intervalMs: 3_600_000,
   maxRequests: 20,
+});
+/** Signed-in assistant usage; keyed by user id so one account cannot proxy the LLM freely. */
+export const assistantUserRateLimit = createRateLimiter({
+  intervalMs: 3_600_000,
+  maxRequests: 60,
 });
 
 export function getClientIp(req: Request): string {

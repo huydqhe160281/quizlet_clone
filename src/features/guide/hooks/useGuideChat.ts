@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { ASSISTANT_MAX_HISTORY_MESSAGES } from '@/features/guide/constants';
 
 export type GuideChatMessage = {
   id: string;
@@ -47,7 +48,9 @@ export function useGuideChatSession(): GuideChatSessionValue {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             pathname,
-            messages: nextMessages.map(({ role, content: text }) => ({ role, content: text })),
+            messages: nextMessages
+              .slice(-ASSISTANT_MAX_HISTORY_MESSAGES)
+              .map(({ role, content: text }) => ({ role, content: text })),
           }),
         });
 

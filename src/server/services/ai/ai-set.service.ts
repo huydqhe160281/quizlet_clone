@@ -8,7 +8,7 @@ import {
 import { ApiError } from '@/lib/api-error';
 import { getOllamaGenerateOptions, getOllamaModel, getOllamaLargeModel } from '@/server/ai/ollama';
 import { getZaiModel } from '@/server/ai/zai';
-import { withModelFallback } from '@/server/ai/with-fallback';
+import { withModelFallback, type ModelFallbackOptions } from '@/server/ai/with-fallback';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
@@ -30,6 +30,13 @@ Respond with JSON only using this shape:
   "cards": [{ "front": "string", "back": "string", "example": "string (optional)" }]
 }`;
 
+/** Per-attempt cap and overall budget, under the generate-set route's 120s maxDuration. */
+export const AI_SET_FALLBACK_OPTIONS: ModelFallbackOptions = {
+  maxAttempts: 2,
+  attemptTimeoutMs: 45_000,
+  totalBudgetMs: 100_000,
+};
+
 export async function generateAiSet(userId: string, input: AiGenerateInput) {
   const outputSchema = buildAiFlashcardOutputSchema(input.cardCount);
   const prompt = `${buildSystemPrompt(input.cardCount)}\n\nUser input:\n${input.prompt}`;
@@ -38,21 +45,25 @@ export async function generateAiSet(userId: string, input: AiGenerateInput) {
   let generated;
   try {
     // Fallback cascade: Ollama primary → Ollama large → Z.ai
-    // Each provider is retried up to 2 times before moving to the next.
+    // Each provider is retried up to 2 times before moving to the next. The cascade owns
+    // retries (maxRetries: 0, otherwise each attempt retries 3x internally) and finishes
+    // inside the route's 120s maxDuration.
     const result = await withModelFallback(
       [
         ['ollama-primary', getOllamaModel(input.cardCount)],
         ['ollama-large', getOllamaLargeModel(input.cardCount)],
         ['zai', getZaiModel()],
       ],
-      (model) =>
+      (model, abortSignal) =>
         generateText({
           model,
           ...generateOptions,
           output: Output.json(),
           prompt,
+          maxRetries: 0,
+          abortSignal,
         }),
-      2 // max attempts per provider
+      AI_SET_FALLBACK_OPTIONS
     );
 
     const parsed = outputSchema.safeParse(trimAiFlashcardOutput(result.output, input.cardCount));
@@ -76,12 +87,14 @@ export async function generateAiSet(userId: string, input: AiGenerateInput) {
       visibility: Visibility.PRIVATE,
       userId,
       cards: {
-        create: cards.map((card, index) => ({
-          front: card.front,
-          back: card.back,
-          example: card.example ?? null,
-          sortOrder: index,
-        })),
+        createMany: {
+          data: cards.map((card, index) => ({
+            front: card.front,
+            back: card.back,
+            example: card.example ?? null,
+            sortOrder: index,
+          })),
+        },
       },
     },
     include: {

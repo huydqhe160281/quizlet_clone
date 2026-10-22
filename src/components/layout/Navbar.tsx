@@ -20,7 +20,7 @@ import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/constants';
 import { persistLocaleClient } from '@/lib/i18n/client-locale';
 import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
-import { flushPendingMutationsBeforeSignOut } from '@/features/study-offline/flush-before-signout';
+import { prepareOfflineDataForSignOut } from '@/features/study-offline/flush-before-signout';
 
 function writeLocaleCookie(locale: Locale) {
   persistLocaleClient(locale);
@@ -35,7 +35,7 @@ export function Navbar() {
   const [pending, startTransition] = useTransition();
 
   const handleSignOut = async () => {
-    await flushPendingMutationsBeforeSignOut(session?.user?.id).catch(() => {});
+    await prepareOfflineDataForSignOut(session?.user?.id).catch(() => {});
     void signOut({ callbackUrl: '/' });
   };
 

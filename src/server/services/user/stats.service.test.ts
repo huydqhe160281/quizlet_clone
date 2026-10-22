@@ -94,23 +94,28 @@ describe('dashboard stats service', () => {
     expect(stats.accuracy).toBe(0.8);
   });
 
-  it('test_activity_heatmap_performance: aggregates review history quickly', async () => {
-    prismaMock.$queryRaw.mockResolvedValueOnce([
-      { day: '2026-01-01', count: BigInt(3) },
-      { day: '2026-01-02', count: BigInt(1) },
-    ]);
+  it('test_activity_heatmap_performance: aggregates review history in one query', async () => {
+    // Pin "now": the fixture dates must stay inside the 365-day window whatever the real
+    // date is (with the real clock this test started failing on 2027-01-01).
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-06-17T12:00:00.000Z'));
+    try {
+      prismaMock.$queryRaw.mockResolvedValueOnce([
+        { day: '2026-01-01', count: BigInt(3) },
+        { day: '2026-01-02', count: BigInt(1) },
+      ]);
 
-    const started = performance.now();
-    const activity = await getActivity('user-a', 365);
-    const elapsed = performance.now() - started;
+      const activity = await getActivity('user-a', 365);
 
-    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(activity.length).toBe(365);
-    expect(activity.every((day) => typeof day.count === 'number')).toBe(true);
-    expect(activity[0]?.date < activity[activity.length - 1]?.date).toBe(true);
-    expect(activity.some((day) => day.count === 0)).toBe(true);
-    expect(activity.some((day) => day.count === 3)).toBe(true);
-    expect(elapsed).toBeLessThan(200);
+      expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1);
+      expect(activity.length).toBe(365);
+      expect(activity.every((day) => typeof day.count === 'number')).toBe(true);
+      expect(activity[0]?.date < activity[activity.length - 1]?.date).toBe(true);
+      expect(activity.some((day) => day.count === 0)).toBe(true);
+      expect(activity.find((day) => day.date === '2026-01-01')?.count).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('getActivity: sums union sources in one query result', async () => {

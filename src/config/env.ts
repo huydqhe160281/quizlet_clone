@@ -51,11 +51,15 @@ export const env = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   mediaBucket: process.env.SUPABASE_MEDIA_BUCKET ?? 'flashcard-media',
-  ollamaBaseUrl: resolveOllamaBaseUrl(
-    process.env.NODE_ENV ?? 'development',
-    process.env.OLLAMA_BASE_URL
-  ),
-  ollamaModel: resolveOllamaModel(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_MODEL),
+  // Getters: resolved (and, in production, validated) only when an AI feature runs.
+  // Resolving at import time made a missing OLLAMA_* var crash every request,
+  // because the middleware and auth config import this module.
+  get ollamaBaseUrl(): string {
+    return resolveOllamaBaseUrl(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_BASE_URL);
+  },
+  get ollamaModel(): string {
+    return resolveOllamaModel(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_MODEL);
+  },
   ollamaLargeModel: resolveOllamaLargeModel(process.env.OLLAMA_MODEL_LARGE),
   ollamaApiKey: resolveOllamaApiKey(process.env.OLLAMA_API_KEY),
   // Z.ai fallback (OpenAI-compatible, https://api.z.ai/api/paas/v4)

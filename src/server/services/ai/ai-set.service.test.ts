@@ -36,10 +36,13 @@ vi.mock('@/server/ai/zai', () => ({
 // Stub withModelFallback so it simply calls fn with the first defined model.
 vi.mock('@/server/ai/with-fallback', () => ({
   withModelFallback: vi.fn(
-    async (models: Array<[string, unknown]>, fn: (m: unknown) => Promise<unknown>) => {
+    async (
+      models: Array<[string, unknown]>,
+      fn: (m: unknown, signal: AbortSignal) => Promise<unknown>
+    ) => {
       const first = models.find(([, m]) => m !== undefined);
       if (!first) throw new Error('No model available');
-      return fn(first[1]);
+      return fn(first[1], new AbortController().signal);
     }
   ),
 }));
@@ -99,15 +102,24 @@ describe('ai-set.service', () => {
     );
   });
 
+  it('lets the fallback cascade own retries and timeouts', async () => {
+    await generateAiSet('user-a', validInput);
+    expect(generateTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({ maxRetries: 0, abortSignal: expect.any(AbortSignal) })
+    );
+  });
+
   it('Scenario: LLM returns valid structure', async () => {
     await generateAiSet('user-a', validInput);
     expect(prismaMock.flashcardSet.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           cards: expect.objectContaining({
-            create: expect.arrayContaining([
-              expect.objectContaining({ front: '家族', back: 'family' }),
-            ]),
+            createMany: {
+              data: expect.arrayContaining([
+                expect.objectContaining({ front: '家族', back: 'family' }),
+              ]),
+            },
           }),
         }),
       })
@@ -147,7 +159,7 @@ describe('ai-set.service', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           cards: expect.objectContaining({
-            create: expect.any(Array),
+            createMany: { data: expect.any(Array) },
           }),
         }),
       })

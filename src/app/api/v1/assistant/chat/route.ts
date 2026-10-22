@@ -1,5 +1,9 @@
 import { withErrorHandler, ApiError } from '@/lib/api-error';
-import { assistantGuestRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
+import {
+  assistantGuestRateLimit,
+  assistantUserRateLimit,
+  getClientIp,
+} from '@/lib/rate-limit/rate-limit';
 import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 import { loadCatalog } from '@/lib/i18n/catalog';
 import { t } from '@/lib/i18n/t';
@@ -19,14 +23,13 @@ export const POST = withErrorHandler(async (req) => {
   const locale = await getRequestLocale();
   const catalog = loadCatalog(locale);
 
-  if (isGuest) {
-    const ip = getClientIp(req);
-    const decision = await assistantGuestRateLimit.check(ip);
-    if (decision.limited) {
-      throw new ApiError('RATE_LIMITED', 'Too many requests', 429, {
-        retryAfter: decision.retryAfterSec,
-      });
-    }
+  const decision = isGuest
+    ? await assistantGuestRateLimit.check(getClientIp(req))
+    : await assistantUserRateLimit.check(`assistant:user:${session.user.id}`);
+  if (decision.limited) {
+    throw new ApiError('RATE_LIMITED', 'Too many requests', 429, {
+      retryAfter: decision.retryAfterSec,
+    });
   }
 
   let body: unknown;

@@ -30,6 +30,8 @@ export type QueuedMutation = {
   payload: Record<string, unknown>;
   status: MutationStatus;
   failReason?: string;
+  /** Transient (5xx) replay failures so far; dead-lettered at MAX_REPLAY_ATTEMPTS. */
+  attempts?: number;
 };
 
 export type StampedPendingAnswer = {

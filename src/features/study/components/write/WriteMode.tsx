@@ -45,9 +45,13 @@ export function WriteMode({ setId }: WriteModeProps) {
       .filter((c): c is StudyCard => !!c);
   }, [study.currentRound, study.cards]);
 
-  const currentCard = roundCards[study.currentIndex];
+  // The store moves to the next round synchronously on a round's last answer;
+  // keep the answered card on screen until the learner continues.
+  const [answeredCard, setAnsweredCard] = useState<StudyCard | null>(null);
+  const currentCard = answeredCard ?? roundCards[study.currentIndex];
 
   const finishIfLast = () => {
+    setAnsweredCard(null);
     if (roundEndedThisStep) {
       if (study.isComplete) {
         void study.completeSession();
@@ -76,6 +80,7 @@ export function WriteMode({ setId }: WriteModeProps) {
     const isCorrect = fuzzyMatch(answer, currentCard.back);
     setSubmitted(true);
     setIsCorrectAnswer(isCorrect);
+    setAnsweredCard(currentCard);
     if (isCorrect) {
       setFeedback(t('studyUi.feedbackCorrect'));
     } else {

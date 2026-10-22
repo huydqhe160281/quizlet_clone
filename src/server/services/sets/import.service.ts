@@ -98,12 +98,15 @@ async function createImport(
       visibility: meta.visibility ?? 'PRIVATE',
       userId,
       cards: {
-        create: cards.map((card, index) => ({
-          front: card.front,
-          back: card.back,
-          example: card.example,
-          sortOrder: index,
-        })),
+        // createMany: one INSERT for up to 2000 cards instead of one per card.
+        createMany: {
+          data: cards.map((card, index) => ({
+            front: card.front,
+            back: card.back,
+            example: card.example,
+            sortOrder: index,
+          })),
+        },
       },
     },
     select: { id: true, title: true },
@@ -224,27 +227,31 @@ async function importToExistingSet(
 
   const existingSet = await prisma.flashcardSet.findFirst({
     where: { id: setId, userId },
-    select: { id: true, title: true, visibility: true, _count: { select: { cards: true } } },
+    select: { id: true, title: true, visibility: true },
   });
 
   if (!existingSet) {
     throw new ApiError('NOT_FOUND', 'Set not found or access denied', 404);
   }
 
-  const currentCount = existingSet._count.cards;
+  await prisma.$transaction(async (tx) => {
+    // Append after the highest sortOrder: deletes leave gaps, so the card count
+    // would collide with existing positions.
+    const { _max } = await tx.flashcard.aggregate({
+      where: { setId },
+      _max: { sortOrder: true },
+    });
+    const start = (_max.sortOrder ?? -1) + 1;
 
-  await prisma.flashcardSet.update({
-    where: { id: setId },
-    data: {
-      cards: {
-        create: cards.map((card, index) => ({
-          front: card.front,
-          back: card.back,
-          example: card.example,
-          sortOrder: currentCount + index,
-        })),
-      },
-    },
+    await tx.flashcard.createMany({
+      data: cards.map((card, index) => ({
+        setId,
+        front: card.front,
+        back: card.back,
+        example: card.example,
+        sortOrder: start + index,
+      })),
+    });
   });
 
   invalidateSetCache(userId, existingSet.visibility);
