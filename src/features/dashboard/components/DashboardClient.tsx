@@ -25,6 +25,8 @@ type DashboardClientProps = {
     totalSets: number;
     totalCards: number;
     dueToday: number;
+    /** IANA zone for showing dates; the same on server and client render. */
+    preferredTimezone?: string;
   };
   activity: Array<{ date: string; count: number }>;
   sessions: Array<{
@@ -64,7 +66,7 @@ export function DashboardClient({ stats, activity, sessions }: DashboardClientPr
           {t('dashboardPage.recentSessions')}
         </h3>
         <div className="relative z-10">
-          <RecentSessions sessions={sessions} />
+          <RecentSessions sessions={sessions} timeZone={stats.preferredTimezone} />
         </div>
       </div>
     </div>

@@ -51,7 +51,7 @@ export function TodayPageClient() {
   const t = useTranslations();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data, isLoading, isError, error, refetch } = useTodayPlan();
+  const { data, isLoading, isError, refetch } = useTodayPlan();
   const updateGoals = useUpdateStudyGoals();
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalDraft, setGoalDraft] = useState(GOAL_DEFAULT);
@@ -111,10 +111,7 @@ export function TodayPageClient() {
     return (
       <div className="mx-auto w-full max-w-3xl space-y-4">
         <PageHeader title={t('todayPage.title')} subtitle={t('todayPage.subtitle')} />
-        <QueryErrorPanel
-          message={error instanceof Error ? error.message : t('todayPage.loadFailed')}
-          onRetry={refetch}
-        />
+        <QueryErrorPanel message={t('todayPage.loadFailed')} onRetry={refetch} />
       </div>
     );
   }

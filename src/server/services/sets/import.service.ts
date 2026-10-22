@@ -20,6 +20,8 @@ export type ImportResult = {
 
 type RawCard = { front: string; back: string; example?: string };
 
+const REQUIRED_CSV_COLUMNS = ['front', 'back'] as const;
+
 // ── CSV Parsing ───────────────────────────────────────────────────────────────
 
 function validateUtf8Buffer(buffer: ArrayBuffer): void {
@@ -38,10 +40,23 @@ function parseCsvContent(csvText: string): { cards: RawCard[]; skippedRows: numb
     transformHeader: (h) => h.trim().toLowerCase(),
   });
 
+  // Check the header once: a missing column leaves every value undefined, which the
+  // row loop would otherwise count as blank rows instead of reporting.
+  const columns = result.meta.fields ?? [];
+  const missing = REQUIRED_CSV_COLUMNS.filter((column) => !columns.includes(column));
+  if (missing.length > 0) {
+    throw new ApiError(
+      'VALIDATION_ERROR',
+      `CSV is missing required column${missing.length > 1 ? 's' : ''} ${missing.map((c) => `"${c}"`).join(', ')}`,
+      400,
+      { missingColumns: missing, details: 'Required columns: front, back. Optional: example' }
+    );
+  }
+
   const cards: RawCard[] = [];
   let skippedRows = 0;
 
-  for (const row of result.data) {
+  for (const [index, row] of result.data.entries()) {
     const front = row['front']?.trim() ?? '';
     const back = row['back']?.trim() ?? '';
 
@@ -50,17 +65,19 @@ function parseCsvContent(csvText: string): { cards: RawCard[]; skippedRows: numb
       continue;
     }
 
-    if (!('back' in row)) {
-      throw new ApiError('VALIDATION_ERROR', 'CSV is missing required column "back"', 400, {
-        details: 'Required columns: front, back. Optional: example',
-      });
-    }
-
-    cards.push({
+    const card = importCardSchema.safeParse({
       front,
       back,
       example: row['example']?.trim() || undefined,
     });
+    if (!card.success) {
+      // Row numbers are 1-based and count the header line, as spreadsheets show them.
+      throw new ApiError('VALIDATION_ERROR', `Invalid card on row ${index + 2}`, 400, {
+        row: index + 2,
+        details: card.error.flatten(),
+      });
+    }
+    cards.push(card.data);
   }
 
   return { cards, skippedRows };

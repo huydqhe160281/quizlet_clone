@@ -9,6 +9,15 @@ type RateLimitOptions = {
 type RateLimitEntry = { count: number; resetAt: number };
 type RateLimitDecision = { limited: boolean; retryAfterSec: number };
 
+/**
+ * E2E runs register many accounts from one IP and would hit the auth limits. The
+ * Playwright web server sets this flag; it is ignored on a Vercel production deploy so a
+ * stray env var cannot switch limits off for real users.
+ */
+export function rateLimitsDisabledForTests(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.UNSAFE_DISABLE_RATE_LIMIT_FOR_E2E === '1' && env.VERCEL_ENV !== 'production';
+}
+
 export const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions) => {
   const cache = new LRUCache<string, RateLimitEntry>({ max: 5000 });
 
@@ -36,6 +45,9 @@ export const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions)
 
   return {
     async check(key: string): Promise<RateLimitDecision> {
+      if (rateLimitsDisabledForTests()) {
+        return { limited: false, retryAfterSec: 0 };
+      }
       const now = new Date();
       const nextResetAt = new Date(now.getTime() + intervalMs);
 

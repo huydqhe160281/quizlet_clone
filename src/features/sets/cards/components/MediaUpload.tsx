@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 
 type MediaUploadProps = {
   fileType: 'image' | 'audio';
@@ -36,8 +37,8 @@ export function MediaUpload({ fileType, onUploaded }: MediaUploadProps) {
     });
 
     if (!presignedResponse.ok) {
-      const payload = (await presignedResponse.json()) as { message?: string };
-      setError(payload.message ?? t('cards.uploadRequestFailed'));
+      const payload = (await presignedResponse.json()) as { error?: string; message?: string };
+      setError(apiErrorMessage(t, payload, 'cards.uploadRequestFailed'));
       setLoading(false);
       return;
     }

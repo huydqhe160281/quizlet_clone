@@ -28,3 +28,13 @@ describe('password helpers', () => {
     expect(hashResetToken(token)).not.toBe(token);
   });
 });
+
+describe('burnPasswordCheck', () => {
+  it('always fails but spends a real bcrypt comparison', async () => {
+    const { burnPasswordCheck } = await import('@/server/auth/password');
+    const started = performance.now();
+    await expect(burnPasswordCheck('anything')).resolves.toBe(false);
+    // Cost 12 bcrypt is tens of milliseconds at minimum; an early return is ~0 ms.
+    expect(performance.now() - started).toBeGreaterThan(20);
+  });
+});

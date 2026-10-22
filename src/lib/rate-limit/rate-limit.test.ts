@@ -47,3 +47,19 @@ describe('createRateLimiter', () => {
     expect((await limiter.check('k')).limited).toBe(true);
   });
 });
+
+describe('rateLimitsDisabledForTests', () => {
+  it('only honours the E2E flag outside a Vercel production deploy', async () => {
+    const { rateLimitsDisabledForTests } = await import('@/lib/rate-limit/rate-limit');
+    expect(rateLimitsDisabledForTests({ UNSAFE_DISABLE_RATE_LIMIT_FOR_E2E: '1' } as never)).toBe(
+      true
+    );
+    expect(
+      rateLimitsDisabledForTests({
+        UNSAFE_DISABLE_RATE_LIMIT_FOR_E2E: '1',
+        VERCEL_ENV: 'production',
+      } as never)
+    ).toBe(false);
+    expect(rateLimitsDisabledForTests({} as never)).toBe(false);
+  });
+});

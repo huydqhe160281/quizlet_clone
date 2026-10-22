@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-const uniqueEmail = () => `e2e-${Date.now()}@example.com`;
+import { uniqueEmail } from '../helpers/auth';
 
 test.describe('auth login', () => {
   test('registers and signs in with email/password', async ({ page, request }) => {

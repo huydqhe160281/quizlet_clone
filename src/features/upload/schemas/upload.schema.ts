@@ -6,6 +6,21 @@ export const AUDIO_MAX_BYTES = 10_485_760;
 const imageMimeTypes = ['image/jpeg', 'image/png', 'image/webp'] as const;
 const audioMimeTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'] as const;
 
+/** Every MIME type the media bucket accepts (mirrored in its `allowedMimeTypes`). */
+export const MEDIA_MIME_TYPES = [...imageMimeTypes, ...audioMimeTypes] as const;
+/** Bucket-wide size cap; the per-type limits above are checked before signing. */
+export const MEDIA_MAX_BYTES = Math.max(IMAGE_MAX_BYTES, AUDIO_MAX_BYTES);
+
+/** Stored object extension, derived from the validated MIME type (never the file name). */
+export const MEDIA_EXTENSION_BY_MIME: Record<(typeof MEDIA_MIME_TYPES)[number], string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'audio/mpeg': 'mp3',
+  'audio/wav': 'wav',
+  'audio/ogg': 'ogg',
+};
+
 export const presignedUrlSchema = z.object({
   fileType: z.enum(['image', 'audio']),
   fileName: z.string().trim().min(1).max(255),

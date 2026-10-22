@@ -100,3 +100,41 @@ describe('ollama-env', () => {
     expect(resolveOllamaModel('development')).toBe('llama3');
   });
 });
+
+describe('normalizeAiFlashcardOutput', () => {
+  it('trims, clips to the shared limits and drops empty cards', async () => {
+    const { normalizeAiFlashcardOutput } =
+      await import('@/features/sets/schemas/ai-generate.schema');
+    const { CARD_FRONT_MAX } = await import('@/features/sets/cards/schemas/card.schema');
+    const { SET_TITLE_MAX } = await import('@/features/sets/schemas/set.schema');
+
+    const result = normalizeAiFlashcardOutput({
+      title: 't'.repeat(SET_TITLE_MAX + 50),
+      description: '  desc  ',
+      cards: [
+        { front: '  term ', back: ' def ', example: '   ' },
+        { front: 'f'.repeat(CARD_FRONT_MAX + 10), back: 'b' },
+        { front: '   ', back: 'orphan' },
+      ],
+    });
+
+    expect(result?.title).toHaveLength(SET_TITLE_MAX);
+    expect(result?.description).toBe('desc');
+    expect(result?.cards).toEqual([
+      { front: 'term', back: 'def' },
+      { front: 'f'.repeat(CARD_FRONT_MAX), back: 'b' },
+    ]);
+  });
+
+  it('returns null when no card survives', async () => {
+    const { normalizeAiFlashcardOutput } =
+      await import('@/features/sets/schemas/ai-generate.schema');
+    expect(
+      normalizeAiFlashcardOutput({
+        title: 'x',
+        description: '',
+        cards: [{ front: ' ', back: 'b' }],
+      })
+    ).toBeNull();
+  });
+});

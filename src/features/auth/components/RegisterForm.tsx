@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleButton } from '@/features/auth/components/GoogleButton';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 
 type RegisterFormProps = {
   googleAuthEnabled?: boolean;
@@ -37,7 +38,7 @@ export function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
 
     if (!response.ok) {
       const payload = (await response.json()) as { error?: string; message?: string };
-      setError(payload.message ?? payload.error ?? t('auth.registerFailed'));
+      setError(apiErrorMessage(t, payload, 'auth.registerFailed'));
       setLoading(false);
       return;
     }

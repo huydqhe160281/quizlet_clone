@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
-
-const uniqueEmail = () => `study-${Date.now()}@example.com`;
+import { uniqueEmail } from '../helpers/auth';
 
 test.describe('flashcard study mode', () => {
   test('flips card and navigates with keyboard', async ({ page }) => {

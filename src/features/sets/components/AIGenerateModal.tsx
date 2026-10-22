@@ -21,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 
 const DEFAULT_CARD_COUNT = 15;
 
@@ -208,10 +209,9 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
       if (!response.ok) {
         setStep('form');
         const message =
-          payload.message ??
-          (response.status === 429
+          response.status === 429
             ? t('aiGenerate.errorRateLimit')
-            : t('aiGenerate.errorGenerateFailed'));
+            : apiErrorMessage(t, payload, 'aiGenerate.errorGenerateFailed');
         toast.error(message);
         return;
       }

@@ -9,8 +9,7 @@ import type {
 import { MAX_SPLIT_PARTS } from '@/features/sets/schemas/set.schema';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
-
-const SET_TITLE_MAX = 200;
+import { SET_TITLE_MAX } from '@/features/sets/schemas/set.schema';
 
 export const SPLIT_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 30_000 } as const;
 

@@ -11,20 +11,22 @@ Flashcard app (Quizlet clone): Next.js 15 App Router + React 19, TypeScript, Pri
 ```bash
 pnpm dev                      # dev server — must be port 3000 (NextAuth cookies are configured for it)
 pnpm build                    # runs generate:guide, then next build
-pnpm lint                     # next lint (ESLint flat config: eslint.config.mjs)
+pnpm lint                     # eslint . (flat config: eslint.config.mjs)
 pnpm typecheck                # tsc --noEmit
 pnpm test                     # vitest run (unit/integration)
 pnpm vitest run src/features/study/lib/sm2.test.ts   # single test file
 pnpm vitest run -t "test name"                       # filter by test name
 pnpm test:coverage            # enforces per-file thresholds (see vitest.config.ts)
-CI=1 pnpm test:e2e            # Playwright; build first — it serves `pnpm start` on port 3002
+CI=1 pnpm test:e2e            # Playwright; build first — serves `pnpm start` on 3002 with English locale,
+                              # auth rate limits off (UNSAFE_DISABLE_RATE_LIMIT_FOR_E2E) and E2E_DATABASE_URL if set
 pnpm db:migrate               # prisma migrate dev (uses DIRECT_DATABASE_URL, port 5432)
 pnpm db:generate              # prisma generate (also runs on postinstall)
 pnpm generate:guide           # regenerate src/generated/guide-config.json (committed)
 pnpm generate:guide:check     # fails if the committed guide config is stale
+node --env-file=.env scripts/configure-media-bucket.mjs  # apply upload type/size limits to the Supabase bucket
 ```
 
-Pre-commit hook runs `lint-staged` (eslint --fix + prettier). `prisma migrate dev` generates `DROP INDEX` for the raw-SQL search indexes `sets_search_idx` / `sets_title_prefix_idx` (they can't be declared in `schema.prisma`); delete those lines from the generated migration — `scripts/search-index-guard.test.ts` fails if a migration leaves them dropped. `DATABASE_URL` is the pooled PgBouncer URL (port 6543); `DIRECT_DATABASE_URL` is for migrations.
+Never rename a migration folder: Prisma records applied names in `_prisma_migrations`, so a rename makes `migrate deploy` treat it as new. Pre-commit hook runs `lint-staged` (eslint --fix + prettier). `prisma migrate dev` generates `DROP INDEX` for the raw-SQL search indexes `sets_search_idx` / `sets_title_prefix_idx` (they can't be declared in `schema.prisma`); delete those lines from the generated migration — `scripts/search-index-guard.test.ts` fails if a migration leaves them dropped. `DATABASE_URL` is the pooled PgBouncer URL (port 6543); `DIRECT_DATABASE_URL` is for migrations.
 
 ## Architecture
 

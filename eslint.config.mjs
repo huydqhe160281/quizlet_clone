@@ -8,7 +8,7 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
-export default [
+const config = [
   {
     ignores: [
       '.next/**',
@@ -47,7 +47,7 @@ export default [
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       ...Object.fromEntries(
-        Object.entries(jsxA11yPlugin.configs.recommended.rules).map(([rule]) => [rule, 'warn']),
+        Object.entries(jsxA11yPlugin.configs.recommended.rules).map(([rule]) => [rule, 'warn'])
       ),
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
@@ -67,3 +67,5 @@ export default [
   },
   eslintConfigPrettier,
 ];
+
+export default config;

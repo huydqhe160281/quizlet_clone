@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { isSafeInternalPath } from '@/lib/navigation/safe-path';
 
 type InlineSegment =
   | { kind: 'text'; value: string }
@@ -15,13 +16,7 @@ const MARKDOWN_LINK = /\[([^\]]+)\]\(((?:[^()]|\([^)]*\))*)\)/g;
 const BOLD = /\*\*([^*]+)\*\*/g;
 
 function isSafeInternalHref(href: string): boolean {
-  return (
-    href.startsWith('/') &&
-    !href.includes('://') &&
-    !href.toLowerCase().startsWith('javascript:') &&
-    !href.includes('[') &&
-    !href.includes(']')
-  );
+  return isSafeInternalPath(href) && !href.includes('[') && !href.includes(']');
 }
 
 export function parseInlineMarkdown(text: string): InlineSegment[] {

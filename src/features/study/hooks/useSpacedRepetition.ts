@@ -58,28 +58,28 @@ export function useSubmitReview() {
       }
 
       if (shouldEnqueueReview(response.status) && userId) {
-        await enqueueMutation(
+        const queued = await enqueueMutation(
           userId,
           'srs-review',
           { cardId, grade },
           clientMutationId,
           clientTimestamp
         );
-        return { status: 'queued' };
+        return queued ? { status: 'queued' } : { status: 'error' };
       }
 
       // 404/403/429/other client errors: do not invent a durable retry channel.
       return { status: 'error', httpStatus: response.status };
     } catch {
       if (userId) {
-        await enqueueMutation(
+        const queued = await enqueueMutation(
           userId,
           'srs-review',
           { cardId, grade },
           clientMutationId,
           clientTimestamp
         );
-        return { status: 'queued' };
+        return queued ? { status: 'queued' } : { status: 'error' };
       }
       return { status: 'error' };
     }

@@ -26,7 +26,8 @@
     "register": "Sign up",
     "getStarted": "Get started",
     "signOut": "Sign out",
-    "language": "Language"
+    "language": "Language",
+    "userMenu": "Account menu"
   },
   "language": {
     "vi": "Tiếng Việt",
@@ -117,5 +118,32 @@
       "drawShort": "Write characters",
       "drawDesc": "Practice Chinese characters with interactive stroke guidance."
     }
+  },
+  "errorPage": {
+    "title": "Something went wrong",
+    "body": "This page hit an error. Your saved progress is safe.",
+    "retry": "Try again",
+    "home": "Go to dashboard",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for does not exist or was moved.",
+    "reloading": "A new version is available. Reloading…"
+  },
+  "apiErrors": {
+    "VALIDATION_ERROR": "Some of the information is invalid. Please check and try again.",
+    "NOT_FOUND": "We could not find that item. It may have been deleted.",
+    "FORBIDDEN": "You do not have permission to do that.",
+    "UNAUTHORIZED": "Please sign in again to continue.",
+    "RATE_LIMITED": "Too many requests. Please wait a moment and try again.",
+    "TOKEN_INVALID": "This link is invalid or has already been used.",
+    "TOKEN_EXPIRED": "This link has expired. Please request a new one.",
+    "FILE_TOO_LARGE": "The file is too large.",
+    "INVALID_MIME_TYPE": "This file type is not supported.",
+    "INVALID_ENCODING": "The file must be UTF-8 encoded.",
+    "CARD_LIMIT_EXCEEDED": "Too many cards in one import (maximum 2000).",
+    "EMAIL_ALREADY_EXISTS": "This email is already registered. Try signing in instead.",
+    "STORAGE_NOT_CONFIGURED": "Media upload is not available right now.",
+    "STORAGE_ERROR": "The file could not be uploaded. Please try again.",
+    "AI_GENERATION_FAILED": "The AI could not create cards this time. Please try again.",
+    "INTERNAL_ERROR": "Something went wrong on our side. Please try again."
   }
 }

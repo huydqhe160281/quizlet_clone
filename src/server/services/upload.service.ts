@@ -2,13 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
 import { ApiError } from '@/lib/api-error';
 import {
+  MEDIA_EXTENSION_BY_MIME,
   validateUploadRequest,
   type PresignedUrlInput,
 } from '@/features/upload/schemas/upload.schema';
 import { env } from '@/config/env';
-
-const sanitizeFileName = (fileName: string) =>
-  fileName.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 200);
 
 export function validatePresignedUpload(input: PresignedUrlInput) {
   const validation = validateUploadRequest(input);
@@ -24,12 +22,11 @@ export async function generatePresignedUrl(userId: string, input: PresignedUrlIn
     throw new ApiError('STORAGE_NOT_CONFIGURED', 'Media storage is not configured', 503);
   }
 
-  const safeName = sanitizeFileName(input.fileName);
-  const extension = safeName.includes('.')
-    ? safeName.split('.').pop()
-    : input.fileType === 'image'
-      ? 'jpg'
-      : 'mp3';
+  // The name is client-controlled (`x.html`), so the extension comes from the MIME type
+  // that passed validation. The bucket's allowedMimeTypes / fileSizeLimit (see
+  // scripts/configure-media-bucket.mjs) enforce type and size on the upload itself,
+  // since Supabase signed upload URLs cannot be bound to either.
+  const extension = MEDIA_EXTENSION_BY_MIME[input.mimeType as keyof typeof MEDIA_EXTENSION_BY_MIME];
 
   const path = `${userId}/${input.fileType}/${randomUUID()}.${extension}`;
   const supabase = createClient(env.supabaseUrl, env.supabaseServiceRoleKey);

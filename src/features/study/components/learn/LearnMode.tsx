@@ -10,6 +10,7 @@ import { StudySessionError } from '@/features/study/components/shared/StudySessi
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { speakStudyText } from '@/features/study/components/flashcard/FlashcardViewer';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
+import { hasKana } from '@/features/study/lib/speech-lang';
 import { resolveLearnMcq } from '@/features/study/lib/test-generator';
 import {
   studyContinueKey,
@@ -34,6 +35,10 @@ type LearnModeProps = {
 export function LearnMode({ setId }: LearnModeProps) {
   const t = useTranslations();
   const study = useStudySession(setId, 'LEARN');
+  const japaneseSession = useMemo(
+    () => study.cards.some((card) => hasKana(`${card.front}${card.back}`)),
+    [study.cards]
+  );
   const [feedback, setFeedback] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [answer, setAnswer] = useState('');
@@ -255,7 +260,7 @@ export function LearnMode({ setId }: LearnModeProps) {
           {isMultipleChoice && (
             <button
               type="button"
-              onClick={() => speakStudyText(mcPrompt)}
+              onClick={() => speakStudyText(mcPrompt, undefined, { japanese: japaneseSession })}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80"
             >
               <Volume2 className="h-4 w-4" />

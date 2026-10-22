@@ -26,7 +26,8 @@
     "register": "Đăng ký",
     "getStarted": "Bắt đầu",
     "signOut": "Đăng xuất",
-    "language": "Ngôn ngữ"
+    "language": "Ngôn ngữ",
+    "userMenu": "Menu tài khoản"
   },
   "language": {
     "vi": "Tiếng Việt",
@@ -117,5 +118,32 @@
       "drawShort": "Viết chữ",
       "drawDesc": "Luyện viết ký tự Hán với hướng dẫn nét bút tương tác."
     }
+  },
+  "errorPage": {
+    "title": "Đã có lỗi xảy ra",
+    "body": "Trang này gặp lỗi. Tiến độ đã lưu của bạn vẫn an toàn.",
+    "retry": "Thử lại",
+    "home": "Về trang tổng quan",
+    "notFoundTitle": "Không tìm thấy trang",
+    "notFoundBody": "Trang bạn tìm không tồn tại hoặc đã được chuyển đi.",
+    "reloading": "Đã có phiên bản mới. Đang tải lại…"
+  },
+  "apiErrors": {
+    "VALIDATION_ERROR": "Một số thông tin không hợp lệ. Vui lòng kiểm tra và thử lại.",
+    "NOT_FOUND": "Không tìm thấy mục này. Có thể nó đã bị xóa.",
+    "FORBIDDEN": "Bạn không có quyền thực hiện thao tác này.",
+    "UNAUTHORIZED": "Vui lòng đăng nhập lại để tiếp tục.",
+    "RATE_LIMITED": "Bạn thao tác quá nhanh. Vui lòng đợi một chút rồi thử lại.",
+    "TOKEN_INVALID": "Liên kết không hợp lệ hoặc đã được sử dụng.",
+    "TOKEN_EXPIRED": "Liên kết đã hết hạn. Vui lòng yêu cầu liên kết mới.",
+    "FILE_TOO_LARGE": "Tệp quá lớn.",
+    "INVALID_MIME_TYPE": "Loại tệp này không được hỗ trợ.",
+    "INVALID_ENCODING": "Tệp phải được mã hóa UTF-8.",
+    "CARD_LIMIT_EXCEEDED": "Quá nhiều thẻ trong một lần nhập (tối đa 2000).",
+    "EMAIL_ALREADY_EXISTS": "Email này đã được đăng ký. Hãy thử đăng nhập.",
+    "STORAGE_NOT_CONFIGURED": "Hiện chưa thể tải tệp lên.",
+    "STORAGE_ERROR": "Không tải được tệp lên. Vui lòng thử lại.",
+    "AI_GENERATION_FAILED": "AI chưa tạo được thẻ lần này. Vui lòng thử lại.",
+    "INTERNAL_ERROR": "Hệ thống gặp lỗi. Vui lòng thử lại."
   }
 }

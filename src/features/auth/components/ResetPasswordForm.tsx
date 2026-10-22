@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 
 export function ResetPasswordForm() {
   const t = useTranslations();
@@ -45,7 +46,7 @@ export function ResetPasswordForm() {
 
     if (!response.ok) {
       const payload = (await response.json()) as { message?: string; error?: string };
-      setError(payload.message ?? payload.error ?? t('auth.resetFailed'));
+      setError(apiErrorMessage(t, payload, 'auth.resetFailed'));
       return;
     }
 

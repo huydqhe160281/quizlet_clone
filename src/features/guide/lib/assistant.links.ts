@@ -1,3 +1,5 @@
+import { isSafeInternalPath } from '@/lib/navigation/safe-path';
+
 const MARKDOWN_LINK = /\[([^\]]+)\]\(((?:[^()]|\([^)]*\))*)\)/g;
 
 function stripUnsafeMarkdownLinks(text: string): string {
@@ -22,11 +24,8 @@ export function sanitizeAssistantLinks(text: string, allowedPaths: readonly stri
     MARKDOWN_LINK,
     (match, label: string, href: string) => {
       const normalized = href.split('?')[0] ?? href;
-      if (href.startsWith('/') && !href.includes('://') && allowed.has(normalized)) {
+      if (isSafeInternalPath(href) && allowed.has(normalized)) {
         return match;
-      }
-      if (!href.startsWith('/')) {
-        return label;
       }
       return label;
     }

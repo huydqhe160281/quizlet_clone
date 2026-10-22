@@ -1,4 +1,5 @@
 import { parseEmbeddedMcq, shuffleOptions } from '@/features/study/lib/mcq-parser';
+import { answerKey } from '@/lib/utils/fuzzy';
 
 export type StudyCardInput = {
   id: string;
@@ -38,16 +39,34 @@ export type LearnMcqView = {
   embedded: boolean;
 };
 
+/**
+ * Up to `count` wrong options. Cards often share an answer (synonyms, A/B/C/D keys), so
+ * candidates equal to the correct answer, or to each other, are skipped: otherwise an
+ * option list can show the right answer twice or offer a "wrong" option that is right.
+ */
+function pickDistinct(candidates: string[], correct: string, count: number): string[] {
+  const seen = new Set([answerKey(correct)]);
+  const picked: string[] = [];
+  for (const candidate of shuffleOptions(candidates)) {
+    const key = answerKey(candidate);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    picked.push(candidate);
+    if (picked.length === count) break;
+  }
+  return picked;
+}
+
 const pickDistractors = (cards: StudyCardInput[], correctId: string, count: number) => {
+  const correct = cards.find((card) => card.id === correctId)?.back ?? '';
   const pool = cards.filter((card) => card.id !== correctId).map((card) => card.back);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return pickDistinct(pool, correct, count);
 };
 
 const pickFrontDistractors = (cards: StudyCardInput[], correctId: string, count: number) => {
+  const correct = cards.find((card) => card.id === correctId)?.front ?? '';
   const pool = cards.filter((item) => item.id !== correctId).map((item) => item.front);
-  const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return pickDistinct(pool, correct, count);
 };
 
 /** Resolve MC prompt/options, preferring embedded a/b/c/d options in front when present. */
@@ -107,13 +126,15 @@ export function generateTestQuestions(cards: StudyCardInput[]): TestQuestion[] {
     }
 
     if (cards.length >= 2 && index % 3 === 1) {
-      const other = cards[(index + 1) % cards.length];
-      const isPairCorrect = Math.random() >= 0.5;
+      // A "false" pair needs a back that really differs from this card's; when every
+      // other card has the same answer, the pair can only be shown as true.
+      const [wrongBack] = pickDistractors(cards, card.id, 1);
+      const isPairCorrect = wrongBack === undefined || Math.random() >= 0.5;
       return {
         type: 'tf',
         cardId: card.id,
         front: card.front,
-        shownBack: isPairCorrect ? card.back : other.back,
+        shownBack: isPairCorrect || wrongBack === undefined ? card.back : wrongBack,
         isPairCorrect,
       };
     }

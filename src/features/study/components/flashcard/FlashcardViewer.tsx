@@ -5,6 +5,7 @@ import { Volume2 } from 'lucide-react';
 import { useState } from 'react';
 import { CardMediaImage } from '@/components/shared/CardMediaImage';
 import { Button } from '@/components/ui/button';
+import { guessSpeechLang, type SpeechLangHints } from '@/features/study/lib/speech-lang';
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
@@ -154,12 +155,13 @@ export function useFlipState() {
   return { isFlipped, flip, resetFlip };
 }
 
-export function speakStudyText(text: string, lang = 'vi-VN') {
+/** Reads `text` aloud; the voice language is guessed from its script unless given. */
+export function speakStudyText(text: string, lang?: string, hints?: SpeechLangHints) {
   if (!('speechSynthesis' in window) || !text.trim()) {
     return;
   }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = lang;
+  utterance.lang = lang ?? guessSpeechLang(text, hints);
   window.speechSynthesis.speak(utterance);
 }

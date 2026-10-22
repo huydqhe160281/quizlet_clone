@@ -2,10 +2,15 @@ import { z } from 'zod';
 
 export const visibilitySchema = z.enum(['PRIVATE', 'PUBLIC']);
 
+/** Shared by the set form, import and AI generation so every path stores the same shape. */
+export const SET_TITLE_MAX = 200;
+export const SET_DESCRIPTION_MAX = 1000;
+export const SET_LANGUAGE_MAX = 10;
+
 export const createSetSchema = z.object({
-  title: z.string().trim().min(1).max(200),
-  description: z.string().trim().max(1000).optional(),
-  language: z.string().trim().max(10).optional(),
+  title: z.string().trim().min(1).max(SET_TITLE_MAX),
+  description: z.string().trim().max(SET_DESCRIPTION_MAX).optional(),
+  language: z.string().trim().max(SET_LANGUAGE_MAX).optional(),
   visibility: visibilitySchema.default('PRIVATE'),
   tagIds: z.array(z.string().cuid()).max(20).optional(),
 });

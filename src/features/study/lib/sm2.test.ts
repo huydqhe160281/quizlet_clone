@@ -47,3 +47,20 @@ describe('SM-2 algorithm', () => {
     expect(result.easeFactor).toBe(EASE_FACTOR_MIN);
   });
 });
+
+describe('GOOD after repeated HARD', () => {
+  it('never schedules the card sooner than HARD would have', () => {
+    let state = { repetitions: 1, easeFactor: 2.5, interval: 1 };
+    for (let i = 0; i < 6; i += 1) {
+      state = calculateSm2(state, 1);
+    }
+    expect(state.repetitions).toBe(1);
+    const hardAgain = calculateSm2(state, 1).interval;
+    const good = calculateSm2(state, 2).interval;
+    const easy = calculateSm2(state, 3).interval;
+
+    expect(good).toBeGreaterThanOrEqual(hardAgain);
+    expect(easy).toBeGreaterThanOrEqual(good);
+    expect(good).toBeGreaterThan(state.interval);
+  });
+});

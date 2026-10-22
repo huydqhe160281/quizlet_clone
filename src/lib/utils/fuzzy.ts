@@ -6,6 +6,9 @@ export const FUZZY_THRESHOLD = 0.85;
 const normalize = (value: string): string =>
   value.trim().replace(/\s+/g, ' ').toLowerCase().normalize('NFC');
 
+/** Key under which two answers count as the same text (case/whitespace-insensitive). */
+export const answerKey = normalize;
+
 const stripMarks = (value: string): string => value.normalize('NFD').replace(/\p{M}/gu, '');
 
 const jaro = (s1: string, s2: string): number => {

@@ -96,7 +96,9 @@ describe('TodayPageClient', () => {
       refetch,
     });
     wrap(<TodayPageClient />);
-    expect(screen.getByText('boom')).toBeInTheDocument();
+    // The raw error text is developer English; the panel shows the localized message.
+    expect(screen.getByText('todayPage.loadFailed')).toBeInTheDocument();
+    expect(screen.queryByText('boom')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ui.retry' })).toBeInTheDocument();
   });
 

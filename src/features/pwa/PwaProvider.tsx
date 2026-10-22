@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Serwist } from '@serwist/window';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { shouldRegisterServiceWorker } from '@/features/pwa/sw-policy';
+import { activateWaitingWorker } from '@/features/pwa/update-prompt';
 
 type PwaProviderProps = {
   children: ReactNode;
@@ -50,10 +51,7 @@ export function PwaProvider({ children }: PwaProviderProps) {
         duration: Infinity,
         action: {
           label: translate('pwa.updateReload'),
-          onClick: () => {
-            serwist.messageSkipWaiting();
-            window.location.reload();
-          },
+          onClick: () => activateWaitingWorker(serwist),
         },
       });
     };

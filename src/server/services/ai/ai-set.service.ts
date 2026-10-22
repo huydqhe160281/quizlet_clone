@@ -3,6 +3,7 @@ import { generateText, Output } from 'ai';
 import type { AiGenerateInput } from '@/features/sets/schemas/ai-generate.schema';
 import {
   buildAiFlashcardOutputSchema,
+  normalizeAiFlashcardOutput,
   trimAiFlashcardOutput,
 } from '@/features/sets/schemas/ai-generate.schema';
 import { ApiError } from '@/lib/api-error';
@@ -70,7 +71,11 @@ export async function generateAiSet(userId: string, input: AiGenerateInput) {
     if (!parsed.success) {
       throw parsed.error;
     }
-    generated = parsed.data;
+    const normalized = normalizeAiFlashcardOutput(parsed.data);
+    if (!normalized) {
+      throw new Error('AI returned no usable cards');
+    }
+    generated = normalized;
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {
       console.error('[generateAiSet] All AI providers failed:', error);

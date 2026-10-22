@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import { after } from 'next/server';
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { forgotPasswordSchema } from '@/features/auth/schemas/auth.schema';
@@ -44,27 +45,31 @@ export const POST = withErrorHandler(async (req) => {
   let devResetUrl: string | undefined;
 
   if (user) {
-    const token = randomBytes(32).toString('hex');
-    const tokenHash = hashResetToken(token);
-    const expires = new Date(Date.now() + 60 * 60 * 1000);
+    const issueReset = async () => {
+      const token = randomBytes(32).toString('hex');
+      const tokenHash = hashResetToken(token);
+      const expires = new Date(Date.now() + 60 * 60 * 1000);
 
-    await prisma.verificationToken.deleteMany({ where: { identifier: email } });
-    await prisma.verificationToken.create({
-      data: { identifier: email, token: tokenHash, expires },
-    });
-
-    const resetUrl = `${env.authUrl}/reset-password?token=${token}`;
-    const emailLocale = resolveEmailLocale(user.preferredLocale, locale);
+      await prisma.verificationToken.deleteMany({ where: { identifier: email } });
+      await prisma.verificationToken.create({
+        data: { identifier: email, token: tokenHash, expires },
+      });
+      return `${env.authUrl}/reset-password?token=${token}`;
+    };
 
     if (env.resendApiKey) {
-      try {
-        await sendPasswordResetEmail(email, resetUrl, emailLocale);
-      } catch (error) {
-        // Same response either way: a send failure must not reveal that the account exists.
-        console.error('[auth] failed to send password reset email', error);
-      }
+      // Token writes and the email send run after the response, so an existing account
+      // does not answer measurably slower than an unknown address.
+      const emailLocale = resolveEmailLocale(user.preferredLocale, locale);
+      after(async () => {
+        try {
+          await sendPasswordResetEmail(email, await issueReset(), emailLocale);
+        } catch (error) {
+          console.error('[auth] failed to send password reset email', error);
+        }
+      });
     } else if (env.nodeEnv !== 'production') {
-      devResetUrl = resetUrl;
+      devResetUrl = await issueReset();
     }
   }
 

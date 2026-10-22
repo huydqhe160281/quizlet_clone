@@ -20,9 +20,14 @@ type RecentSessionsProps = {
     completedAt: string | Date | null;
     set: { id: string; title: string };
   }>;
+  /**
+   * The user's preferred IANA zone. Without it the date is formatted in the server's zone
+   * during SSR and the browser's after hydration, which can disagree near midnight.
+   */
+  timeZone?: string;
 };
 
-function formatSessionDate(value: string | Date | null, locale: string) {
+function formatSessionDate(value: string | Date | null, locale: string, timeZone: string) {
   if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) return null;
@@ -30,10 +35,11 @@ function formatSessionDate(value: string | Date | null, locale: string) {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone,
   }).format(date);
 }
 
-export function RecentSessions({ sessions }: RecentSessionsProps) {
+export function RecentSessions({ sessions, timeZone = 'UTC' }: RecentSessionsProps) {
   const t = useTranslations();
   const locale = useLocale();
 
@@ -54,7 +60,7 @@ export function RecentSessions({ sessions }: RecentSessionsProps) {
           session.progress ?? (session.totalCards > 0 ? answeredCount / session.totalCards : 0);
         const progressPercent = Math.round(Math.min(1, Math.max(0, progress)) * 100);
         const isComplete = Boolean(session.completedAt);
-        const dateLabel = formatSessionDate(session.completedAt, locale);
+        const dateLabel = formatSessionDate(session.completedAt, locale, timeZone);
         const accuracy = session.accuracy ?? session.score;
         const accuracyPercent =
           accuracy != null ? Math.round(Math.min(1, Math.max(0, accuracy)) * 100) : null;

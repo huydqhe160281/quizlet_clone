@@ -6,7 +6,7 @@ import { loginSchema } from '@/features/auth/schemas/auth.schema';
 import { env } from '@/config/env';
 import { authConfig } from '@/server/auth/auth.config';
 import { prisma } from '@/server/db';
-import { verifyPassword } from '@/server/auth/password';
+import { burnPasswordCheck, verifyPassword } from '@/server/auth/password';
 import { applySessionVersion } from '@/server/auth/session-version';
 
 const googleProvider =
@@ -83,6 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
 
         if (!user?.passwordHash) {
+          await burnPasswordCheck(parsed.data.password);
           return null;
         }
 

@@ -3,6 +3,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { reloadOnceForChunkError } from '@/lib/chunk-error';
 
 type ErrorBoundaryProps = {
   children: ReactNode;
@@ -37,6 +38,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    // A stale tab after a deploy fails to load lazy chunks; one reload fixes it.
+    if (reloadOnceForChunkError(error)) return;
     console.error(error, info);
   }
 

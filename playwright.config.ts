@@ -13,6 +13,9 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    // Specs match English copy; the app picks the locale from Accept-Language (default vi).
+    locale: 'en-US',
+    extraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
@@ -24,6 +27,17 @@ export default defineConfig({
       ...process.env,
       AUTH_URL: baseURL,
       NEXTAUTH_URL: baseURL,
+      // Every spec registers a fresh account from 127.0.0.1; auth limits (5/min) would 429.
+      UNSAFE_DISABLE_RATE_LIMIT_FOR_E2E: '1',
+      // Point E2E at a disposable database: specs create users and sets that are never
+      // cleaned up. Without E2E_DATABASE_URL they write to the DATABASE_URL in .env.
+      ...(process.env.E2E_DATABASE_URL
+        ? {
+            DATABASE_URL: process.env.E2E_DATABASE_URL,
+            DIRECT_DATABASE_URL:
+              process.env.E2E_DIRECT_DATABASE_URL ?? process.env.E2E_DATABASE_URL,
+          }
+        : {}),
     },
   },
 });

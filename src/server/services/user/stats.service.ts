@@ -170,6 +170,7 @@ export async function getStats(userId: string) {
     totalSets,
     totalCards,
     dueToday: dueCount,
+    preferredTimezone: stats.preferredTimezone,
   };
 }
 

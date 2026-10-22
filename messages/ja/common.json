@@ -1,5 +1,7 @@
 {
-  "app": { "name": "QuizFree" },
+  "app": {
+    "name": "QuizFree"
+  },
   "greeting": "こんにちは {name}",
   "seo": {
     "title": "QuizFree — 無料の学習・試験対策",
@@ -24,7 +26,8 @@
     "register": "登録",
     "getStarted": "はじめる",
     "signOut": "ログアウト",
-    "language": "言語"
+    "language": "言語",
+    "userMenu": "アカウントメニュー"
   },
   "language": {
     "vi": "Tiếng Việt",
@@ -115,5 +118,32 @@
       "drawShort": "文字書き",
       "drawDesc": "筆順ガイド付きで漢字の書き方を練習します。"
     }
+  },
+  "errorPage": {
+    "title": "エラーが発生しました",
+    "body": "このページでエラーが発生しました。保存済みの進捗は失われていません。",
+    "retry": "再試行",
+    "home": "ダッシュボードへ",
+    "notFoundTitle": "ページが見つかりません",
+    "notFoundBody": "お探しのページは存在しないか、移動されました。",
+    "reloading": "新しいバージョンがあります。再読み込みしています…"
+  },
+  "apiErrors": {
+    "VALIDATION_ERROR": "入力内容に誤りがあります。確認してもう一度お試しください。",
+    "NOT_FOUND": "対象が見つかりません。削除された可能性があります。",
+    "FORBIDDEN": "この操作を行う権限がありません。",
+    "UNAUTHORIZED": "続けるには再度ログインしてください。",
+    "RATE_LIMITED": "リクエストが多すぎます。しばらく待ってから再試行してください。",
+    "TOKEN_INVALID": "このリンクは無効か、すでに使用されています。",
+    "TOKEN_EXPIRED": "このリンクは期限切れです。新しいリンクをリクエストしてください。",
+    "FILE_TOO_LARGE": "ファイルが大きすぎます。",
+    "INVALID_MIME_TYPE": "このファイル形式はサポートされていません。",
+    "INVALID_ENCODING": "ファイルはUTF-8でエンコードしてください。",
+    "CARD_LIMIT_EXCEEDED": "一度にインポートできるカードは最大2000枚です。",
+    "EMAIL_ALREADY_EXISTS": "このメールアドレスは登録済みです。ログインしてください。",
+    "STORAGE_NOT_CONFIGURED": "現在ファイルをアップロードできません。",
+    "STORAGE_ERROR": "ファイルをアップロードできませんでした。再試行してください。",
+    "AI_GENERATION_FAILED": "AIがカードを作成できませんでした。再試行してください。",
+    "INTERNAL_ERROR": "システムエラーが発生しました。再試行してください。"
   }
 }

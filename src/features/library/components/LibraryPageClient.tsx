@@ -41,7 +41,6 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
     data,
     isLoading,
     isError,
-    error,
     refetch,
     isFetching,
     fetchNextPage,
@@ -86,12 +85,7 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
         ))}
       </div>
       {isLoading && <p className="text-sm text-muted-foreground">{t('library.loading')}</p>}
-      {isError && (
-        <QueryErrorPanel
-          message={error instanceof Error ? error.message : t('library.loadFailed')}
-          onRetry={refetch}
-        />
-      )}
+      {isError && <QueryErrorPanel message={t('library.loadFailed')} onRetry={refetch} />}
       {showEmpty && (
         <EmptyStatePanel
           title={t('library.emptyTitle')}

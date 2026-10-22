@@ -23,6 +23,8 @@ import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
+import { hasKana } from '@/features/study/lib/speech-lang';
+import { useStudyStore } from '@/features/study/store';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -52,6 +54,10 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   }, [study.currentRound, study.cards]);
 
   const currentCard = roundCards[study.currentIndex];
+  const speechHints = useMemo(
+    () => ({ japanese: study.cards.some((card) => hasKana(`${card.front}${card.back}`)) }),
+    [study.cards]
+  );
   const isLastCard = study.currentIndex >= roundCards.length - 1;
 
   const goNext = useCallback(async () => {
@@ -65,7 +71,9 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
     study.recordAnswer(currentCard.cardId, true);
 
     if (roundEnded) {
-      if (study.isComplete) {
+      // recordRoundAnswer updated the store synchronously; `study` is this render's
+      // snapshot, so read completion from the store or the final round never completes.
+      if (useStudyStore.getState().isComplete) {
         await study.completeSession(study.reviewedCount + 1);
       } else {
         setShowSummary(true);
@@ -105,8 +113,8 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
     if (!speechEnabled || !currentCard || isFlipped) {
       return;
     }
-    speakStudyText(currentCard.front, 'en-US');
-  }, [currentCard?.cardId, speechEnabled, isFlipped, currentCard]);
+    speakStudyText(currentCard.front, undefined, speechHints);
+  }, [currentCard?.cardId, speechEnabled, isFlipped, currentCard, speechHints]);
 
   useEffect(() => {
     if (autoplayTimerRef.current) {
@@ -121,7 +129,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
       if (!isFlipped) {
         flip();
         if (speechEnabled) {
-          speakStudyText(currentCard.back);
+          speakStudyText(currentCard.back, undefined, speechHints);
         }
       } else {
         void goNext();
@@ -133,7 +141,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         clearInterval(autoplayTimerRef.current);
       }
     };
-  }, [autoplay, currentCard, isFlipped, flip, goNext, speechEnabled]);
+  }, [autoplay, currentCard, isFlipped, flip, goNext, speechEnabled, speechHints]);
 
   if (study.isLoading) {
     return (
@@ -252,8 +260,8 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         isFlipped={isFlipped}
         onFlip={flip}
         speechEnabled={speechEnabled}
-        onSpeakFront={() => speakStudyText(currentCard.front, 'en-US')}
-        onSpeakBack={() => speakStudyText(currentCard.back)}
+        onSpeakFront={() => speakStudyText(currentCard.front, undefined, speechHints)}
+        onSpeakBack={() => speakStudyText(currentCard.back, undefined, speechHints)}
       />
 
       <div className="flex items-center justify-center gap-6">

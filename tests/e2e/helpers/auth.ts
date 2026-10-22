@@ -1,6 +1,8 @@
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
-export const uniqueEmail = () => `e2e-${Date.now()}@example.com`;
+// Parallel workers can start in the same millisecond, so add randomness to the timestamp.
+export const uniqueEmail = () =>
+  `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
 export async function registerAndLogin(page: Page, request: APIRequestContext) {
   const email = uniqueEmail();

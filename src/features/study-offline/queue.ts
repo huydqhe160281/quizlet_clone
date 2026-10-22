@@ -29,7 +29,7 @@ export async function enqueueMutation(
   clientMutationId: string,
   clientTimestamp: number,
   fallback: EnqueueFallback = {}
-): Promise<void> {
+): Promise<boolean> {
   const row: QueuedMutation = {
     clientMutationId,
     userId,
@@ -45,9 +45,10 @@ export async function enqueueMutation(
     // The server dedupes, but duplicate rows inflate the pending count and replay work.
     const existing = await db.getAllFromIndex('mutations', 'by-userId', userId);
     if (existing.some((queued) => queued.clientMutationId === clientMutationId)) {
-      return;
+      return true;
     }
     await db.add('mutations', row);
+    return true;
   } catch (error) {
     logQueueError('enqueueMutation', error);
     if (kind === 'session-answer') {
@@ -60,7 +61,9 @@ export async function enqueueMutation(
       const requeue = fallback.requeuePendingAnswers ?? defaultRequeue;
       requeue([answer]);
     }
-    // srs-review / session-complete: accepted degradation — log-and-drop
+    // srs-review / session-complete have no in-memory channel: report the loss so the
+    // caller does not tell the user the change was saved for later.
+    return false;
   }
 }
 

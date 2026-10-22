@@ -11,12 +11,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleButton } from '@/features/auth/components/GoogleButton';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { safeInternalPath } from '@/lib/navigation/safe-path';
 
 function safeCallbackUrl(raw: string | null): string {
-  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) {
-    return '/dashboard';
-  }
-  return raw;
+  return safeInternalPath(raw, '/dashboard');
 }
 
 type LoginFormProps = {

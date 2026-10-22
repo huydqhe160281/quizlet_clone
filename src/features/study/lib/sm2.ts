@@ -18,14 +18,18 @@ const addDays = (date: Date, days: number): Date => {
   return next;
 };
 
+const HARD_INTERVAL_MULTIPLIER = 1.2;
+
+const hardInterval = (interval: number): number =>
+  Math.max(1, Math.ceil(interval * HARD_INTERVAL_MULTIPLIER));
+
 const advanceInterval = (repetitions: number, interval: number, easeFactor: number): number => {
-  if (repetitions === 0) {
-    return 1;
-  }
-  if (repetitions === 1) {
-    return 6;
-  }
-  return Math.max(1, Math.round(interval * easeFactor));
+  const step =
+    repetitions === 0 ? 1 : repetitions === 1 ? 6 : Math.max(1, Math.round(interval * easeFactor));
+  // HARD grows the interval without advancing `repetitions`, so after a few HARDs the
+  // fixed early steps (1 and 6 days) can be shorter than the current interval. A better
+  // grade must never schedule the card sooner than HARD would have.
+  return interval > 0 ? Math.max(step, hardInterval(interval)) : step;
 };
 
 export function calculateSm2(state: Sm2State, grade: Sm2Grade, now = new Date()): Sm2Result {
@@ -37,7 +41,7 @@ export function calculateSm2(state: Sm2State, grade: Sm2Grade, now = new Date())
     easeFactor = Math.max(EASE_FACTOR_MIN, easeFactor - 0.2);
   } else if (grade === 1) {
     easeFactor = Math.max(EASE_FACTOR_MIN, easeFactor - 0.15);
-    interval = Math.max(1, Math.ceil(interval * 1.2));
+    interval = hardInterval(interval);
   } else if (grade === 2) {
     interval = advanceInterval(repetitions, interval, easeFactor);
     repetitions += 1;

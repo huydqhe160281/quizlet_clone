@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  CARD_BACK_MAX,
+  CARD_EXAMPLE_MAX,
+  CARD_FRONT_MAX,
+} from '@/features/sets/cards/schemas/card.schema';
+import { SET_DESCRIPTION_MAX, SET_TITLE_MAX } from '@/features/sets/schemas/set.schema';
 
 const MAX_GENERATED_CARDS = 300;
 
@@ -51,6 +57,35 @@ export const trimAiFlashcardOutput = (output: unknown, cardCount?: number) => {
     cards: record.cards.slice(0, cardCount),
   };
 };
+
+function clip(value: string, max: number): string {
+  return value.trim().slice(0, max).trim();
+}
+
+/**
+ * Model output skips the form validation, so bring it to the limits every other write
+ * path enforces: trim, cut over-long text, drop cards with an empty side. Returns null
+ * when no usable card is left.
+ */
+export function normalizeAiFlashcardOutput(output: AiFlashcardOutput): AiFlashcardOutput | null {
+  const cards = output.cards
+    .map((card) => {
+      const example = card.example ? clip(card.example, CARD_EXAMPLE_MAX) : '';
+      return {
+        front: clip(card.front, CARD_FRONT_MAX),
+        back: clip(card.back, CARD_BACK_MAX),
+        ...(example ? { example } : {}),
+      };
+    })
+    .filter((card) => card.front && card.back);
+  if (cards.length === 0) return null;
+
+  return {
+    title: clip(output.title, SET_TITLE_MAX) || 'AI flashcards',
+    description: clip(output.description, SET_DESCRIPTION_MAX),
+    cards,
+  };
+}
 
 export type AiGenerateInput = z.infer<typeof aiGenerateInputSchema>;
 export type AiFlashcardOutput = z.infer<typeof aiFlashcardOutputSchema>;

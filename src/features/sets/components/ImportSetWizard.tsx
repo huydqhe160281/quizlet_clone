@@ -28,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 
 type ImportResult = {
   set: { id: string; title: string };
@@ -282,6 +283,27 @@ function CsvUploadZone({
   );
 }
 
+type ImportErrorPayload = {
+  error?: string;
+  message?: string;
+  details?: { row?: number; missingColumns?: string[] };
+};
+
+/** Import errors name the row or columns, which the generic code message cannot. */
+function importErrorMessage(
+  t: ReturnType<typeof useTranslations>,
+  payload: ImportErrorPayload | null
+): string {
+  const missing = payload?.details?.missingColumns;
+  if (missing?.length) {
+    return t('importWizard.errorMissingColumns', { columns: missing.join(', ') });
+  }
+  if (typeof payload?.details?.row === 'number') {
+    return t('importWizard.errorRow', { row: payload.details.row });
+  }
+  return apiErrorMessage(t, payload, 'importWizard.errorFailed');
+}
+
 export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSetWizardProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -363,8 +385,8 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
           const response = format === 'json' ? await handleJsonImport() : await handleCsvImport();
 
           if (!response || !response.ok) {
-            const payload = response ? ((await response.json()) as { message?: string }) : null;
-            setError(payload?.message ?? t('importWizard.errorFailed'));
+            const payload = response ? ((await response.json()) as ImportErrorPayload) : null;
+            setError(importErrorMessage(t, payload));
             return;
           }
 
