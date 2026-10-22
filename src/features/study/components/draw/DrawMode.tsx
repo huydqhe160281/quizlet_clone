@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
@@ -9,7 +9,7 @@ import { HanziWriterCanvas } from '@/features/study/components/draw/HanziWriterC
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { HINT_DISPLAY_MS } from '@/features/study/lib/draw-config';
 import { studyProgressWhileFeedback } from '@/features/study/lib/study-continue-label';
-import type { StudyCard } from '@/features/study/store';
+import { useStudyStore, type StudyCard } from '@/features/study/store';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
@@ -37,24 +37,38 @@ export function DrawMode({ setId }: DrawModeProps) {
       .filter((card): card is StudyCard => !!card);
   }, [study.currentRound, study.cards]);
 
-  const currentCard = roundCards[study.currentIndex];
+  // The store moves to the next round synchronously on a round's last answer;
+  // keep the answered card on screen while its hint is shown.
+  const [answeredCard, setAnsweredCard] = useState<StudyCard | null>(null);
+  const currentCard = answeredCard ?? roundCards[study.currentIndex];
+  const advanceTimerRef = useRef<number | null>(null);
 
-  const finishIfLast = () => {
-    if (roundEndedThisStep) {
-      if (study.isComplete) {
+  useEffect(
+    () => () => {
+      if (advanceTimerRef.current !== null) window.clearTimeout(advanceTimerRef.current);
+    },
+    []
+  );
+
+  // `roundEnded` is passed in rather than read from state: the timer runs with the
+  // closure of the render that scheduled it, before setRoundEndedThisStep re-rendered.
+  const finishIfLast = (roundEnded: boolean) => {
+    advanceTimerRef.current = null;
+    setAnsweredCard(null);
+    setHint(null);
+    setAwaitingAdvance(false);
+    setRoundEndedThisStep(false);
+
+    if (roundEnded) {
+      if (useStudyStore.getState().isComplete) {
         void study.completeSession();
       } else {
         setShowSummary(true);
       }
-      setRoundEndedThisStep(false);
-      setHint(null);
-      setAwaitingAdvance(false);
       return;
     }
 
     study.nextCard();
-    setHint(null);
-    setAwaitingAdvance(false);
   };
 
   const handleSkip = () => {
@@ -69,6 +83,7 @@ export function DrawMode({ setId }: DrawModeProps) {
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));
+    setAnsweredCard(currentCard);
 
     const roundEnded = study.recordRoundAnswer(currentCard.cardId, isCorrect);
     study.recordAnswer(currentCard.cardId, isCorrect);
@@ -77,8 +92,8 @@ export function DrawMode({ setId }: DrawModeProps) {
     setHint(`${currentCard.back} — ${currentCard.front}`);
     setAwaitingAdvance(true);
 
-    window.setTimeout(() => {
-      finishIfLast();
+    advanceTimerRef.current = window.setTimeout(() => {
+      finishIfLast(roundEnded);
     }, HINT_DISPLAY_MS);
   };
 

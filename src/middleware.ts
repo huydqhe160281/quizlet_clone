@@ -11,18 +11,21 @@ const protectedPrefixes = ['/dashboard', '/today', '/sets', '/study', '/folders'
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
+  // Require a real user: on auth misconfiguration next-auth can populate req.auth
+  // with an error object instead of null, so a bare truthiness check fails open.
+  const isSignedIn = Boolean(req.auth?.user?.id);
   const isProtected = protectedPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 
-  if (isProtected && !req.auth) {
+  if (isProtected && !isSignedIn) {
     const loginUrl = new URL('/login', req.nextUrl.origin);
     loginUrl.searchParams.set('callbackUrl', pathname);
     return Response.redirect(loginUrl);
   }
 
   const isAuthPageOrRoot = pathname === '/' || pathname === '/login' || pathname === '/register';
-  if (isAuthPageOrRoot && req.auth) {
+  if (isAuthPageOrRoot && isSignedIn) {
     const dashboardUrl = new URL('/dashboard', req.nextUrl.origin);
     return Response.redirect(dashboardUrl);
   }

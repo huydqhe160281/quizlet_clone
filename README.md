@@ -106,7 +106,7 @@ After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLo
 
 ## Deploy to Vercel
 
-1. Import GitHub repo in Vercel (uses `vercel.json` — runs `prisma migrate deploy` before build)
+1. Import GitHub repo in Vercel (uses `vercel.json` — `scripts/vercel-migrate.mjs` runs `prisma migrate deploy` before build for **Production only**; Preview skips migrations unless `MIGRATE_ON_PREVIEW=1` and Preview has its own database)
 2. Set all env vars from `.env.example` (use port **6543** + `?pgbouncer=true` for `DATABASE_URL`)
 3. Set `NEXTAUTH_URL` / `AUTH_URL` to your production domain (e.g. `https://your-app.vercel.app`)
 4. **Supabase Storage**: In Supabase Dashboard → Storage → create a **public** bucket named `flashcard-media` (or match `SUPABASE_MEDIA_BUCKET`). Allow image/audio MIME types.

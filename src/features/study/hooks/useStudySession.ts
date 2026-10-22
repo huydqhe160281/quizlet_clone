@@ -11,6 +11,7 @@ import {
 } from '@/features/study/lib/create-session-once';
 import { notifyStreakUpdated, type StreakUpdatedDetail } from '@/lib/streak/streak-client';
 import { useStudyStore, type StudyCard, type StampedPendingAnswer } from '@/features/study/store';
+import { beaconSessionAnswers } from '@/features/study/lib/answer-beacon';
 import { getCachedSet, upsertCachedSet } from '@/features/study-offline/cache';
 import {
   enqueueMutation,
@@ -116,21 +117,6 @@ function ensureCompletionMutationId(ref: { current: string | null }): string {
     ref.current = crypto.randomUUID();
   }
   return ref.current;
-}
-
-function toBeaconBlob(answers: StampedPendingAnswer[]) {
-  return new Blob(
-    [
-      JSON.stringify({
-        answers: answers.map((answer) => ({
-          cardId: answer.cardId,
-          isCorrect: answer.isCorrect,
-          clientMutationId: answer.clientMutationId,
-        })),
-      }),
-    ],
-    { type: 'application/json' }
-  );
 }
 
 export function useStudySession(setId: string, mode: StudyModeValue) {
@@ -333,7 +319,7 @@ export function useStudySession(setId: string, mode: StudyModeValue) {
         );
         useStudyStore.getState().clearPendingAnswers();
       } else if (sessionId && pendingAnswers.length > 0) {
-        navigator.sendBeacon(`/api/v1/study/sessions/${sessionId}`, toBeaconBlob(pendingAnswers));
+        beaconSessionAnswers(sessionId, pendingAnswers, uid);
       }
       activeSessionIdRef.current = null;
       store.reset();
@@ -345,7 +331,7 @@ export function useStudySession(setId: string, mode: StudyModeValue) {
     const flushBeacon = () => {
       const { sessionId, pendingAnswers } = useStudyStore.getState();
       if (!sessionId || pendingAnswers.length === 0) return;
-      navigator.sendBeacon(`/api/v1/study/sessions/${sessionId}`, toBeaconBlob(pendingAnswers));
+      beaconSessionAnswers(sessionId, pendingAnswers, userIdRef.current);
       useStudyStore.getState().clearPendingAnswers();
     };
 

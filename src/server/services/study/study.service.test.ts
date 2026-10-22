@@ -58,8 +58,10 @@ import {
   getSessionCards,
   recordSessionAnswer,
   recordSessionAnswersBatch,
+  settingsMatchStored,
 } from '@/server/services/study/study.service';
 import { recordDailyStudyActivity } from '@/server/services/user/stats.service';
+import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
 
 describe('study.service', () => {
   beforeEach(() => {
@@ -164,6 +166,49 @@ describe('study.service', () => {
 
     expect(session.id).toBe('session-new');
     expect(prismaMock.studySession.create).toHaveBeenCalled();
+  });
+
+  it('resumes when stored JSONB settings come back with a different key order', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [{ id: 'card-1', sortOrder: 0, type: null }],
+    });
+
+    // Postgres JSONB orders keys by length, then bytes — not by insertion order.
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        id: 'session-existing',
+        totalCards: 1,
+        mode: 'LEARN',
+        settings: {
+          randomize: false,
+          mcDirection: 'front_to_back',
+          presentation: 'multiple_choice',
+          requeueWrong: true,
+          cardsPerRound: 10,
+        },
+        sessionCards: [{ cardId: 'card-1' }],
+      },
+    ]);
+
+    const { session } = await createSession('user-a', 'set-1', 'LEARN', {
+      randomize: false,
+      cardsPerRound: 10,
+      requeueWrong: true,
+      presentation: 'multiple_choice',
+      mcDirection: 'front_to_back',
+    });
+
+    expect(session.id).toBe('session-existing');
+    expect(prismaMock.studySession.create).not.toHaveBeenCalled();
+  });
+
+  it('settingsMatchStored never matches invalid stored settings', () => {
+    expect(settingsMatchStored({ randomize: 'yes' }, undefined)).toBe(false);
+    expect(settingsMatchStored(null, undefined)).toBe(true);
+    expect(settingsMatchStored(null, { ...STUDY_SESSION_SETTINGS_DEFAULTS })).toBe(false);
   });
 
   it('Scenario: Omitted cardIds keeps full pool', async () => {

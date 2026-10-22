@@ -40,6 +40,9 @@ export function TestMode({ setId }: TestModeProps) {
   const [typingAnswer, setTypingAnswer] = useState('');
   const [answered, setAnswered] = useState(false);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
+  // The store advances to the next round synchronously on the round's last answer,
+  // so keep rendering the answered question until the learner continues.
+  const [answeredQuestion, setAnsweredQuestion] = useState<TestQuestion | null>(null);
 
   const [showSummary, setShowSummary] = useState(false);
   const [roundEndedThisStep, setRoundEndedThisStep] = useState(false);
@@ -62,9 +65,10 @@ export function TestMode({ setId }: TestModeProps) {
     [roundCards]
   );
 
-  const currentQuestion: TestQuestion | undefined = questions[questionIndex];
+  const currentQuestion: TestQuestion | undefined = answeredQuestion ?? questions[questionIndex];
 
   const goNext = () => {
+    setAnsweredQuestion(null);
     if (roundEndedThisStep) {
       if (study.isComplete) {
         void study.completeSession();
@@ -88,6 +92,7 @@ export function TestMode({ setId }: TestModeProps) {
   };
 
   const recordResult = (cardId: string, isCorrect: boolean, message: string) => {
+    if (currentQuestion) setAnsweredQuestion(currentQuestion);
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
     setLastRoundCorrect(study.correctInRound + (isCorrect ? 1 : 0));

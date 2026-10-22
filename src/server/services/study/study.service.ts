@@ -7,7 +7,10 @@ import {
   recordDailyStudyActivity,
   recordReviewStats,
 } from '@/server/services/user/stats.service';
-import type { StudySessionSettings } from '@/features/study/schemas/study.schema';
+import {
+  studySessionSettingsSchema,
+  type StudySessionSettings,
+} from '@/features/study/schemas/study.schema';
 const shuffle = <T>(items: T[]): T[] => {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -54,12 +57,22 @@ const sessionCardsInclude = {
   },
 };
 
-function settingsFingerprint(settings?: StudySessionSettings) {
-  return JSON.stringify(settings ?? null);
+/**
+ * Key-order-independent fingerprint. Postgres JSONB does not preserve key
+ * order, so a raw JSON.stringify of the stored value never matches the
+ * Zod-ordered input. Returns null when the stored value is not valid settings.
+ */
+function settingsFingerprint(settings: unknown): string | null {
+  if (settings === null || settings === undefined) return 'null';
+  const parsed = studySessionSettingsSchema.safeParse(settings);
+  if (!parsed.success) return null;
+  const entries = Object.entries(parsed.data).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  return JSON.stringify(entries);
 }
 
-function settingsMatchStored(stored: unknown, settings?: StudySessionSettings) {
-  return JSON.stringify(stored ?? null) === settingsFingerprint(settings);
+export function settingsMatchStored(stored: unknown, settings?: StudySessionSettings) {
+  const storedFingerprint = settingsFingerprint(stored);
+  return storedFingerprint !== null && storedFingerprint === settingsFingerprint(settings);
 }
 
 function cardIdSetEqual(a: Iterable<string>, b: Iterable<string>): boolean {

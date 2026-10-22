@@ -18,7 +18,12 @@ if (!studyNavMatch) {
 const STUDY_NAV_ENABLED = studyNavMatch[1] === 'true';
 
 const APP_NAV_ITEMS = [
-  { id: 'dashboard', href: '/dashboard', labelKey: 'nav.dashboard', guideTargetId: 'nav-dashboard' },
+  {
+    id: 'dashboard',
+    href: '/dashboard',
+    labelKey: 'nav.dashboard',
+    guideTargetId: 'nav-dashboard',
+  },
   { id: 'today', href: '/today', labelKey: 'nav.today', guideTargetId: 'nav-today' },
   { id: 'sets', href: '/sets', labelKey: 'nav.sets', guideTargetId: 'nav-sets' },
   ...(STUDY_NAV_ENABLED
@@ -59,7 +64,11 @@ function scanRoutes(dir, segments = []) {
     const urlSegments = segments.filter((s) => !s.startsWith('('));
     const routePath = urlSegments.length === 0 ? '/' : `/${urlSegments.join('/')}`;
     const lastSegment = urlSegments[urlSegments.length - 1] ?? 'home';
-    routes.push({ path: routePath, title: titleFromSegment(lastSegment), auth: inferAuth(segments) });
+    routes.push({
+      path: routePath,
+      title: titleFromSegment(lastSegment),
+      auth: inferAuth(segments),
+    });
   }
   return routes;
 }
@@ -111,8 +120,27 @@ export function buildGuideConfig() {
   };
 }
 
+/**
+ * Keep the previous `generatedAt` when nothing else changed, so regenerating is
+ * deterministic and `generate:guide:check` can pass in CI.
+ */
+export function reusePreviousTimestamp(config, previousJson) {
+  if (!previousJson) return config;
+  try {
+    const previous = JSON.parse(previousJson);
+    const strip = ({ generatedAt: _generatedAt, ...rest }) => JSON.stringify(rest);
+    if (typeof previous.generatedAt === 'string' && strip(previous) === strip(config)) {
+      return { ...config, generatedAt: previous.generatedAt };
+    }
+  } catch {
+    // Unreadable previous output: regenerate with a fresh timestamp.
+  }
+  return config;
+}
+
 export function writeGuideConfig(outputPath = OUTPUT) {
-  const config = buildGuideConfig();
+  const previousJson = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : null;
+  const config = reusePreviousTimestamp(buildGuideConfig(), previousJson);
   const json = `${JSON.stringify(config, null, 2)}\n`;
   const bytes = Buffer.byteLength(json, 'utf8');
 

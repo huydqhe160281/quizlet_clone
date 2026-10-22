@@ -20,6 +20,16 @@ export const GET = withErrorHandler(async (_req, { params }) => {
   return Response.json({ data: session, streak });
 });
 
+// navigator.sendBeacon can only POST: batch answer flush on page hide / unmount.
+export const POST = withErrorHandler(async (req, { params }) => {
+  await assertApiRateLimit(req);
+  const { sessionId } = await params;
+  const userId = await requireUserId();
+  const { answers } = batchAnswersSchema.parse(await req.json());
+  const result = await recordSessionAnswersBatch(sessionId, userId, answers);
+  return Response.json({ data: result });
+});
+
 export const PATCH = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { sessionId } = await params;

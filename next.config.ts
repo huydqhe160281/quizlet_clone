@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 import { spawnSync } from 'node:child_process';
 import bundleAnalyzer from '@next/bundle-analyzer';
 import withSerwistInit from '@serwist/next';
-import { REQUIRED_WORKER_SRC_CSP } from './src/features/pwa/sw-policy';
+import { SECURITY_HEADERS } from './src/config/security-headers';
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
@@ -25,25 +25,6 @@ const withSerwist = withSerwistInit({
   additionalPrecacheEntries: [{ url: '/offline.html', revision }],
 });
 
-const securityHeaders = [
-  { key: 'X-DNS-Prefetch-Control', value: 'on' },
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  {
-    key: 'Content-Security-Policy',
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co",
-      "font-src 'self'",
-      "connect-src 'self' https://*.supabase.co",
-      REQUIRED_WORKER_SRC_CSP,
-    ].join('; '),
-  },
-];
-
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -56,7 +37,7 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [{ source: '/(.*)', headers: SECURITY_HEADERS }];
   },
 };
 

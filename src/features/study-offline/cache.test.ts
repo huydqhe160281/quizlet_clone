@@ -50,6 +50,8 @@ describe('study-offline cache', () => {
     await upsertCachedSet('user-a', 'set-a', 's-a', 'A', [card]);
     await new Promise((r) => setTimeout(r, 2));
     await upsertCachedSet('user-a', 'set-b', 's-b', 'B', [card]);
+    // Avoid a same-millisecond lastAccessed tie between set-b and set-a (flaky LRU order).
+    await new Promise((r) => setTimeout(r, 2));
     await getCachedSet('user-a', 'set-a');
     for (let i = 0; i < 4; i += 1) {
       await upsertCachedSet('user-a', `set-x${i}`, `sx${i}`, `X${i}`, [card]);

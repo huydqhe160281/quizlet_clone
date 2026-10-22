@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import HanziWriter from 'hanzi-writer';
 import { Button } from '@/components/ui/button';
-import { CANVAS_PADDING, CANVAS_SIZE, MAX_MISTAKES } from '@/features/study/lib/draw-config';
+import {
+  CANVAS_PADDING,
+  CANVAS_SIZE,
+  MAX_MISTAKES,
+  loadHanziCharData,
+} from '@/features/study/lib/draw-config';
 import { isHanziWriterHanChar } from '@/features/study/lib/cjk-draw-utils';
 import { FreeDrawCanvas } from '@/features/study/components/draw/FreeDrawCanvas';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -61,6 +66,7 @@ function HanziWriterQuizCanvas({ character, onComplete, onSkip }: HanziWriterQui
       padding: CANVAS_PADDING,
       showOutline: true,
       showHintAfterMisses: MAX_MISTAKES,
+      charDataLoader: loadHanziCharData,
       onLoadCharDataError: () => setLoadError(true),
     });
     writerRef.current.quiz({
