@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Flashcard app (Quizlet clone): Next.js 15 App Router + React 19, TypeScript, Prisma/PostgreSQL (Supabase), NextAuth v5 (beta), TanStack Query, Zustand, Tailwind + shadcn/ui (Radix), Serwist PWA. Package manager is **pnpm**; Node must be `^20.19` or `>=22.12` (Vitest 4's rolldown native binding is skipped on older Node and tests fail to start). Deployed on Vercel: `vercel.json` runs `scripts/vercel-migrate.mjs` before `next build`, which applies `prisma migrate deploy` only for `VERCEL_ENV=production` (Preview needs `MIGRATE_ON_PREVIEW=1`). CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and `generate:guide:check`.
+Flashcard app (Quizlet clone): Next.js 15 App Router + React 19, TypeScript, Prisma/PostgreSQL (Supabase), NextAuth v5 (beta), TanStack Query, Zustand, Tailwind + shadcn/ui (Radix), Serwist PWA. Package manager is **pnpm**; Node must be `^20.19` or `>=22.12` (Vitest 4's rolldown native binding is skipped on older Node and tests fail to start). Deployed on Vercel: `vercel.json` runs `scripts/vercel-migrate.mjs` before `next build`, which applies `prisma migrate deploy` only for `VERCEL_ENV=production` (Preview needs `MIGRATE_ON_PREVIEW=1`). CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests with coverage thresholds (`test:coverage`) and `generate:guide:check`. A daily Vercel Cron (`vercel.json` → `/api/cron/cleanup`, needs `CRON_SECRET`) purges expired rate-limit buckets, idempotency records and verification tokens.
 
 ## Commands
 
@@ -38,6 +38,8 @@ Pre-commit hook runs `lint-staged` (eslint --fix + prettier). `prisma migrate de
 ### API route pattern
 
 Route handlers are thin: wrap in `withErrorHandler` (`src/lib/api-error.ts`), call `requireUserId()` / `optionalUserId()` (`src/server/auth/auth-utils.ts`), parse input with the Zod schemas from `src/features/*/schemas`, then delegate to a `src/server/services/*` function. Throw `ApiError(code, message, status)` for expected failures; `ZodError` becomes a 400 `VALIDATION_ERROR` automatically. Mutating routes call `assertApiRateLimit(req)` (DB-backed rate-limit buckets); AI routes use `ai-rate-limit-guard`.
+
+Session revocation: JWTs carry `User.sessionVersion` (`src/server/auth/session-version.ts`); a password reset bumps it, and the Node-side jwt callback in `auth.ts` rejects stale tokens. Middleware uses the edge `auth.config.ts` without that DB check, so the client signs out when `/api/v1/auth/me` returns 401 (`useAccountStatus`). Password-reset and email-verification tokens share `verification_tokens`; verification identifiers are prefixed `verify-email:` and must never be accepted as reset tokens. `src/app/api/v1/auth-contract.test.ts` checks every API handler returns 401 when signed out — list intentionally public handlers there.
 
 Route protection happens in `src/middleware.ts` (a `protectedPrefixes` list), which also resolves the locale. There must be only one middleware file — locale logic is composed inside the NextAuth `auth()` handler.
 

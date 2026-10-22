@@ -3,6 +3,8 @@ import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { registerSchema } from '@/features/auth/schemas/auth.schema';
 import { prisma } from '@/server/db';
 import { hashPassword } from '@/server/auth/password';
+import { issueEmailVerification } from '@/server/auth/email-verification';
+import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 
 export const POST = withErrorHandler(async (req) => {
   const ip = getClientIp(req);
@@ -34,6 +36,13 @@ export const POST = withErrorHandler(async (req) => {
     },
     select: { id: true, email: true, name: true },
   });
+
+  try {
+    await issueEmailVerification(email, await getRequestLocale());
+  } catch (error) {
+    // Sign-up must not fail when the mail provider does; the user can resend from the app.
+    console.error('[auth] failed to send verification email', error);
+  }
 
   return Response.json({ data: user }, { status: 201 });
 });

@@ -24,7 +24,19 @@ vi.mock('@/server/auth/password', async (importOriginal) => {
   };
 });
 
+const verificationMock = vi.hoisted(() => ({ issueEmailVerification: vi.fn() }));
+vi.mock('@/server/auth/email-verification', () => verificationMock);
+vi.mock('@/lib/i18n/getRequestLocale', () => ({ getRequestLocale: vi.fn(async () => 'ja') }));
+
 import { POST } from '@/app/api/v1/auth/register/route';
+
+function registerRequest(email: string) {
+  return new Request('http://localhost/api/v1/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password: 'ValidPass123!' }),
+  });
+}
 
 describe('POST /api/v1/auth/register', () => {
   beforeEach(() => {
@@ -52,5 +64,31 @@ describe('POST /api/v1/auth/register', () => {
     expect(response.status).toBe(400);
     expect(payload.error).toBe('EMAIL_ALREADY_EXISTS');
     expect(prismaMock.user.create).not.toHaveBeenCalled();
+  });
+
+  it('sends a verification email after creating the account', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockResolvedValue({ id: 'u1', email: 'new@example.com', name: null });
+
+    const response = await POST(registerRequest('New@Example.com'), {
+      params: Promise.resolve({}),
+    });
+
+    expect(response.status).toBe(201);
+    expect(verificationMock.issueEmailVerification).toHaveBeenCalledWith('new@example.com', 'ja');
+  });
+
+  it('still registers when the verification email cannot be sent', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockResolvedValue({ id: 'u1', email: 'new@example.com', name: null });
+    verificationMock.issueEmailVerification.mockRejectedValueOnce(new Error('resend down'));
+
+    const response = await POST(registerRequest('new@example.com'), {
+      params: Promise.resolve({}),
+    });
+
+    expect(response.status).toBe(201);
+    spy.mockRestore();
   });
 });

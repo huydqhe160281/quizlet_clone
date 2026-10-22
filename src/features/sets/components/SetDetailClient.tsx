@@ -26,6 +26,8 @@ import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SetDetailClientProps = {
   setId: string;
+  /** Server-counted "new-word" cards, used until the card list arrives (large sets). */
+  initialNewWordCount?: number;
 };
 
 const DEFAULT_CHUNK_SIZE = 20;
@@ -37,7 +39,7 @@ function defaultChunkSizeFor(cardCount: number): number {
   return Math.min(DEFAULT_CHUNK_SIZE, cardCount - 1);
 }
 
-export function SetDetailClient({ setId }: SetDetailClientProps) {
+export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const [importOpen, setImportOpen] = useState(false);
@@ -49,7 +51,9 @@ export function SetDetailClient({ setId }: SetDetailClientProps) {
   const { data: cards, error: cardsError } = useCards(setId);
   const { deleteSet, duplicateSet, splitSet } = useSetMutations();
   const loadError = setError ?? cardsError;
-  const newWordCount = cards?.filter((card) => card.type === 'new-word').length ?? 0;
+  const newWordCount = cards
+    ? cards.filter((card) => card.type === 'new-word').length
+    : initialNewWordCount;
   const cardCount = set?._count.cards ?? 0;
 
   const chunkSize =

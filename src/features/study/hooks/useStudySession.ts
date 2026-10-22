@@ -11,7 +11,13 @@ import {
 } from '@/features/study/lib/create-session-once';
 import { notifyStreakUpdated, type StreakUpdatedDetail } from '@/lib/streak/streak-client';
 import { notifyStudyActivity } from '@/lib/study-activity';
-import { useStudyStore, type StudyCard, type StampedPendingAnswer } from '@/features/study/store';
+import { useShallow } from 'zustand/react/shallow';
+import {
+  selectStudySessionView,
+  useStudyStore,
+  type StudyCard,
+  type StampedPendingAnswer,
+} from '@/features/study/store';
 import { beaconSessionAnswers } from '@/features/study/lib/answer-beacon';
 import { getCachedSet, upsertCachedSet } from '@/features/study-offline/cache';
 import {
@@ -122,7 +128,7 @@ function ensureCompletionMutationId(ref: { current: string | null }): string {
 }
 
 export function useStudySession(setId: string, mode: StudyModeValue) {
-  const store = useStudyStore();
+  const store = useStudyStore(useShallow(selectStudySessionView));
   const searchParams = useSearchParams();
   const sessionIdFromQuery = searchParams.get('sessionId');
   const { data: authSession } = useSession();

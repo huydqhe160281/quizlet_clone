@@ -1,5 +1,5 @@
 import type { Prisma, Visibility } from '@prisma/client';
-import { unstable_cache, revalidateTag } from 'next/cache';
+import { unstable_cache } from 'next/cache';
 import { ApiError } from '@/lib/api-error';
 import type {
   CreateSetInput,
@@ -145,9 +145,10 @@ export async function updateSet(setId: string, userId: string, input: UpdateSetI
     include: setInclude,
   });
 
-  invalidateSetCache(userId, set.visibility);
+  invalidateSetCache(userId, set.visibility, { setId });
   if (existing.visibility === 'PUBLIC' && set.visibility !== 'PUBLIC') {
-    revalidateTag('public-sets');
+    // Made private: drop it from public lists and its public preview.
+    invalidateSetCache(userId, 'PUBLIC', { setId });
   }
   return set;
 }
@@ -159,7 +160,7 @@ export async function deleteSet(setId: string, userId: string) {
   }
   assertOwner(existing, userId);
   await prisma.flashcardSet.delete({ where: { id: setId } });
-  invalidateSetCache(userId, existing.visibility);
+  invalidateSetCache(userId, existing.visibility, { setId });
 }
 
 export async function duplicateSet(setId: string, userId: string) {

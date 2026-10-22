@@ -7,6 +7,7 @@ import { env } from '@/config/env';
 import { authConfig } from '@/server/auth/auth.config';
 import { prisma } from '@/server/db';
 import { verifyPassword } from '@/server/auth/password';
+import { applySessionVersion } from '@/server/auth/session-version';
 
 const googleProvider =
   env.googleClientId && env.googleClientSecret
@@ -22,6 +23,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   secret: env.authSecret,
+  callbacks: {
+    ...authConfig.callbacks,
+    // Node-only: the edge config (middleware) cannot reach the DB, so revocation is checked here.
+    async jwt(params) {
+      const token = await authConfig.callbacks!.jwt!(params);
+      return token ? applySessionVersion(token, params.user) : token;
+    },
+  },
   events: {
     async signIn({ user }) {
       if (!user.id) return;
@@ -87,6 +96,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           image: user.image,
+          sessionVersion: user.sessionVersion,
           // Pass rememberMe so jwt callback can set dynamic maxAge
           rememberMe: parsed.data.rememberMe ?? false,
         };

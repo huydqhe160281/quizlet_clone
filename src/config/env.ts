@@ -47,6 +47,10 @@ export const env = {
     Boolean(process.env.GOOGLE_CLIENT_ID?.trim()) &&
     Boolean(process.env.GOOGLE_CLIENT_SECRET?.trim()),
   resendApiKey: process.env.RESEND_API_KEY ?? '',
+  /** Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`; cron routes refuse without it. */
+  get cronSecret() {
+    return process.env.CRON_SECRET ?? '';
+  },
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',

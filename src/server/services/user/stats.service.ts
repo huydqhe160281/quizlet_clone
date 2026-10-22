@@ -153,8 +153,9 @@ export async function getStats(userId: string) {
   const [totalSets, totalCards, dueCount] = await Promise.all([
     prisma.flashcardSet.count({ where: { userId } }),
     prisma.flashcard.count({ where: { set: { userId } } }),
+    // Same "due" as the Today queue the dashboard alert links to: owned sets only.
     prisma.cardProgress.count({
-      where: { userId, dueDate: { lte: new Date() } },
+      where: { userId, dueDate: { lte: new Date() }, card: { set: { userId } } },
     }),
   ]);
 

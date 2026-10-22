@@ -6,6 +6,13 @@
       "cta": "Nhấn vào đây để đặt lại mật khẩu",
       "expiry": "Liên kết này hết hạn sau 1 giờ.",
       "ignore": "Nếu bạn không yêu cầu, hãy bỏ qua email này."
+    },
+    "verifyEmail": {
+      "subject": "Xác nhận email QuizFree",
+      "intro": "Cảm ơn bạn đã đăng ký QuizFree. Vui lòng xác nhận đây là địa chỉ email của bạn.",
+      "cta": "Xác nhận địa chỉ email",
+      "expiry": "Liên kết này hết hạn sau 24 giờ.",
+      "ignore": "Nếu bạn không tạo tài khoản, hãy bỏ qua email này."
     }
   }
 }

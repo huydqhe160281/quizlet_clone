@@ -5,10 +5,15 @@ import {
   WEAK_LOOKBACK_DAYS,
 } from '@/server/services/learning/constants';
 import { clampQueueLimit, rankAndCap, type RankableCard } from '@/server/services/learning/ranking';
-import { cardIdsWithLatestFail } from '@/server/services/learning/weak-latest';
+import {
+  cardIdsWithLatestFail,
+  type LatestReviewRow,
+} from '@/server/services/learning/weak-latest';
 import type { LearningQueueItem } from '@/features/today/types';
 
 const MS_PER_DAY = 86_400_000;
+
+type LatestReviewWithCard = LatestReviewRow & { front: string; setId: string; setTitle: string };
 
 function frontPreview(front: string, max = 80): string {
   if (front.length <= max) return front;
@@ -55,11 +60,12 @@ export async function getLearningQueue(
 
   const dueIds = new Set(dueProgress.map((row) => row.cardId));
 
+  // Not due means dueDate > now, so this is disjoint from the due branch without a NOT IN list.
   const weakByEase = await prisma.cardProgress.findMany({
     where: {
       userId,
       easeFactor: { lt: WEAK_EASE_THRESHOLD },
-      cardId: { notIn: [...dueIds] },
+      dueDate: { gt: now },
       card: { set: { userId } },
     },
     include: {
@@ -74,73 +80,57 @@ export async function getLearningQueue(
     },
   });
 
-  // Latest review per card in the weak lookback window; only AGAIN/HARD counts as weak.
-  const recentReviews = await prisma.reviewHistory.findMany({
-    where: {
-      userId,
-      reviewedAt: { gte: weakSince },
-      card: { set: { userId } },
-    },
-    orderBy: { reviewedAt: 'desc' },
-    select: {
-      cardId: true,
-      grade: true,
-      card: {
-        select: {
-          id: true,
-          front: true,
-          setId: true,
-          set: { select: { id: true, title: true, userId: true } },
-        },
-      },
-    },
-  });
+  // Latest review per owned card in the weak lookback window (DISTINCT ON keeps one row per
+  // card in SQL instead of loading the whole window); only AGAIN/HARD counts as weak.
+  const latestReviews = await prisma.$queryRaw<LatestReviewWithCard[]>`
+    SELECT DISTINCT ON (rh."cardId")
+      rh."cardId", rh."grade", f."front", f."setId", s."title" AS "setTitle"
+    FROM review_history rh
+    JOIN flashcards f ON f."id" = rh."cardId"
+    JOIN flashcard_sets s ON s."id" = f."setId"
+    WHERE rh."userId" = ${userId}
+      AND rh."reviewedAt" >= ${weakSince}
+      AND s."userId" = ${userId}
+    ORDER BY rh."cardId", rh."reviewedAt" DESC
+  `;
 
   const weakIds = new Set(weakByEase.map((row) => row.cardId));
-  const latestFailIds = cardIdsWithLatestFail(recentReviews);
-  const failCardIds = new Set<string>();
+  const latestFailIds = cardIdsWithLatestFail(latestReviews);
   const failCards: RankableCard[] = [];
-  const cardById = new Map(recentReviews.map((row) => [row.cardId, row.card]));
 
-  for (const cardId of latestFailIds) {
-    if (dueIds.has(cardId) || weakIds.has(cardId) || failCardIds.has(cardId)) {
+  for (const row of latestReviews) {
+    if (!latestFailIds.has(row.cardId) || dueIds.has(row.cardId) || weakIds.has(row.cardId)) {
       continue;
     }
-    const card = cardById.get(cardId);
-    if (!card || card.set.userId !== userId) {
-      continue;
-    }
-    failCardIds.add(cardId);
     failCards.push({
-      cardId,
-      setId: card.setId,
-      setTitle: card.set.title,
+      cardId: row.cardId,
+      setId: row.setId,
+      setTitle: row.setTitle,
       reason: 'weak',
       dueDate: null,
       easeFactor: null,
-      frontPreview: frontPreview(card.front),
+      frontPreview: frontPreview(row.front),
       recentFail: true,
     });
   }
 
-  const selectedIds = new Set([...dueIds, ...weakIds, ...failCardIds]);
-
-  const progressCardIds = await prisma.cardProgress.findMany({
-    where: { userId },
-    select: { cardId: true },
-  });
-  const excludeFromNew = new Set([...progressCardIds.map((row) => row.cardId), ...selectedIds]);
-
-  const newCards = await prisma.flashcard.findMany({
-    where: {
-      set: { userId },
-      ...(excludeFromNew.size > 0 ? { id: { notIn: [...excludeFromNew] } } : {}),
-    },
-    include: {
-      set: { select: { id: true, title: true } },
-    },
-    orderBy: { createdAt: 'asc' },
-  });
+  // New = owned cards with no progress row for this user (NOT EXISTS in SQL). All new cards
+  // score the same and tie-break by id, so only the first `limit` can reach the queue;
+  // the rest are counted for totalEligible without being loaded.
+  const newWhere = {
+    set: { userId },
+    progress: { none: { userId } },
+    ...(failCards.length > 0 ? { id: { notIn: failCards.map((card) => card.cardId) } } : {}),
+  };
+  const [newCards, newTotal] = await Promise.all([
+    prisma.flashcard.findMany({
+      where: newWhere,
+      select: { id: true, front: true, setId: true, set: { select: { title: true } } },
+      orderBy: { id: 'asc' },
+      take: limit,
+    }),
+    prisma.flashcard.count({ where: newWhere }),
+  ]);
 
   const candidates: RankableCard[] = [
     ...dueProgress
@@ -178,7 +168,9 @@ export async function getLearningQueue(
     })),
   ];
 
-  const { items, totalEligible } = rankAndCap(candidates, now, limit);
+  const ranked = rankAndCap(candidates, now, limit);
+  const items = ranked.items;
+  const totalEligible = ranked.totalEligible + Math.max(0, newTotal - newCards.length);
 
   // Uncapped due+weak membership for retention weakSets (excludes `new`).
   const membershipForInsights: LearningQueueItem[] = candidates

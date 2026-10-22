@@ -36,12 +36,19 @@ vi.mock('@/lib/i18n/getRequestLocale', () => ({
 
 import { streamAssistantChat } from '@/server/services/ai/assistant.service';
 
-// Helper: build a mock stream result where `usage` resolves successfully
-function makeMockStream() {
+type Part = { type: string; text?: string; error?: unknown };
+
+/** Mock streamText result whose fullStream yields the given parts. */
+function makeMockStream(parts: Part[] = [{ type: 'text-delta', text: 'ok' }]) {
   return {
-    usage: Promise.resolve({ totalTokens: 10 }),
-    toTextStreamResponse: vi.fn(),
+    fullStream: (async function* () {
+      for (const part of parts) yield part;
+    })(),
   };
+}
+
+function failingStream(message: string) {
+  return makeMockStream([{ type: 'start' }, { type: 'error', error: new Error(message) }]);
 }
 
 describe('assistant.service', () => {
@@ -75,10 +82,7 @@ describe('assistant.service', () => {
   it('falls back to Z.ai when Ollama fails', async () => {
     // First call (ollama) throws, second call (zai) succeeds
     streamTextMock
-      .mockReturnValueOnce({
-        usage: Promise.reject(new Error('Not Found')),
-        toTextStreamResponse: vi.fn(),
-      })
+      .mockReturnValueOnce(failingStream('Not Found'))
       .mockReturnValueOnce(makeMockStream());
 
     const result = await streamAssistantChat({
@@ -90,13 +94,41 @@ describe('assistant.service', () => {
   });
 
   it('throws when all providers fail', async () => {
-    streamTextMock.mockReturnValue({
-      usage: Promise.reject(new Error('All failed')),
-      toTextStreamResponse: vi.fn(),
-    });
+    streamTextMock.mockImplementation(() => failingStream('All failed'));
 
     await expect(
       streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toThrow('All failed');
+  });
+
+  it('streams text as it arrives instead of waiting for the whole answer', async () => {
+    let releaseRest!: () => void;
+    const gate = new Promise<void>((resolve) => (releaseRest = resolve));
+    streamTextMock.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: 'start' };
+        yield { type: 'text-delta', text: 'Hel' };
+        await gate;
+        yield { type: 'text-delta', text: 'lo' };
+        yield { type: 'finish' };
+      })(),
+    });
+
+    const result = await streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] });
+    const reader = result.toTextStreamResponse().body!.getReader();
+    const decoder = new TextDecoder();
+
+    // The first chunk is readable while the provider is still generating.
+    const first = await reader.read();
+    expect(decoder.decode(first.value)).toBe('Hel');
+
+    releaseRest();
+    let rest = '';
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      rest += decoder.decode(value);
+    }
+    expect(rest).toBe('lo');
   });
 });

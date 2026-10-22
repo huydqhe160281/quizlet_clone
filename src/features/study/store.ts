@@ -105,6 +105,18 @@ const initialState = {
   pendingAnswers: [] as StampedPendingAnswer[],
 };
 
+/**
+ * What study mode UIs render. Leaves out the answer buffer and raw engine state, which
+ * change on every answer/flush but are only read through `getState()`, so subscribing
+ * to this view (with `useShallow`) skips those re-renders.
+ */
+export function selectStudySessionView(state: StudyState) {
+  const { pendingAnswers, roundEngine, ...view } = state;
+  void pendingAnswers;
+  void roundEngine;
+  return view;
+}
+
 export const useStudyStore = create<StudyState>((set, get) => ({
   ...initialState,
 

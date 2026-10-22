@@ -474,6 +474,8 @@ export async function completeSession(
   }
 }
 
+export const DUE_CARDS_NEW_LIMIT = 100;
+
 export async function getDueCards(userId: string) {
   const now = new Date();
 
@@ -489,21 +491,15 @@ export async function getDueCards(userId: string) {
     orderBy: { dueDate: 'asc' },
   });
 
-  const progressCardIds = await prisma.cardProgress.findMany({
-    where: { userId },
-    select: { cardId: true },
-  });
-  const studiedIds = progressCardIds.map((row) => row.cardId);
-
+  // Unstudied owned cards via NOT EXISTS (no id list round-trip), capped so a large
+  // library does not ship every new card on each visit; the rest come in later sessions.
   const newCards = await prisma.flashcard.findMany({
-    where: {
-      set: { userId },
-      ...(studiedIds.length > 0 ? { id: { notIn: studiedIds } } : {}),
-    },
+    where: { set: { userId }, progress: { none: { userId } } },
     include: {
       set: { select: { id: true, title: true } },
     },
     orderBy: { createdAt: 'asc' },
+    take: DUE_CARDS_NEW_LIMIT,
   });
 
   const progressItems = dueProgress.map((row) => ({

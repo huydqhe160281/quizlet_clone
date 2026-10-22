@@ -125,8 +125,9 @@ describe('learning queue ranking', () => {
     const { getLearningQueue } = await import('@/server/services/learning/learning-queue');
     const { prisma } = await import('@/server/db');
     const spy = vi.spyOn(prisma.cardProgress, 'findMany').mockResolvedValue([]);
-    vi.spyOn(prisma.reviewHistory, 'findMany').mockResolvedValue([]);
+    vi.spyOn(prisma, '$queryRaw').mockResolvedValue([] as never);
     vi.spyOn(prisma.flashcard, 'findMany').mockResolvedValue([]);
+    vi.spyOn(prisma.flashcard, 'count').mockResolvedValue(0);
 
     await getLearningQueue('user-a', { now, limit: 10 });
 
@@ -158,10 +159,10 @@ describe('learning queue ranking', () => {
           },
         },
       ] as never)
-      .mockResolvedValueOnce([]) // weakByEase
-      .mockResolvedValueOnce([]); // progressCardIds
-    vi.spyOn(prisma.reviewHistory, 'findMany').mockResolvedValue([]);
+      .mockResolvedValueOnce([]); // weakByEase
+    vi.spyOn(prisma, '$queryRaw').mockResolvedValue([] as never);
     vi.spyOn(prisma.flashcard, 'findMany').mockResolvedValue([]);
+    vi.spyOn(prisma.flashcard, 'count').mockResolvedValue(0);
 
     const result = await getLearningQueue('user-a', { now, limit: 10 });
     expect(result.items.find((i) => i.cardId === 'stale-1')).toBeUndefined();
@@ -187,15 +188,52 @@ describe('learning queue ranking', () => {
 
     vi.spyOn(prisma.cardProgress, 'findMany')
       .mockResolvedValueOnce(dueRows as never) // due
-      .mockResolvedValueOnce([]) // weakByEase
-      .mockResolvedValueOnce([]); // progressCardIds for new
-    vi.spyOn(prisma.reviewHistory, 'findMany').mockResolvedValue([]);
+      .mockResolvedValueOnce([]); // weakByEase
+    vi.spyOn(prisma, '$queryRaw').mockResolvedValue([] as never);
     vi.spyOn(prisma.flashcard, 'findMany').mockResolvedValue([]);
+    vi.spyOn(prisma.flashcard, 'count').mockResolvedValue(0);
 
     const result = await getLearningQueue('user-a', { now, limit: 10 });
     expect(result.items).toHaveLength(10);
     expect(result.totalEligible).toBe(40);
     expect(result.membershipForInsights).toHaveLength(40);
     expect(result.membershipForInsights.every((i) => i.reason === 'due')).toBe(true);
+  });
+
+  it('loads at most `limit` new cards but counts all of them as eligible', async () => {
+    const { getLearningQueue } = await import('@/server/services/learning/learning-queue');
+    const { prisma } = await import('@/server/db');
+
+    const progressSpy = vi.spyOn(prisma.cardProgress, 'findMany').mockResolvedValue([]);
+    vi.spyOn(prisma, '$queryRaw').mockResolvedValue([
+      { cardId: 'fail-1', grade: 'AGAIN', front: 'f', setId: 'set-a', setTitle: 'A' },
+      { cardId: 'ok-1', grade: 'GOOD', front: 'g', setId: 'set-a', setTitle: 'A' },
+    ] as never);
+    const newRows = Array.from({ length: 10 }, (_, i) => ({
+      id: `new-${i}`,
+      front: `n-${i}`,
+      setId: 'set-a',
+      set: { title: 'A' },
+    }));
+    const newSpy = vi.spyOn(prisma.flashcard, 'findMany').mockResolvedValue(newRows as never);
+    vi.spyOn(prisma.flashcard, 'count').mockResolvedValue(500);
+
+    const result = await getLearningQueue('user-a', { now, limit: 10 });
+
+    const newArgs = newSpy.mock.calls[0]?.[0] as { take: number; where: unknown };
+    expect(newArgs.take).toBe(10);
+    expect(newArgs.where).toEqual({
+      set: { userId: 'user-a' },
+      progress: { none: { userId: 'user-a' } },
+      id: { notIn: ['fail-1'] },
+    });
+    // weak-by-ease excludes due cards by dueDate rather than a NOT IN id list
+    const weakWhere = progressSpy.mock.calls[1]?.[0]?.where as { dueDate: unknown };
+    expect(weakWhere.dueDate).toEqual({ gt: now });
+    // 1 recent fail + 500 new
+    expect(result.totalEligible).toBe(501);
+    expect(result.items).toHaveLength(10);
+    expect(result.items.some((item) => item.cardId === 'fail-1')).toBe(true);
+    expect(result.items.some((item) => item.cardId === 'ok-1')).toBe(false);
   });
 });

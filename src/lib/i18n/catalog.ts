@@ -34,9 +34,23 @@ function loadLocaleFiles(locale: Locale): Catalog {
   return merged;
 }
 
+// Catalog files only change with a deploy, so production reads each locale once per
+// process; dev re-reads them so edits to messages/*.json show up without a restart.
+const catalogCache = new Map<Locale, Catalog>();
+
+function readLocale(locale: Locale): Catalog {
+  if (process.env.NODE_ENV !== 'production') return loadLocaleFiles(locale);
+  let catalog = catalogCache.get(locale);
+  if (!catalog) {
+    catalog = loadLocaleFiles(locale);
+    catalogCache.set(locale, catalog);
+  }
+  return catalog;
+}
+
 export function loadCatalog(locale: string): Catalog {
   const active: Locale = isLocale(locale) ? locale : DEFAULT_LOCALE;
-  const catalog = loadLocaleFiles(active);
+  const catalog = readLocale(active);
   if (Object.keys(catalog).length > 0) {
     return catalog;
   }

@@ -304,14 +304,26 @@ export function useSetMutations() {
       );
       return { previous };
     },
+    // The PATCH returns the saved card, so write it into the cache instead of refetching
+    // the whole card list (up to thousands of rows) on every toggle. The set detail is
+    // untouched: a card's type does not change anything it shows.
+    onSuccess: (result, { setId, cardId }) => {
+      // A newer toggle of the same card is still in flight; its result wins.
+      const pendingForCard = queryClient.isMutating({
+        predicate: (mutation) =>
+          (mutation.state.variables as { cardId?: string } | undefined)?.cardId === cardId,
+      });
+      if (pendingForCard > 1) return;
+      queryClient.setQueryData<FlashcardItem[]>(setKeys.cards(setId), (cards) =>
+        cards?.map((card) => (card.id === cardId ? result.data : card))
+      );
+    },
     onError: (_error, { setId }, context) => {
       if (context?.previous) {
         queryClient.setQueryData(setKeys.cards(setId), context.previous);
+      } else {
+        void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
       }
-    },
-    onSettled: (_data, _error, { setId }) => {
-      void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
-      void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
     },
   });
 

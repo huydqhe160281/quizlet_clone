@@ -15,6 +15,8 @@ declare module '@auth/core/jwt' {
   interface JWT {
     sub?: string;
     rememberMe?: boolean;
+    /** User.sessionVersion at sign-in; see src/server/auth/session-version.ts. */
+    sv?: number;
   }
 }
 

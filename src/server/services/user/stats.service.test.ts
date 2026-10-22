@@ -1,4 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Prisma } from '@prisma/client';
 import {
   calculateStreakAfterReview,
   getEffectiveStreak,
@@ -23,10 +24,13 @@ const prismaMock = vi.hoisted(() => ({
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 
 import {
+  ensureUserStats,
   getActivity,
   getDashboardStats,
   getRecentSessions,
   getStats,
+  getStreakSnapshot,
+  recordDailyStudyActivity,
   recordReviewStats,
   updateStreak,
 } from '@/server/services/user/stats.service';
@@ -92,6 +96,13 @@ describe('dashboard stats service', () => {
     expect(stats.totalCards).toBe(24);
     expect(stats.dueToday).toBe(4);
     expect(stats.accuracy).toBe(0.8);
+    expect(prismaMock.cardProgress.count).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-a',
+        dueDate: { lte: expect.any(Date) },
+        card: { set: { userId: 'user-a' } },
+      },
+    });
   });
 
   it('test_activity_heatmap_performance: aggregates review history in one query', async () => {
@@ -249,5 +260,216 @@ describe('dashboard stats service', () => {
       code: 'UNAUTHORIZED',
       status: 401,
     });
+  });
+});
+
+describe('user stats rows and streak writes', () => {
+  const now = new Date('2026-06-17T12:00:00.000Z');
+  const uniqueViolation = () =>
+    new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+      code: 'P2002',
+      clientVersion: 'test',
+    });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(now);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('ensureUserStats returns the existing row without creating one', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({ userId: 'u' });
+    await expect(ensureUserStats('u')).resolves.toEqual({ userId: 'u' });
+    expect(prismaMock.userStats.create).not.toHaveBeenCalled();
+  });
+
+  it('ensureUserStats re-reads the row when a concurrent create wins the race', async () => {
+    prismaMock.userStats.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ userId: 'u', currentStreak: 0 });
+    prismaMock.userStats.create.mockRejectedValue(uniqueViolation());
+
+    await expect(ensureUserStats('u')).resolves.toMatchObject({ userId: 'u' });
+    expect(prismaMock.userStats.findUnique).toHaveBeenCalledTimes(2);
+  });
+
+  it('ensureUserStats rethrows when the row is still missing or the error is unrelated', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue(null);
+    prismaMock.userStats.create.mockRejectedValueOnce(uniqueViolation());
+    await expect(ensureUserStats('u')).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
+
+    prismaMock.userStats.create.mockRejectedValueOnce(new Error('boom'));
+    await expect(ensureUserStats('u')).rejects.toThrow('boom');
+  });
+
+  it('recordDailyStudyActivity is a no-op on a day already counted', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 4,
+      longestStreak: 4,
+      lastStudiedDate: new Date('2026-06-17T00:00:00.000Z'),
+    });
+
+    const result = await recordDailyStudyActivity('u', now);
+
+    expect(result.changed).toBe(false);
+    expect(prismaMock.userStats.update).not.toHaveBeenCalled();
+  });
+
+  it('recordDailyStudyActivity starts a streak at 1 for a first study day', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 0,
+      longestStreak: 2,
+      lastStudiedDate: null,
+    });
+    prismaMock.userStats.update.mockResolvedValue({ currentStreak: 1 });
+
+    const result = await recordDailyStudyActivity('u', now);
+
+    expect(result.changed).toBe(true);
+    expect(prismaMock.userStats.update).toHaveBeenCalledWith({
+      where: { userId: 'u' },
+      data: {
+        currentStreak: 1,
+        longestStreak: 2,
+        lastStudiedDate: new Date('2026-06-17T00:00:00.000Z'),
+      },
+    });
+  });
+
+  it('getStreakSnapshot persists a lapsed streak as 0', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 5,
+      longestStreak: 9,
+      lastStudiedDate: new Date('2026-06-10T00:00:00.000Z'),
+    });
+
+    const snapshot = await getStreakSnapshot('u');
+
+    expect(snapshot).toEqual({
+      currentStreak: 0,
+      longestStreak: 9,
+      lastStudiedDate: '2026-06-10T00:00:00.000Z',
+    });
+    expect(prismaMock.userStats.update).toHaveBeenCalledWith({
+      where: { userId: 'u' },
+      data: { currentStreak: 0 },
+    });
+  });
+
+  it('getStreakSnapshot leaves an active streak untouched', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 2,
+      longestStreak: 2,
+      lastStudiedDate: new Date('2026-06-16T00:00:00.000Z'),
+    });
+
+    const snapshot = await getStreakSnapshot('u');
+
+    expect(snapshot.currentStreak).toBe(2);
+    expect(prismaMock.userStats.update).not.toHaveBeenCalled();
+  });
+
+  it('recordReviewStats does not bump totalCorrect for a wrong answer', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 1,
+      longestStreak: 1,
+      lastStudiedDate: now,
+    });
+    prismaMock.userStats.update.mockResolvedValue({});
+
+    await recordReviewStats('u', false);
+
+    expect(prismaMock.userStats.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('getStats reports zero accuracy before any review', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 0,
+      longestStreak: 0,
+      lastStudiedDate: null,
+      totalReviews: 0,
+      totalCorrect: 0,
+    });
+    prismaMock.flashcardSet.count.mockResolvedValue(0);
+    prismaMock.flashcard.count.mockResolvedValue(0);
+    prismaMock.cardProgress.count.mockResolvedValue(0);
+
+    await expect(getStats('u')).resolves.toMatchObject({ accuracy: 0, currentStreak: 0 });
+  });
+
+  it('getRecentSessions prefers completed, then further along, then newer sessions', async () => {
+    const base = { setId: 'set-1', mode: 'LEARN', totalCards: 10, correctCount: 0, score: null };
+    const set = { id: 'set-1', title: 'A' };
+    prismaMock.studySession.findMany.mockResolvedValue([
+      {
+        ...base,
+        id: 'less-progress',
+        completedAt: null,
+        startedAt: new Date('2026-06-16T10:00:00.000Z'),
+        set,
+        _count: { sessionCards: 2 },
+      },
+      {
+        ...base,
+        id: 'more-progress',
+        completedAt: null,
+        startedAt: new Date('2026-06-15T10:00:00.000Z'),
+        set,
+        _count: { sessionCards: 6 },
+      },
+      {
+        ...base,
+        id: 'tie-older',
+        mode: 'WRITE',
+        completedAt: null,
+        startedAt: new Date('2026-06-14T09:00:00.000Z'),
+        set,
+        _count: { sessionCards: 3 },
+      },
+      {
+        ...base,
+        id: 'tie-newer',
+        mode: 'WRITE',
+        completedAt: null,
+        startedAt: new Date('2026-06-16T09:00:00.000Z'),
+        set,
+        _count: { sessionCards: 3 },
+      },
+      {
+        ...base,
+        id: 'open-test',
+        mode: 'TEST',
+        completedAt: null,
+        startedAt: new Date('2026-06-16T11:00:00.000Z'),
+        set,
+        _count: { sessionCards: 9 },
+      },
+      {
+        ...base,
+        id: 'empty-set',
+        mode: 'TEST',
+        totalCards: 0,
+        completedAt: new Date('2026-06-13T09:30:00.000Z'),
+        startedAt: new Date('2026-06-13T09:00:00.000Z'),
+        set,
+        _count: { sessionCards: 0 },
+      },
+    ]);
+
+    const sessions = await getRecentSessions('u', 10);
+    const ids = sessions.map((session) => session.id).sort();
+
+    expect(ids).toEqual(['empty-set', 'more-progress', 'tie-newer']);
+    expect(sessions.find((session) => session.id === 'empty-set')?.progress).toBe(0);
   });
 });

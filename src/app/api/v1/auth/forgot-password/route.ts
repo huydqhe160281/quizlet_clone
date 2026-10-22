@@ -57,7 +57,12 @@ export const POST = withErrorHandler(async (req) => {
     const emailLocale = resolveEmailLocale(user.preferredLocale, locale);
 
     if (env.resendApiKey) {
-      await sendPasswordResetEmail(email, resetUrl, emailLocale);
+      try {
+        await sendPasswordResetEmail(email, resetUrl, emailLocale);
+      } catch (error) {
+        // Same response either way: a send failure must not reveal that the account exists.
+        console.error('[auth] failed to send password reset email', error);
+      }
     } else if (env.nodeEnv !== 'production') {
       devResetUrl = resetUrl;
     }

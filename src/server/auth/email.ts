@@ -40,23 +40,53 @@ export function renderPasswordResetEmail(
   };
 }
 
+export function renderEmailVerificationEmail(
+  verifyUrl: string,
+  locale: Locale
+): PasswordResetEmailContent {
+  const catalog = loadCatalog(locale);
+  return {
+    subject: t(catalog, 'emails.verifyEmail.subject'),
+    html: `
+    <p>${t(catalog, 'emails.verifyEmail.intro')}</p>
+    <p><a href="${verifyUrl}">${t(catalog, 'emails.verifyEmail.cta')}</a></p>
+    <p>${t(catalog, 'emails.verifyEmail.expiry')}</p>
+    <p>${t(catalog, 'emails.verifyEmail.ignore')}</p>
+  `,
+  };
+}
+
+async function sendEmail(email: string, content: PasswordResetEmailContent, devLink: string) {
+  if (!env.resendApiKey) {
+    console.info(`[dev] Email for ${email} (${content.subject}): ${devLink}`);
+    return;
+  }
+
+  const resend = new Resend(env.resendApiKey);
+  // The SDK reports API failures (bad key, unverified recipient) as `{ error }`, not by throwing.
+  const { error } = await resend.emails.send({
+    from: 'QuizFree <onboarding@resend.dev>',
+    to: email,
+    subject: content.subject,
+    html: content.html,
+  });
+  if (error) {
+    throw new Error(`Email send failed: ${error.name}: ${error.message}`);
+  }
+}
+
 export async function sendPasswordResetEmail(
   email: string,
   resetUrl: string,
   locale: Locale = DEFAULT_LOCALE
 ): Promise<void> {
-  const { subject, html } = renderPasswordResetEmail(resetUrl, locale);
+  await sendEmail(email, renderPasswordResetEmail(resetUrl, locale), resetUrl);
+}
 
-  if (!env.resendApiKey) {
-    console.info(`[dev] Password reset link for ${email}: ${resetUrl}`);
-    return;
-  }
-
-  const resend = new Resend(env.resendApiKey);
-  await resend.emails.send({
-    from: 'QuizFree <onboarding@resend.dev>',
-    to: email,
-    subject,
-    html,
-  });
+export async function sendEmailVerificationEmail(
+  email: string,
+  verifyUrl: string,
+  locale: Locale = DEFAULT_LOCALE
+): Promise<void> {
+  await sendEmail(email, renderEmailVerificationEmail(verifyUrl, locale), verifyUrl);
 }

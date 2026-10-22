@@ -254,7 +254,7 @@ async function importToExistingSet(
     });
   });
 
-  invalidateSetCache(userId, existingSet.visibility);
+  invalidateSetCache(userId, existingSet.visibility, { setId: existingSet.id });
 
   return {
     set: { id: setId, title: existingSet.title },

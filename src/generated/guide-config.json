@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-04T09:24:04.785Z",
+  "generatedAt": "2026-10-22T16:51:21.836Z",
   "site": {
     "name": "QuizFree",
     "locale": "runtime"
@@ -152,6 +152,11 @@
       "path": "/today",
       "title": "Today",
       "auth": "required"
+    },
+    {
+      "path": "/verify-email",
+      "title": "Verify Email",
+      "auth": "guest-only"
     }
   ],
   "flows": [

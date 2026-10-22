@@ -30,6 +30,11 @@ export async function getCards(setId: string, userId?: string) {
   });
 }
 
+/** Cards Draw mode can use; callers must already have checked access to the set. */
+export async function countNewWordCards(setId: string) {
+  return prisma.flashcard.count({ where: { setId, type: 'new-word' } });
+}
+
 export async function createCard(setId: string, userId: string, input: CreateCardInput) {
   const set = await getOwnedSet(setId, userId);
 
@@ -51,7 +56,7 @@ export async function createCard(setId: string, userId: string, input: CreateCar
     },
   });
 
-  invalidateSetCache(userId, set.visibility);
+  invalidateSetCache(userId, set.visibility, { setId });
   return card;
 }
 
@@ -81,7 +86,7 @@ export async function updateCard(
     },
   });
 
-  invalidateSetCache(userId, set.visibility);
+  invalidateSetCache(userId, set.visibility, { setId, scope: 'content' });
   return updatedCard;
 }
 
@@ -94,7 +99,7 @@ export async function deleteCard(setId: string, cardId: string, userId: string) 
   }
 
   await prisma.flashcard.delete({ where: { id: cardId } });
-  invalidateSetCache(userId, set.visibility);
+  invalidateSetCache(userId, set.visibility, { setId });
 }
 
 export async function reorderCards(setId: string, userId: string, cardIds: string[]) {
@@ -126,7 +131,7 @@ export async function reorderCards(setId: string, userId: string, cardIds: strin
     WHERE f.id = v.id AND f."setId" = ${setId}
   `;
 
-  invalidateSetCache(userId, set.visibility);
+  invalidateSetCache(userId, set.visibility, { setId, scope: 'content' });
 
   return prisma.flashcard.findMany({
     where: { setId },
@@ -144,5 +149,5 @@ export async function deleteCards(setId: string, cardIds: string[], userId: stri
     },
   });
 
-  invalidateSetCache(userId, set.visibility);
+  invalidateSetCache(userId, set.visibility, { setId });
 }
