@@ -21,6 +21,7 @@
       "toggle": "Toggle theme",
       "light": "Light",
       "dark": "Dark",
+      "pastel": "Pastel",
       "system": "System"
     },
     "errorBoundary": {

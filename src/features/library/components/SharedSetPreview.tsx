@@ -50,11 +50,16 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+      <div className="min-w-0">
+        <h1
+          title={set.title}
+          className="line-clamp-3 break-words text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+        >
           {set.title}
         </h1>
-        <p className="mt-2 text-muted-foreground">{set.description ?? t('ui.noDescription')}</p>
+        <p className="mt-2 line-clamp-3 break-words text-muted-foreground">
+          {set.description ?? t('ui.noDescription')}
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <Badge variant="secondary">{t('ui.cardsCount', { count: set._count.cards })}</Badge>
           {set.language && <Badge variant="outline">{set.language}</Badge>}
@@ -73,8 +78,10 @@ export function SharedSetPreview({ set }: SharedSetPreviewProps) {
             key={`${card.front}-${card.back}`}
             className="grid gap-2 border-b p-4 last:border-b-0 sm:grid-cols-2"
           >
-            <p>{card.front}</p>
-            <p className="text-muted-foreground">{card.back}</p>
+            <p className="min-w-0 whitespace-pre-line break-words">{card.front}</p>
+            <p className="min-w-0 whitespace-pre-line break-words text-muted-foreground">
+              {card.back}
+            </p>
           </div>
         ))}
       </div>

@@ -14,6 +14,7 @@ const DropdownMenuContent = React.forwardRef<
     <DropdownMenuPrimitive.Content
       ref={ref}
       sideOffset={sideOffset}
+      data-slot="popover"
       className={cn(
         'z-50 min-w-[8rem] overflow-hidden rounded-xl border border-border/50 bg-popover/80 backdrop-blur-xl p-1.5 text-popover-foreground shadow-xl',
         className

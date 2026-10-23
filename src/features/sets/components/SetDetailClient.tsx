@@ -102,11 +102,16 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
         </Button>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+        <div className="min-w-0 max-w-full">
+          <h1
+            title={set.title}
+            className="line-clamp-3 break-words text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+          >
             {set.title}
           </h1>
-          <p className="mt-1 text-muted-foreground">{set.description ?? t('ui.noDescription')}</p>
+          <p className="mt-1 line-clamp-3 break-words text-muted-foreground">
+            {set.description ?? t('ui.noDescription')}
+          </p>
           <div className="mt-2 flex gap-2">
             <Badge variant="secondary">{t('ui.cardsCount', { count: set._count.cards })}</Badge>
             <Badge variant="outline">

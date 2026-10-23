@@ -159,7 +159,7 @@ export function TodayPageClient() {
             {t('todayPage.editGoal')}
           </Button>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div className="soft-track h-2 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${goal.pct}%` }}
@@ -253,7 +253,9 @@ export function TodayPageClient() {
                   <p className="truncate text-sm font-medium">{item.frontPreview ?? item.cardId}</p>
                   <p className="truncate text-xs text-muted-foreground">{item.setTitle}</p>
                 </div>
-                <Badge variant="secondary">{reasonLabel(t, item.reason)}</Badge>
+                <Badge variant="secondary" className="shrink-0">
+                  {reasonLabel(t, item.reason)}
+                </Badge>
               </li>
             ))}
           </ul>

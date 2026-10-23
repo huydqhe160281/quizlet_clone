@@ -10,7 +10,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <div className="fixed -bottom-[500px] -left-[500px] h-[1000px] w-[1000px] rounded-full bg-primary/5 opacity-50 blur-3xl pointer-events-none" />
 
       <Sidebar />
-      <div className="flex flex-1 flex-col pb-16 md:pb-0 z-10">
+      <div className="flex min-w-0 flex-1 flex-col pb-16 sm:pb-0 z-10">
         <Navbar />
         <main className="flex-1 p-4 md:p-6">
           <div className="mx-auto max-w-6xl">{children}</div>

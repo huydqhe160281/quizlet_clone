@@ -41,8 +41,11 @@ export function SetsListClient() {
   );
 
   const toolbarActions = (
-    <div className="flex flex-wrap gap-2">
-      <GenerateWithAIButton onClick={() => setAiModalOpen(true)} />
+    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <GenerateWithAIButton
+        onClick={() => setAiModalOpen(true)}
+        className="col-span-2 order-last sm:order-none"
+      />
       <Button asChild variant="outline" className="shadow-sm">
         <Link href="/sets/import">
           <Upload className="mr-1.5 sm:mr-2 h-4 w-4" />
@@ -50,7 +53,7 @@ export function SetsListClient() {
           <span className="sm:hidden">{t('ui.import')}</span>
         </Link>
       </Button>
-      <Button onClick={() => setCreateModalOpen(true)}>
+      <Button onClick={() => setCreateModalOpen(true)} className="order-first sm:order-none">
         <Plus className="mr-1.5 sm:mr-2 h-4 w-4" />
         <span className="hidden sm:inline">{t('setsPage.newSet')}</span>
         <span className="sm:hidden">{t('setsPage.new')}</span>

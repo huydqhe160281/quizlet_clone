@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { CardMediaImage } from '@/components/shared/CardMediaImage';
 import { Button } from '@/components/ui/button';
 import { guessSpeechLang, type SpeechLangHints } from '@/features/study/lib/speech-lang';
-import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
+import { StudyCardText, isDenseStudyText } from '@/features/study/components/shared/StudyCardText';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 
@@ -34,8 +34,8 @@ export function FlashcardViewer({
   onSpeakBack,
 }: FlashcardViewerProps) {
   const t = useTranslations();
-  const multilineFront = front.includes('\n');
-  const multilineBack = back.includes('\n');
+  const multilineFront = isDenseStudyText(front);
+  const multilineBack = isDenseStudyText(back);
 
   return (
     <div
@@ -58,7 +58,7 @@ export function FlashcardViewer({
       >
         <div
           className={cn(
-            'absolute inset-0 flex flex-col justify-between rounded-xl border border-border/50 bg-card/90 p-6 shadow-lg backface-hidden backdrop-blur-sm'
+            'clay-surface absolute inset-0 flex flex-col justify-between rounded-xl border border-border/50 bg-card/90 p-6 shadow-lg backface-hidden backdrop-blur-sm'
           )}
         >
           <div className="flex items-center justify-between text-muted-foreground">
@@ -84,7 +84,7 @@ export function FlashcardViewer({
 
           <div
             className={cn(
-              'flex flex-1 flex-col px-4',
+              'flex min-h-0 flex-1 flex-col px-4',
               multilineFront
                 ? 'items-stretch justify-start overflow-y-auto py-2 text-left'
                 : 'items-center justify-center text-center'
@@ -99,7 +99,7 @@ export function FlashcardViewer({
 
         <div
           className={cn(
-            'absolute inset-0 flex flex-col justify-between rounded-xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-lg backface-hidden rotate-y-180'
+            'clay-primary-surface absolute inset-0 flex flex-col justify-between rounded-xl border border-primary/20 bg-primary p-6 text-primary-foreground shadow-lg backface-hidden rotate-y-180'
           )}
         >
           <div className="flex items-center justify-between text-primary-foreground/70">
@@ -125,7 +125,7 @@ export function FlashcardViewer({
 
           <div
             className={cn(
-              'flex flex-1 flex-col px-4',
+              'flex min-h-0 flex-1 flex-col px-4',
               multilineBack || example
                 ? 'items-stretch justify-start overflow-y-auto py-2 text-left'
                 : 'items-center justify-center text-center'

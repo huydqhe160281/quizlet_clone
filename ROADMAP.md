@@ -2,6 +2,8 @@
 
 ## Completed
 
+- **2026-10-23 — pastel-theme + mobile study focus mode**: Third theme "Pastel" (Soft UI / neumorphism + claymorphism, scoped `.pastel` tokens and `data-slot` hooks on shadcn primitives, decorative clay orbs on landing/auth). Phones hide MobileNav and the guide chat FAB on study screens (`isStudySessionPath`). Mobile polish: compact email-verification banner, My Sets action grid, keyboard tip hidden on touch. Specs updated (`ui-design-system`, `ui-components`, `ai-assistant-chat-box`).
+
 - **2026-07-21 — optimize-perf-ux-ui-structure** (brainstorm): Layered Performance → UX → UI → Structure playbook; study session resume/idempotency; dashboard due priority + activity coalesce; search/library polish (auth own+public, infinite Load more, shared preview cache); soft radius token ladder. Archived to `openspec/changes/archive/2026-07-21-optimize-perf-ux-ui-structure/`. Specs synced to main (`optimize-perf-playbook`, `dashboard-search-library`, `study-modes`, `ui-design-system`).
 
 - **2026-07-28 — adaptive-learning-coach** (Phase 1): Today planner at `/today` — daily card goal, ranked due/weak/new queue, retention insights, recommended spaced or LEARN session; dashboard due alert → `/today`. Archived: `openspec/changes/archive/2026-07-28-adaptive-learning-coach/`. Specs synced to main (`daily-learning-queue`, `daily-study-goals`, `retention-insights`, `recommended-study-session`, `today-learning-page`, `dashboard-search-library`).
@@ -16,4 +18,4 @@
 
 - [x] **i18n-multilingual-vi-en-ja**: VI/EN/JA UI + system copy; cookie/DB preference; LanguageSwitcher; study content unchanged. (implementation done — verify/checkpoint remaining)
 
-Cập nhật lần cuối: 2026-08-04
+Cập nhật lần cuối: 2026-10-23

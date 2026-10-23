@@ -186,10 +186,10 @@ export function TestMode({ setId }: TestModeProps) {
                 );
               }}
               className={cn(
-                'rounded-xl border border-border/60 bg-background p-4 text-left text-sm font-semibold transition-all hover:border-primary/30 hover:bg-primary/5 disabled:opacity-70',
+                'soft-option break-words rounded-xl border border-border/60 bg-background p-4 text-left text-sm font-semibold transition-all hover:border-primary/30 hover:bg-primary/5 disabled:opacity-70',
                 answered &&
                   option === currentQuestion.correctBack &&
-                  'border-emerald-500/40 bg-emerald-500/10'
+                  'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
               )}
             >
               {option}
@@ -200,7 +200,7 @@ export function TestMode({ setId }: TestModeProps) {
 
       {currentQuestion.type === 'tf' && (
         <div className="space-y-4">
-          <p className="rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium">
+          <p className="soft-well rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium">
             {currentQuestion.shownBack}
           </p>
           <p className="text-center text-sm text-muted-foreground">{t('studyUi.tfPrompt')}</p>

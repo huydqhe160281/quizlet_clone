@@ -146,7 +146,7 @@ The system SHALL render a floating chat widget at the bottom-right of all pages 
 #### Scenario: Widget visible by default
 
 - **GIVEN** a fresh page load
-- **WHEN** any page renders
+- **WHEN** any page renders (except study screens below `md`, see "Mobile study focus mode hides FAB")
 - **THEN** the chat FAB is visible at bottom-right
 
 #### Scenario: Dismiss hides widget during SPA navigation
@@ -172,6 +172,12 @@ The system SHALL render a floating chat widget at the bottom-right of all pages 
 - **GIVEN** viewport width < 768px
 - **WHEN** widget renders expanded
 - **THEN** panel bottom offset is ≥ `GUIDE_CHAT_MOBILE_BOTTOM_OFFSET` (4rem) above viewport bottom
+
+#### Scenario: Mobile study focus mode hides FAB
+
+- **GIVEN** viewport width < 768px
+- **WHEN** the route is a study screen `/sets/[setId]/(flashcard|learn|write|test|draw)` (`isStudySessionPath`)
+- **THEN** the chat FAB is hidden (`max-md:hidden`) so it does not cover the study card; it stays visible on desktop and on all other routes
 
 #### Scenario: Quick prompt chips
 

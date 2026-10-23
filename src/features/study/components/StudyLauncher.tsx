@@ -136,7 +136,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           {MODES.map((mode, index) => {
             const isDrawDisabled = mode.value === 'DRAW' && newWordCount === 0;
             const disabled = mode.disabled || isDrawDisabled;
@@ -146,12 +146,12 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
               <>
                 <div
                   className={cn(
-                    'shrink-0 rounded-xl p-3.5 transition-colors',
+                    'shrink-0 rounded-xl p-2.5 transition-colors sm:p-3.5',
                     mode.iconClass,
                     hoveredMode === mode.value && !disabled && 'scale-105'
                   )}
                 >
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -169,7 +169,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
+                  <p className="line-clamp-1 text-xs leading-relaxed text-muted-foreground sm:line-clamp-none">
                     {t(STUDY_MODE_DESC_KEY[mode.value])}
                   </p>
                 </div>
@@ -180,7 +180,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
               return (
                 <div
                   key={mode.value}
-                  className="glass-panel flex cursor-not-allowed items-start gap-4 rounded-xl border border-border/50 p-5 opacity-60"
+                  className="glass-panel flex cursor-not-allowed items-center gap-3 rounded-xl border border-border/50 p-3.5 opacity-60 sm:items-start sm:gap-4 sm:p-5"
                 >
                   {content}
                 </div>
@@ -195,7 +195,7 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
                 onMouseEnter={() => setHoveredMode(mode.value)}
                 onMouseLeave={() => setHoveredMode(null)}
                 className={cn(
-                  'glass-panel group flex items-start gap-4 rounded-xl border border-border/50 p-5 text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',
+                  'glass-panel group flex items-center gap-3 rounded-xl border border-border/50 p-3.5 text-left sm:items-start sm:gap-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',
                   mode.accentClass
                 )}
                 style={{ animationDelay: `${index * 100}ms` }}

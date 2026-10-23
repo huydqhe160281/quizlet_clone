@@ -51,13 +51,14 @@ export function EmailVerificationBanner() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center gap-3 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm"
+      className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs leading-snug sm:gap-3 sm:px-4 sm:py-2 sm:text-sm"
     >
       <MailWarning className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
       <span className="min-w-0 flex-1">{t('auth.verifyBannerText')}</span>
       <Button
         size="sm"
         variant="outline"
+        className="h-8 shrink-0 px-3 text-xs sm:h-9 sm:text-sm"
         onClick={resend}
         disabled={state === 'sending' || state === 'sent'}
       >
@@ -66,6 +67,7 @@ export function EmailVerificationBanner() {
       <Button
         size="icon"
         variant="ghost"
+        className="h-8 w-8 shrink-0 sm:h-11 sm:w-11"
         onClick={dismiss}
         aria-label={t('auth.verifyBannerDismiss')}
       >

@@ -299,11 +299,11 @@ export function LearnMode({ setId }: LearnModeProps) {
                   disabled={Boolean(selected)}
                   onClick={() => void handleAnswer(option)}
                   className={cn(
-                    'flex items-center justify-between rounded-xl border p-4 text-left text-sm font-semibold transition-all',
+                    'soft-option flex items-center justify-between rounded-xl border p-4 text-left text-sm font-semibold transition-all',
                     optionClass
                   )}
                 >
-                  <span>{option}</span>
+                  <span className="min-w-0 break-words">{option}</span>
                   {selected && isCorrectOption && <Check className="h-4 w-4 shrink-0" />}
                   {selected && isSelected && !isCorrectOption && <X className="h-4 w-4 shrink-0" />}
                 </button>

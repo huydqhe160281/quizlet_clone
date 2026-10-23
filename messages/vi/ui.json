@@ -21,6 +21,7 @@
       "toggle": "Chuyển giao diện",
       "light": "Sáng",
       "dark": "Tối",
+      "pastel": "Pastel",
       "system": "Hệ thống"
     },
     "errorBoundary": {

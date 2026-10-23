@@ -8,11 +8,15 @@ import { GUIDE_CHAT_MOBILE_BOTTOM_OFFSET } from '@/features/guide/constants';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { isStudySessionPath } from '@/lib/navigation/study-focus';
 
 export function GuideChatWidget() {
   const t = useTranslations();
   const { dismissed, dismiss } = useGuideChatUi();
   const [expanded, setExpanded] = useState(false);
+  // Focus mode on phones: the FAB would cover the study card and its controls.
+  const studyFocus = isStudySessionPath(usePathname());
 
   if (dismissed) {
     return null;
@@ -28,7 +32,8 @@ export function GuideChatWidget() {
         <div
           className={cn(
             'group fixed z-40 md:bottom-6 md:right-6',
-            'bottom-[var(--guide-chat-bottom)] right-4'
+            'bottom-[var(--guide-chat-bottom)] right-4',
+            studyFocus && 'max-md:hidden'
           )}
           style={{ ['--guide-chat-bottom' as string]: GUIDE_CHAT_MOBILE_BOTTOM_OFFSET }}
         >

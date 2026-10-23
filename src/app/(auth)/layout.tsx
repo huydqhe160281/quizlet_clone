@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PastelOrbs } from '@/components/layout/PastelOrbs';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { createNoIndexMetadata } from '@/lib/seo/metadata';
 
@@ -7,8 +8,9 @@ export const metadata: Metadata = createNoIndexMetadata();
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-background overflow-hidden px-4 py-8">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none" />
+    <div className="relative flex min-h-screen flex-col bg-background overflow-hidden px-4 py-8 [.pastel_&]:bg-transparent">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none [.pastel_&]:hidden" />
+      <PastelOrbs variant="corners" />
       <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
       <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
 

@@ -58,15 +58,15 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
       style={style}
       className={
         isTallContent
-          ? 'flex items-start gap-3 rounded-xl border border-border/50 bg-card/60 p-4 shadow-sm backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-md'
-          : 'flex items-center gap-3 rounded-xl border border-border/50 bg-card/60 p-4 shadow-sm backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-md'
+          ? 'flex items-start gap-2 rounded-xl border border-border/50 bg-card/60 p-3 shadow-sm sm:gap-3 sm:p-4 backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-md'
+          : 'flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 p-3 shadow-sm sm:gap-3 sm:p-4 backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-md'
       }
     >
       <div
         className={
           isTallContent
-            ? 'flex shrink-0 items-center gap-2 pt-0.5 text-muted-foreground'
-            : 'flex shrink-0 items-center gap-2 text-muted-foreground'
+            ? 'flex shrink-0 flex-col items-center gap-2 pt-0.5 text-muted-foreground sm:flex-row'
+            : 'flex shrink-0 flex-col items-center gap-2 text-muted-foreground sm:flex-row'
         }
       >
         <button
@@ -98,7 +98,7 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
               </Badge>
             )}
           </div>
-          <p className="text-[15px] font-medium leading-relaxed whitespace-pre-line text-foreground/90">
+          <p className="text-[15px] font-medium leading-relaxed whitespace-pre-line break-words text-foreground/90">
             {card.front}
           </p>
         </div>
@@ -111,7 +111,7 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
               {card.back}
             </p>
           ) : (
-            <p className="text-[15px] leading-relaxed whitespace-pre-line text-foreground/80">
+            <p className="text-[15px] leading-relaxed whitespace-pre-line break-words text-foreground/80">
               {card.back}
             </p>
           )}
@@ -121,8 +121,8 @@ function SortableCardRow({ card, selected, onSelect, onDelete, onTypeToggle }: S
       <div
         className={
           isTallContent
-            ? 'ml-1 flex shrink-0 items-center gap-3 pt-0.5 sm:border-l sm:border-border/60 sm:pl-4'
-            : 'ml-1 flex shrink-0 items-center gap-3 sm:border-l sm:border-border/60 sm:pl-4'
+            ? 'flex shrink-0 flex-col items-center gap-2 pt-0.5 sm:ml-1 sm:flex-row sm:gap-3 sm:border-l sm:border-border/60 sm:pl-4'
+            : 'flex shrink-0 flex-col items-center gap-2 sm:ml-1 sm:flex-row sm:gap-3 sm:border-l sm:border-border/60 sm:pl-4'
         }
       >
         <label className="flex cursor-pointer items-center gap-2 text-muted-foreground transition-colors hover:text-primary">

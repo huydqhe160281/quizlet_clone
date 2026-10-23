@@ -26,6 +26,14 @@ The system SHALL define a unified design token set covering color, typography, s
 - **WHEN** `<html>` receives class `dark`
 - **THEN** all semantic color tokens resolve from the `.dark` block with sufficient contrast for text and interactive elements
 
+#### Scenario: Pastel theme (Soft UI + claymorphism)
+
+- **GIVEN** the user picks "Pastel" in `ThemeToggle` (next-themes `themes={['light','dark','pastel']}`)
+- **WHEN** `<html>` receives class `pastel`
+- **THEN** semantic tokens resolve from the `.pastel` block (cream base, peach primary, dusty-blue secondary, `--radius: 1.25rem`) and `body` shows a soft mesh gradient
+- **AND** primitives opt into soft/clay surfaces via `data-slot` (`button` + `data-variant`, `card`, `input`, `checkbox`, `tabs-list`/`tabs-trigger`, `popover`, `dialog`, `dialog-overlay`, `slider-track`/`slider-thumb`); feature components use `clay-surface`, `clay-primary-surface`, `soft-option`, `soft-well`, `soft-track`
+- **AND** all of these rules are scoped under `.pastel`, so light and dark render unchanged
+
 #### Scenario: Subtle border radius scale
 
 - **GIVEN** `--radius` is defined in `globals.css` (default `0.75rem`)
@@ -84,7 +92,14 @@ The system SHALL maintain usable layouts at mobile (≥375px), tablet (≥768px)
 
 - **GIVEN** viewport width below `md` breakpoint
 - **WHEN** user navigates authenticated app
-- **THEN** Sidebar is hidden and MobileNav bottom bar is visible with touch-friendly targets
+- **THEN** Sidebar is hidden and MobileNav bottom bar is visible with touch-friendly targets, except on study screens (see "Mobile study focus mode")
+
+#### Scenario: Mobile study focus mode
+
+- **GIVEN** viewport width below `sm` breakpoint (MobileNav range)
+- **WHEN** the user is on a study screen `/sets/[setId]/(flashcard|learn|write|test|draw)` (`isStudySessionPath` in `src/lib/navigation/study-focus.ts`)
+- **THEN** MobileNav is not rendered and the guide chat FAB is hidden, so the card and its controls fit the viewport
+- **AND** the study header's Exit control remains the way back; every other app route (including `/sets/[setId]`) keeps MobileNav
 
 #### Scenario: Tablet layout
 

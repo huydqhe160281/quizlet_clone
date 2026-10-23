@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
 import { dispatchNavReselect } from '@/lib/navigation/nav-reselect';
+import { isStudySessionPath } from '@/lib/navigation/study-focus';
 import { NAV_ICON_MAP } from '@/lib/navigation/navigation-icons';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -11,6 +12,11 @@ import { useTranslations } from '@/lib/i18n/LocaleProvider';
 export function MobileNav() {
   const pathname = usePathname();
   const t = useTranslations();
+
+  // Focus mode: study screens get the full viewport; their header has an Exit control.
+  if (isStudySessionPath(pathname)) {
+    return null;
+  }
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 sm:hidden pb-[env(safe-area-inset-bottom)] p-3 pointer-events-none">

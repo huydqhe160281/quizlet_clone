@@ -54,6 +54,12 @@ MobileNav SHALL provide bottom navigation on mobile viewports matching the glass
 - **WHEN** app layout renders
 - **THEN** MobileNav displays with glass background and icons matching Sidebar destinations
 
+#### Scenario: Hidden during study (focus mode)
+
+- **GIVEN** viewport below `sm` breakpoint
+- **WHEN** the route is a study screen (`isStudySessionPath`)
+- **THEN** MobileNav renders nothing (`MobileNav.test.tsx`)
+
 ---
 
 ### Requirement: Dashboard Redesign
