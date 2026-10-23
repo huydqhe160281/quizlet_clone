@@ -18,6 +18,7 @@
     "private": "Riêng tư",
     "public": "Công khai",
     "theme": {
+      "label": "Giao diện",
       "toggle": "Chuyển giao diện",
       "light": "Sáng",
       "dark": "Tối",

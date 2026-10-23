@@ -18,6 +18,7 @@
     "private": "非公開",
     "public": "公開",
     "theme": {
+      "label": "テーマ",
       "toggle": "テーマを切り替え",
       "light": "ライト",
       "dark": "ダーク",

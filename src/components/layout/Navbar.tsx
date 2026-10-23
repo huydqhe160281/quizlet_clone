@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { signOut, useSession } from 'next-auth/react';
-import { BookOpen, Globe, LogOut, Moon, Sun, User } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { BookOpen, Globe, LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { StreakBadge } from '@/components/layout/StreakBadge';
+import { ThemePicker } from '@/components/layout/ThemePicker';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/constants';
@@ -28,7 +28,6 @@ function writeLocaleCookie(locale: Locale) {
 
 export function Navbar() {
   const { data: session, status } = useSession();
-  const { setTheme, resolvedTheme } = useTheme();
   const locale = useLocale();
   const t = useTranslations();
   const router = useRouter();
@@ -130,7 +129,7 @@ export function Navbar() {
                   </button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuContent align="end" className="w-64">
                   <div className="px-2.5 py-2 border-b border-border/40 mb-1">
                     <p className="text-xs font-semibold text-foreground truncate">
                       {session.user.name ?? session.user.email}
@@ -142,17 +141,12 @@ export function Navbar() {
                     )}
                   </div>
 
-                  <DropdownMenuItem
-                    onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                    className="gap-2.5"
-                  >
-                    {resolvedTheme === 'dark' ? (
-                      <Sun className="h-4 w-4 text-amber-400" />
-                    ) : (
-                      <Moon className="h-4 w-4 text-indigo-400" />
-                    )}
-                    {resolvedTheme === 'dark' ? t('ui.theme.light') : t('ui.theme.dark')}
-                  </DropdownMenuItem>
+                  <div className="px-1 pb-2 pt-1">
+                    <p className="px-1.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {t('ui.theme.label')}
+                    </p>
+                    <ThemePicker />
+                  </div>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -197,6 +191,9 @@ export function Navbar() {
           </>
         ) : (
           <div className="flex items-center gap-1.5">
+            <div className="md:hidden">
+              <ThemeToggle />
+            </div>
             <Button
               variant="ghost"
               size="sm"

@@ -18,6 +18,7 @@
     "private": "Private",
     "public": "Public",
     "theme": {
+      "label": "Theme",
       "toggle": "Toggle theme",
       "light": "Light",
       "dark": "Dark",
