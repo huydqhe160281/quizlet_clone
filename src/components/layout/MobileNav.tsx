@@ -7,14 +7,17 @@ import { dispatchNavReselect } from '@/lib/navigation/nav-reselect';
 import { isStudySessionPath } from '@/lib/navigation/study-focus';
 import { NAV_ICON_MAP } from '@/lib/navigation/navigation-icons';
 import { cn } from '@/lib/utils';
+import { useKeyboardOpen } from '@/lib/utils/use-keyboard-open';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 export function MobileNav() {
   const pathname = usePathname();
   const t = useTranslations();
+  const keyboardOpen = useKeyboardOpen();
 
   // Focus mode: study screens get the full viewport; their header has an Exit control.
-  if (isStudySessionPath(pathname)) {
+  // While typing on a phone the keyboard pushes the bar up over the field's surroundings.
+  if (isStudySessionPath(pathname) || keyboardOpen) {
     return null;
   }
 

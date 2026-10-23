@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isCoarsePointer } from '@/lib/utils/touch';
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -26,12 +27,22 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, onOpenAutoFocus, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       data-slot="dialog"
+      onOpenAutoFocus={(event) => {
+        onOpenAutoFocus?.(event);
+        // Radix focuses the first field on open; on touch devices that pops the
+        // keyboard. Keep focus inside the dialog (for screen readers) but on the
+        // container, so the keyboard only opens when the user taps a field.
+        if (!event.defaultPrevented && isCoarsePointer()) {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
+        }
+      }}
       className={cn(
         'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-border/50 bg-background/80 backdrop-blur-2xl p-6 shadow-2xl shadow-black/20 sm:rounded-xl',
         className

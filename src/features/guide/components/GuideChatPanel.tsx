@@ -9,6 +9,7 @@ import { useGuideChat } from '@/features/guide/context/GuideChatContext';
 import { GUIDE_CHAT_MOBILE_BOTTOM_OFFSET } from '@/features/guide/constants';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
+import { isCoarsePointer } from '@/lib/utils/touch';
 
 export function GuideChatPanel({ onClose }: { onClose: () => void }) {
   const t = useTranslations();
@@ -21,7 +22,10 @@ export function GuideChatPanel({ onClose }: { onClose: () => void }) {
   }, [messages, isLoading]);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    // Desktop only: on phones this would open the keyboard before the user asks for it.
+    if (!isCoarsePointer()) {
+      inputRef.current?.focus();
+    }
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();

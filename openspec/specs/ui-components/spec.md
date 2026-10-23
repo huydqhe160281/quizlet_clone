@@ -60,6 +60,18 @@ MobileNav SHALL provide bottom navigation on mobile viewports matching the glass
 - **WHEN** the route is a study screen (`isStudySessionPath`)
 - **THEN** MobileNav renders nothing (`MobileNav.test.tsx`)
 
+#### Scenario: Hidden while typing (on-screen keyboard)
+
+- **GIVEN** a touch device (`(pointer: coarse)`)
+- **WHEN** a text field (input/textarea/contenteditable) has focus
+- **THEN** MobileNav is hidden so it does not ride up on top of the keyboard, and returns on blur (`useKeyboardOpen`)
+
+#### Scenario: No auto-focus that opens the keyboard
+
+- **GIVEN** a touch device (`isCoarsePointer` in `src/lib/utils/touch.ts`)
+- **WHEN** a Dialog or the guide chat panel opens
+- **THEN** focus moves to the dialog container (Dialog) or stays put (chat) instead of the first text field, so the keyboard opens only when the user taps a field; desktop keeps focusing the first field (`dialog.test.tsx`)
+
 ---
 
 ### Requirement: Dashboard Redesign
