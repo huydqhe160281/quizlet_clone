@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-22T16:51:21.836Z",
+  "generatedAt": "2026-10-24T07:27:13.686Z",
   "site": {
     "name": "QuizFree",
     "locale": "runtime"
@@ -109,6 +109,11 @@
       "auth": "required"
     },
     {
+      "path": "/sets/[setId]/gravity",
+      "title": "Gravity",
+      "auth": "required"
+    },
+    {
       "path": "/sets/[setId]/learn",
       "title": "Learn",
       "auth": "required"
@@ -184,7 +189,7 @@
     },
     {
       "q": "Các chế độ học khác nhau thế nào?",
-      "a": "Mỗi bộ thẻ hỗ trợ Flashcards, Learn, Write, Test và Draw (CJK). Vào trang bộ thẻ → Study để chọn mode."
+      "a": "Mỗi bộ thẻ hỗ trợ Flashcards, Learn, Write, Test, Draw (CJK) và Gravity (Bắn thiên thạch). Vào trang bộ thẻ → Study để chọn mode."
     }
   ],
   "guideTargets": [

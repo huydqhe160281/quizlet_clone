@@ -33,6 +33,10 @@ const DrawMode = dynamic(
   () => import('@/features/study/components/draw/DrawMode').then((m) => m.DrawMode),
   { ssr: false, loading: () => <StudyLoading /> }
 );
+const GravityMode = dynamic(
+  () => import('@/features/study/components/gravity/GravityMode').then((m) => m.GravityMode),
+  { ssr: false, loading: () => <StudyLoading /> }
+);
 
 type StudyPageClientProps = {
   setId: string;
@@ -46,6 +50,7 @@ export function StudyPageClient({ setId, mode }: StudyPageClientProps) {
     WRITE: WriteMode,
     TEST: TestMode,
     DRAW: DrawMode,
+    GRAVITY: GravityMode,
   }[mode];
 
   return <ModeComponent setId={setId} />;

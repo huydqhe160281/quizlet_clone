@@ -8,6 +8,7 @@ describe('isStudySessionPath', () => {
     '/sets/abc123/write',
     '/sets/abc123/test',
     '/sets/abc123/draw',
+    '/sets/abc123/gravity',
     '/sets/abc123/learn/',
   ])('matches study screen %s', (path) => {
     expect(isStudySessionPath(path)).toBe(true);

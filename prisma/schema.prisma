@@ -19,6 +19,7 @@ enum StudyMode {
   WRITE
   TEST
   DRAW
+  GRAVITY
 }
 
 enum Grade {

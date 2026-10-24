@@ -409,8 +409,110 @@
   }
 }
 
+/* Gravity (meteor game) — src/features/study/components/gravity. Transform/opacity only,
+   so every loop stays on the compositor. */
+@keyframes gravityMeteorShake {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  18% {
+    transform: translate3d(-7px, -4px, 0) rotate(-5deg) scale(1.04);
+  }
+  36% {
+    transform: translate3d(7px, -2px, 0) rotate(5deg) scale(1.04);
+  }
+  54% {
+    transform: translate3d(-5px, 2px, 0) rotate(-3.5deg);
+  }
+  72% {
+    transform: translate3d(5px, -1px, 0) rotate(3deg);
+  }
+  88% {
+    transform: translate3d(-2px, 1px, 0) rotate(-1.5deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+@keyframes gravityShipRecoil {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(-4px, 8px, 0) scale(0.95);
+  }
+  52% {
+    transform: translate3d(4px, 4px, 0) scale(1.02);
+  }
+  78% {
+    transform: translate3d(-2px, 2px, 0) scale(0.99);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@keyframes gravityChipFlash {
+  0% {
+    opacity: 1;
+    transform: scale(0.75);
+  }
+  45% {
+    opacity: 0.95;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.38);
+  }
+}
+@keyframes gravityFlameMain {
+  from {
+    transform: scale(1.02, 0.99) skewX(-3.5deg);
+  }
+  to {
+    transform: scale(1.14, 1.17) skewX(3.5deg);
+  }
+}
+@keyframes gravityFlameUpper {
+  from {
+    transform: scale(1.04, 1.02) skewX(4.5deg);
+  }
+  to {
+    transform: scale(1.2, 1.26) skewX(-4.5deg);
+  }
+}
+@keyframes gravityGlowPulse {
+  from {
+    transform: scale(0.92);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+@keyframes gravityEmber {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--ember-drift, 0), -32px, 0) scale(0.5);
+  }
+}
+@keyframes gravityLaserFade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.15;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *:not(.gravity-fx, .gravity-fx *) {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

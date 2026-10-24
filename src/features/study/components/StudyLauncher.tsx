@@ -9,6 +9,7 @@ import {
   HelpCircle,
   Layers,
   PenLine,
+  Rocket,
   Settings2,
   Sparkles,
 } from 'lucide-react';
@@ -73,6 +74,13 @@ const MODES: ModeConfig[] = [
     icon: PenLine,
     accentClass: 'hover:border-violet-500/30 hover:bg-violet-500/5',
     iconClass: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+  },
+  {
+    value: 'GRAVITY',
+    href: 'gravity',
+    icon: Rocket,
+    accentClass: 'hover:border-orange-500/30 hover:bg-orange-500/5',
+    iconClass: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
   },
 ];
 

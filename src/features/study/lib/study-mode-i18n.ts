@@ -6,6 +6,7 @@ export const STUDY_MODE_LABEL_KEY: Record<StudyModeValue, string> = {
   WRITE: 'study.modes.write',
   TEST: 'study.modes.test',
   DRAW: 'study.modes.draw',
+  GRAVITY: 'study.modes.gravity',
 };
 
 export const STUDY_MODE_SHORT_LABEL_KEY: Record<StudyModeValue, string> = {
@@ -14,6 +15,7 @@ export const STUDY_MODE_SHORT_LABEL_KEY: Record<StudyModeValue, string> = {
   WRITE: 'study.modes.write',
   TEST: 'study.modes.test',
   DRAW: 'study.modes.drawShort',
+  GRAVITY: 'study.modes.gravityShort',
 };
 
 export const STUDY_MODE_DESC_KEY: Record<StudyModeValue, string> = {
@@ -22,4 +24,5 @@ export const STUDY_MODE_DESC_KEY: Record<StudyModeValue, string> = {
   WRITE: 'study.modes.writeDesc',
   TEST: 'study.modes.testDesc',
   DRAW: 'study.modes.drawDesc',
+  GRAVITY: 'study.modes.gravityDesc',
 };

@@ -116,7 +116,10 @@
       "testDesc": "A mixed exam with multiple choice, true/false, and typed answers.",
       "draw": "Write characters (CJK)",
       "drawShort": "Write characters",
-      "drawDesc": "Practice Chinese characters with interactive stroke guidance."
+      "drawDesc": "Practice Chinese characters with interactive stroke guidance.",
+      "gravity": "Meteor Defense",
+      "gravityShort": "Meteor",
+      "gravityDesc": "Type answers fast to destroy falling vocabulary meteors before impact."
     }
   },
   "errorPage": {

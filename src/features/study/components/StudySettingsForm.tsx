@@ -60,6 +60,7 @@ export function StudySettingsForm({
     { value: 'LEARN', label: t(STUDY_MODE_LABEL_KEY.LEARN) },
     { value: 'WRITE', label: t(STUDY_MODE_LABEL_KEY.WRITE) },
     { value: 'TEST', label: t(STUDY_MODE_LABEL_KEY.TEST) },
+    { value: 'GRAVITY', label: t(STUDY_MODE_LABEL_KEY.GRAVITY) },
     {
       value: 'DRAW',
       label: t(STUDY_MODE_LABEL_KEY.DRAW),

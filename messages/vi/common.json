@@ -116,7 +116,10 @@
       "testDesc": "Bài kiểm tra tổng hợp gồm trắc nghiệm, đúng/sai và gõ đáp án.",
       "draw": "Viết chữ (CJK)",
       "drawShort": "Viết chữ",
-      "drawDesc": "Luyện viết ký tự Hán với hướng dẫn nét bút tương tác."
+      "drawDesc": "Luyện viết ký tự Hán với hướng dẫn nét bút tương tác.",
+      "gravity": "Bắn thiên thạch",
+      "gravityShort": "Thiên thạch",
+      "gravityDesc": "Gõ nhanh đáp án để phá hủy thiên thạch từ vựng trước khi chạm đất."
     }
   },
   "errorPage": {

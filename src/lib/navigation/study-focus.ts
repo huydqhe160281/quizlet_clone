@@ -1,5 +1,5 @@
 /** Study-mode route segments under `/sets/[setId]/` (see `src/app/(app)/sets/[setId]`). */
-const STUDY_SESSION_SEGMENTS = ['flashcard', 'learn', 'write', 'test', 'draw'] as const;
+const STUDY_SESSION_SEGMENTS = ['flashcard', 'learn', 'write', 'test', 'draw', 'gravity'] as const;
 
 const STUDY_SESSION_PATH = new RegExp(`^/sets/[^/]+/(${STUDY_SESSION_SEGMENTS.join('|')})/?$`);
 
