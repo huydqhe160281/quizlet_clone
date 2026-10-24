@@ -185,14 +185,18 @@ export function TestMode({ setId }: TestModeProps) {
                     : t('studyUi.incorrectWithAnswer', { answer: correctAnswer })
                 );
               }}
+              data-slot="answer-option"
               className={cn(
-                'soft-option break-words rounded-xl border border-border/60 bg-background p-4 text-left text-sm font-semibold transition-all hover:border-primary/30 hover:bg-primary/5 disabled:opacity-70',
+                'flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-background p-4 text-left text-sm font-semibold transition-all hover:border-primary/30 hover:bg-primary/5 disabled:opacity-70',
                 answered &&
                   option === currentQuestion.correctBack &&
                   'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
               )}
             >
-              {option}
+              <span className="min-w-0 break-words">{option}</span>
+              {answered && option === currentQuestion.correctBack && (
+                <Check className="h-4 w-4 shrink-0" aria-hidden />
+              )}
             </button>
           ))}
         </div>
@@ -200,7 +204,10 @@ export function TestMode({ setId }: TestModeProps) {
 
       {currentQuestion.type === 'tf' && (
         <div className="space-y-4">
-          <p className="soft-well rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium">
+          <p
+            data-slot="well"
+            className="rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium"
+          >
             {currentQuestion.shownBack}
           </p>
           <p className="text-center text-sm text-muted-foreground">{t('studyUi.tfPrompt')}</p>

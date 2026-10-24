@@ -16,7 +16,7 @@ export function DueCardsAlert({ dueCount }: { dueCount: number }) {
 
   return (
     <Card className="relative overflow-hidden rounded-xl border-primary/30 bg-primary/5 shadow-md backdrop-blur-sm">
-      <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <div className="decor-glow pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
       <CardHeader className="relative z-10 flex flex-row items-center gap-4 space-y-0 pb-3">
         <div className="rounded-full bg-primary/20 p-2 text-primary">
           <AlertCircle className="h-6 w-6" />

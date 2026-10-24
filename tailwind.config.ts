@@ -1,8 +1,10 @@
 import type { Config } from 'tailwindcss';
 import tailwindcssAnimate from 'tailwindcss-animate';
+import { DARK_THEME_IDS } from './src/lib/theme/themes';
 
 const config: Config = {
-  darkMode: ['class'],
+  // `dark:` applies under every dark-scheme theme in the registry, not just `.dark`.
+  darkMode: ['variant', `&:is(${DARK_THEME_IDS.map((id) => `.${id} *`).join(', ')})`],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',

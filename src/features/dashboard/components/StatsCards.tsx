@@ -53,7 +53,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
           key={label}
           className="glass-panel group relative overflow-hidden rounded-xl p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl sm:p-5"
         >
-          <div className="pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-primary/10 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:bg-primary/20" />
+          <div className="decor-glow pointer-events-none absolute -right-4 -top-4 h-16 w-16 rounded-full bg-primary/10 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:bg-primary/20" />
           <p className="relative z-10 flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Icon className="h-4 w-4 text-primary/70" />
             {label}

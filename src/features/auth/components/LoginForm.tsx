@@ -62,7 +62,7 @@ export function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
 
   return (
     <Card className="glass-panel relative overflow-hidden rounded-2xl border-border/50 shadow-xl">
-      <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+      <div className="decor-glow absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
       <CardHeader className="relative z-10 text-center">
         <CardTitle className="text-2xl font-bold">{t('auth.signInTitle')}</CardTitle>
         <CardDescription>{t('auth.signInSubtitle')}</CardDescription>

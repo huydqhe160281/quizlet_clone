@@ -26,13 +26,36 @@ The system SHALL define a unified design token set covering color, typography, s
 - **WHEN** `<html>` receives class `dark`
 - **THEN** all semantic color tokens resolve from the `.dark` block with sufficient contrast for text and interactive elements
 
+#### Scenario: Theme registry is the single source of truth
+
+- **GIVEN** `src/lib/theme/themes.ts` lists every theme (`id`, `labelKey`, `colorScheme`)
+- **WHEN** the app renders
+- **THEN** next-themes `themes`, the `ThemeToggle` menu, the `ThemePicker` tiles, Sonner's light/dark mapping and Tailwind's `dark:` selector (every `colorScheme: 'dark'` theme) are all derived from it, and `THEME_ICONS` (`Record<ThemeChoice, LucideIcon>`) fails to compile until a new theme has an icon
+- **AND** each non-base theme's tokens and component skin live in `src/styles/themes/<name>.css`, imported in `app/layout.tsx` after `globals.css` so they win over utilities at equal specificity
+- **AND** `ThemePicker` swatches carry the theme's class and preview its real `--background` / `--primary` tokens (`:root, .light` hold the base tokens)
+
+#### Scenario: Shared theme hooks
+
+- **GIVEN** a theme skin needs to restyle a component
+- **WHEN** it targets that component
+- **THEN** it uses `data-slot` hooks only: shadcn primitives (`button` + `data-variant`, `card`, `input`, `checkbox`, `tabs-list`/`tabs-trigger`, `popover`, `dialog`, `dialog-overlay`, `slider-track`/`slider-thumb`) and feature slots `flashcard-face`, `accent-surface` (flashcard back, round banner), `answer-option`, `well`, `progress-track`, `tile` (SetCard)
+- **AND** shared decorations are switched by trait tokens instead of per-theme selectors in components: `.page-backdrop` (`--page-backdrop`), `.decor-backdrop` (`--decor-backdrop`), `.decor-glow` (`--decor-glow`), `.decor-orbs` (`--decor-orbs`, hidden by default); `.decor-tape` / `.decor-highlight` are no-ops unless a theme styles them
+
 #### Scenario: Pastel theme (Soft UI + claymorphism)
 
-- **GIVEN** the user picks "Pastel" in `ThemeToggle` (next-themes `themes={['light','dark','pastel']}`)
+- **GIVEN** the user picks "Pastel"
 - **WHEN** `<html>` receives class `pastel`
-- **THEN** semantic tokens resolve from the `.pastel` block (cream base, peach primary, dusty-blue secondary, `--radius: 1.25rem`) and `body` shows a soft mesh gradient
-- **AND** primitives opt into soft/clay surfaces via `data-slot` (`button` + `data-variant`, `card`, `input`, `checkbox`, `tabs-list`/`tabs-trigger`, `popover`, `dialog`, `dialog-overlay`, `slider-track`/`slider-thumb`); feature components use `clay-surface`, `clay-primary-surface`, `soft-option`, `soft-well`, `soft-track`
-- **AND** all of these rules are scoped under `.pastel`, so light and dark render unchanged
+- **THEN** semantic tokens resolve from `src/styles/themes/pastel.css` (cream base, peach primary, dusty-blue secondary, `--radius: 1.25rem`) and `body` shows a soft mesh gradient
+- **AND** the shared hooks get soft/clay surfaces; the theme hides `decor-backdrop` and shows `decor-orbs` (PastelOrbs)
+
+#### Scenario: Paper & Ink theme (editorial notebook, light + dark)
+
+- **GIVEN** the user picks "Paper & Ink" or "Paper & Ink Dark"
+- **WHEN** `<html>` receives class `paper` or `paper-dark`
+- **THEN** tokens resolve from `src/styles/themes/paper.css` (cream paper `#FAF8F1` / night paper, navy ink text, learning-green primary, `#5B5BD6` focus ring, `--radius: 0.625rem`, plus `--paper-*` outline, rule, sticky, scrim, ink-surface, shadow, motion and font tokens); `body` uses Be Vietnam Pro (`--font-paper`) over faint horizontal rules
+- **AND** the shared hooks get thin ink outlines and flat offset shadows; sticky-yellow offsets are reserved for the flashcard, dialogs and hovered/active items; elements whose box-shadow the skin replaces show focus as an outline
+- **AND** the flashcard front is a ruled index card, `accent-surface` is an ink sheet (cream in dark); `decor-backdrop` and `decor-glow` are hidden and gradient-clipped text renders as solid ink
+- **AND** `paper-dark` has `colorScheme: 'dark'`, so Tailwind `dark:` utilities and Sonner's dark mode apply under it
 
 #### Scenario: Subtle border radius scale
 

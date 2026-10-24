@@ -8,11 +8,11 @@ export const metadata: Metadata = createNoIndexMetadata();
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-background overflow-hidden px-4 py-8 [.pastel_&]:bg-transparent">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none [.pastel_&]:hidden" />
+    <div className="relative page-backdrop flex min-h-screen flex-col overflow-hidden px-4 py-8">
+      <div className="decor-backdrop absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background pointer-events-none" />
       <PastelOrbs variant="corners" />
-      <div className="absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
+      <div className="decor-glow absolute top-1/4 -left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
+      <div className="decor-glow absolute bottom-1/4 -right-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
 
       <div className="relative z-10 flex w-full max-w-5xl justify-between items-center mx-auto mb-12">
         <Link

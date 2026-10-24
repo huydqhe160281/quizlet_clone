@@ -1,0 +1,386 @@
+/*
+ * Paper & Ink theme (`paper` light, `paper-dark` dark): editorial notebook —
+ * cream paper with faint rules, navy ink outlines, flat sticky-yellow offset
+ * shadows, learning-green primary. Yellow offsets are reserved for the
+ * flashcard, dialogs and hovered/active items; resting cards stay quiet.
+ *
+ * Imported after globals.css (see app/layout.tsx), so rules win over Tailwind
+ * utilities at equal specificity. Styles only shared hooks: shadcn primitives'
+ * `data-slot`s plus `flashcard-face`, `accent-surface`, `answer-option`,
+ * `well`, `progress-track`, `tile`; and the `decor-*` decorations.
+ * Theme-specific tokens are HSL triplets so they take alpha like shadcn's.
+ */
+
+/* ---- Tokens ------------------------------------------------------------- */
+
+.paper,
+.paper-dark {
+  --radius: 0.625rem;
+  --paper-font: var(--font-paper), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --paper-heading-tracking: -0.02em;
+  --paper-rule-gap: 32px;
+  --paper-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --paper-duration: 140ms;
+  --paper-border-width: 1.5px;
+  /* Flat, offset "layered paper" shadows — no blur */
+  --paper-shadow-xs: 2px 2px 0 hsl(var(--paper-outline) / 0.14);
+  --paper-shadow-ink: 2px 2px 0 hsl(var(--paper-outline));
+  --paper-shadow-ink-lg: 3px 3px 0 hsl(var(--paper-outline));
+  --paper-shadow-sticky-sm: 3px 3px 0 hsl(var(--paper-sticky));
+  --paper-shadow-sticky: 4px 4px 0 hsl(var(--paper-sticky));
+  --paper-shadow-sticky-lg: 6px 6px 0 hsl(var(--paper-sticky));
+  --paper-focus: 0 0 0 3px hsl(var(--ring) / 0.28);
+
+  /* Shared theme traits (globals.css): no glows, let the ruled body show through */
+  --page-backdrop: transparent;
+  --decor-backdrop: none;
+  --decor-glow: none;
+}
+
+.paper {
+  --background: 47 47% 96%; /* #FAF8F1 paper */
+  --foreground: 218 47% 17%; /* #17263F ink */
+  --card: 0 0% 100%;
+  --card-foreground: 218 47% 17%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 218 47% 17%;
+  --primary: 132 59% 33%; /* #238636 learning green */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 43 39% 93%; /* #F4F0E6 */
+  --secondary-foreground: 218 47% 17%;
+  --muted: 43 39% 93%;
+  --muted-foreground: 218 15% 41%; /* #596579 */
+  --accent: 50 90% 90%; /* pale sticky-note tint for hovers */
+  --accent-foreground: 218 47% 17%;
+  --destructive: 352 55% 51%; /* #C63D4F */
+  --destructive-foreground: 0 0% 100%;
+  --border: 216 24% 84%;
+  --input: 218 22% 62%;
+  --ring: 240 60% 60%; /* #5B5BD6 focus accent */
+  color-scheme: light;
+
+  --paper-outline: 217 36% 23%; /* #263650 ink border */
+  --paper-line: 214 41% 93%; /* #E7EDF5 notebook rule */
+  --paper-sticky: 50 89% 63%; /* #F5D84E */
+  --paper-scrim: 218 47% 12%;
+  /* Flashcard back / banners: an ink sheet with paper-coloured text */
+  --paper-ink-surface: 218 47% 17%;
+  --paper-ink-surface-foreground: 45 40% 96%;
+}
+
+.paper-dark {
+  --background: 222 30% 9%;
+  --foreground: 45 35% 92%;
+  --card: 222 26% 13%;
+  --card-foreground: 45 35% 92%;
+  --popover: 222 26% 13%;
+  --popover-foreground: 45 35% 92%;
+  --primary: 134 48% 56%;
+  --primary-foreground: 222 35% 8%;
+  --secondary: 222 20% 18%;
+  --secondary-foreground: 45 35% 92%;
+  --muted: 222 20% 17%;
+  --muted-foreground: 40 14% 70%;
+  --accent: 48 40% 20%;
+  --accent-foreground: 48 90% 84%;
+  --destructive: 352 60% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 222 16% 24%;
+  --input: 222 14% 40%;
+  --ring: 240 80% 74%;
+  color-scheme: dark;
+
+  --paper-outline: 40 18% 58%;
+  --paper-line: 222 26% 13%;
+  --paper-sticky: 46 72% 50%;
+  --paper-scrim: 222 40% 4%;
+  /* Inverted: a cream sheet with ink text */
+  --paper-ink-surface: 45 40% 90%;
+  --paper-ink-surface-foreground: 218 47% 14%;
+}
+
+/* ---- Page --------------------------------------------------------------- */
+
+.paper body,
+.paper-dark body {
+  font-family: var(--paper-font);
+  background-color: hsl(var(--background));
+  /* Faint ruled lines behind everything — never on individual components */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--paper-rule-gap) - 1px),
+    hsl(var(--paper-line)) calc(var(--paper-rule-gap) - 1px),
+    hsl(var(--paper-line)) var(--paper-rule-gap)
+  );
+}
+:is(.paper, .paper-dark) :is(h1, h2, h3) {
+  letter-spacing: var(--paper-heading-tracking);
+}
+/* Gradient-clipped headings read as solid ink */
+:is(.paper, .paper-dark) .bg-clip-text {
+  background-image: none;
+  color: hsl(var(--foreground));
+}
+:is(.paper, .paper-dark) ::selection {
+  background-color: hsl(var(--paper-sticky) / 0.55);
+  color: hsl(var(--foreground));
+}
+/* The skin below replaces these elements' box-shadow, which also carried their
+   Tailwind focus ring — draw focus as an outline instead. */
+:is(.paper, .paper-dark)
+  :is(
+    [data-slot='button'],
+    [data-slot='answer-option'],
+    [data-slot='tile'],
+    a.glass-panel,
+    button.glass-panel
+  ):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ---- Surfaces ----------------------------------------------------------- */
+
+:is(.paper, .paper-dark) :is(.glass-panel, [data-slot='card'], [data-slot='tile']) {
+  border-color: hsl(var(--paper-outline) / 0.9);
+  background-color: hsl(var(--card));
+  backdrop-filter: none;
+  box-shadow: var(--paper-shadow-xs);
+  transition:
+    transform var(--paper-duration) var(--paper-ease),
+    box-shadow var(--paper-duration) var(--paper-ease);
+}
+/* Interactive surfaces lift onto a sticky note */
+:is(.paper, .paper-dark) :is(a.glass-panel, a[data-slot='tile'], a[data-slot='card']):hover,
+:is(.paper, .paper-dark) button.glass-panel:not(:disabled):hover,
+:is(.paper, .paper-dark) a:hover > [data-slot='card'] {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--paper-shadow-sticky);
+}
+/* Sidebar: a page edge, not a floating card */
+:is(.paper, .paper-dark) aside.glass-panel {
+  border-width: 0 1px 0 0;
+  box-shadow: none;
+}
+:is(.paper, .paper-dark) .glass-nav {
+  border-color: hsl(var(--paper-outline) / 0.22);
+  background-color: hsl(var(--background) / 0.92);
+  box-shadow: none;
+}
+
+/* ---- Buttons: ink-outlined, pressable ------------------------------------ */
+
+:is(.paper, .paper-dark) [data-slot='button'] {
+  transition:
+    transform var(--paper-duration) var(--paper-ease),
+    box-shadow var(--paper-duration) var(--paper-ease),
+    background-color var(--paper-duration) var(--paper-ease);
+}
+:is(.paper, .paper-dark)
+  [data-slot='button']:is([data-variant='default'], [data-variant='destructive']) {
+  background-image: none;
+  box-shadow:
+    inset 0 0 0 var(--paper-border-width) hsl(var(--paper-outline)),
+    var(--paper-shadow-ink);
+}
+:is(.paper, .paper-dark)
+  [data-slot='button']:is([data-variant='default'], [data-variant='destructive']):not(
+    :disabled
+  ):hover {
+  transform: translate(-1px, -1px);
+  box-shadow:
+    inset 0 0 0 var(--paper-border-width) hsl(var(--paper-outline)),
+    var(--paper-shadow-ink-lg);
+}
+:is(.paper, .paper-dark)
+  [data-slot='button']:is([data-variant='outline'], [data-variant='secondary']) {
+  border-color: hsl(var(--paper-outline));
+  background-image: none;
+  backdrop-filter: none;
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--paper-outline)),
+    var(--paper-shadow-xs);
+}
+/* outline already has a real border, so no inset ring */
+:is(.paper, .paper-dark) [data-slot='button'][data-variant='outline'] {
+  background-color: hsl(var(--card));
+  box-shadow: var(--paper-shadow-xs);
+}
+:is(.paper, .paper-dark)
+  [data-slot='button']:is([data-variant='outline'], [data-variant='secondary']):not(
+    :disabled
+  ):hover {
+  transform: translate(-1px, -1px);
+  background-color: hsl(var(--accent));
+  box-shadow: var(--paper-shadow-sticky-sm);
+}
+:is(.paper, .paper-dark) [data-slot='button']:not([data-variant='link']):not(:disabled):active {
+  transform: translate(1px, 1px);
+  box-shadow: inset 0 0 0 var(--paper-border-width) hsl(var(--paper-outline));
+}
+:is(.paper, .paper-dark) [data-slot='button'][data-variant='ghost']:active {
+  box-shadow: none;
+}
+
+/* ---- Study surfaces ----------------------------------------------------- */
+
+/* Flashcard front: an index card with the same faint rules as the page */
+:is(.paper, .paper-dark) [data-slot='flashcard-face'] {
+  border-width: var(--paper-border-width);
+  border-color: hsl(var(--paper-outline));
+  background-color: hsl(var(--card));
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--paper-rule-gap) - 1px),
+    hsl(var(--paper-line)) calc(var(--paper-rule-gap) - 1px),
+    hsl(var(--paper-line)) var(--paper-rule-gap)
+  );
+  backdrop-filter: none;
+  box-shadow: var(--paper-shadow-sticky-lg);
+}
+/* Flashcard back / round banner. Children use text-primary-foreground, so
+   re-point that token at the sheet's readable foreground. */
+:is(.paper, .paper-dark) [data-slot='accent-surface'] {
+  --primary-foreground: var(--paper-ink-surface-foreground);
+  border-width: var(--paper-border-width);
+  border-color: hsl(var(--paper-outline));
+  background-color: hsl(var(--paper-ink-surface));
+  background-image: none;
+  box-shadow: var(--paper-shadow-sticky-lg);
+}
+:is(.paper, .paper-dark) [data-slot='well'] {
+  border-style: dashed;
+  border-color: hsl(var(--paper-outline) / 0.45);
+  background-color: hsl(var(--card));
+  box-shadow: none;
+}
+
+/* Progress: outlined track, green fill */
+:is(.paper, .paper-dark) [data-slot='progress-track'] {
+  height: 0.625rem;
+  border: 1px solid hsl(var(--paper-outline) / 0.7);
+  background-color: hsl(var(--secondary));
+}
+:is(.paper, .paper-dark) [data-slot='progress-track'] > * {
+  height: 100%;
+  background-color: hsl(var(--primary));
+  background-image: none;
+}
+
+/* Answer options: keep the component's state border/colours and icons */
+:is(.paper, .paper-dark) [data-slot='answer-option'] {
+  border-width: var(--paper-border-width);
+  box-shadow: var(--paper-shadow-xs);
+  transition:
+    transform var(--paper-duration) var(--paper-ease),
+    box-shadow var(--paper-duration) var(--paper-ease),
+    background-color var(--paper-duration) var(--paper-ease);
+}
+:is(.paper, .paper-dark) [data-slot='answer-option']:not(:disabled):hover {
+  transform: translate(-1px, -1px);
+  border-color: hsl(var(--paper-outline));
+  box-shadow: var(--paper-shadow-sticky-sm);
+}
+:is(.paper, .paper-dark) [data-slot='answer-option']:not(:disabled):active {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+}
+:is(.paper, .paper-dark) [data-slot='answer-option']:disabled {
+  box-shadow: none;
+}
+
+/* ---- Fields ------------------------------------------------------------- */
+
+:is(.paper, .paper-dark) [data-slot='input'] {
+  background-color: hsl(var(--card));
+  backdrop-filter: none;
+  box-shadow: none;
+  transition:
+    border-color var(--paper-duration) var(--paper-ease),
+    box-shadow var(--paper-duration) var(--paper-ease);
+}
+:is(.paper, .paper-dark) [data-slot='input']:hover {
+  border-color: hsl(var(--paper-outline));
+}
+:is(.paper, .paper-dark) [data-slot='input']:is(:focus, :focus-visible) {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: var(--paper-focus);
+}
+:is(.paper, .paper-dark) [data-slot='checkbox'] {
+  border-color: hsl(var(--paper-outline));
+}
+
+/* Tabs: tray with a raised index-tab for the active one */
+:is(.paper, .paper-dark) [data-slot='tabs-list'] {
+  border: 1px solid hsl(var(--paper-outline) / 0.35);
+  background-color: hsl(var(--secondary));
+}
+:is(.paper, .paper-dark) [data-slot='tabs-trigger'][data-state='active'] {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--paper-outline)),
+    2px 2px 0 hsl(var(--paper-sticky));
+}
+
+/* ---- Floating surfaces -------------------------------------------------- */
+
+:is(.paper, .paper-dark) [data-slot='popover'] {
+  border-color: hsl(var(--paper-outline));
+  background-color: hsl(var(--popover));
+  backdrop-filter: none;
+  box-shadow: 3px 3px 0 hsl(var(--paper-outline) / 0.18);
+}
+:is(.paper, .paper-dark) [data-slot='dialog'] {
+  border-width: var(--paper-border-width);
+  border-color: hsl(var(--paper-outline));
+  background-color: hsl(var(--popover));
+  backdrop-filter: none;
+  box-shadow: var(--paper-shadow-sticky-lg);
+}
+:is(.paper, .paper-dark) [data-slot='dialog-overlay'] {
+  background-color: hsl(var(--paper-scrim) / 0.4);
+  backdrop-filter: blur(2px);
+}
+
+/* Slider */
+:is(.paper, .paper-dark) [data-slot='slider-track'] {
+  border: 1px solid hsl(var(--paper-outline) / 0.6);
+  background-color: hsl(var(--secondary));
+}
+:is(.paper, .paper-dark) [data-slot='slider-thumb'] {
+  border: 2px solid hsl(var(--paper-outline));
+  background-color: hsl(var(--card));
+  box-shadow: 2px 2px 0 hsl(var(--paper-sticky));
+}
+
+/* ---- Scrapbook decorations (decor-* classes are no-ops in other themes) ---- */
+
+:is(.paper, .paper-dark) .decor-tape {
+  position: relative;
+  overflow: visible;
+}
+:is(.paper, .paper-dark) .decor-tape::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 72px;
+  height: 18px;
+  transform: translateX(-50%) rotate(-2deg);
+  background-color: hsl(var(--paper-sticky) / 0.75);
+  pointer-events: none;
+}
+:is(.paper, .paper-dark) .decor-highlight {
+  background-image: linear-gradient(
+    transparent 62%,
+    hsl(var(--paper-sticky) / 0.75) 62%,
+    hsl(var(--paper-sticky) / 0.75) 92%,
+    transparent 92%
+  );
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

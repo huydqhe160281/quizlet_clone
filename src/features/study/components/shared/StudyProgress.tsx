@@ -20,7 +20,7 @@ export function StudyProgress({ current, total, label, fullWidth }: StudyProgres
         <span>{resolvedLabel}</span>
         <span>{t('study.cardsProgress', { current, total, percent })}</span>
       </div>
-      <div className="soft-track h-2 overflow-hidden rounded-full bg-muted">
+      <div data-slot="progress-track" className="h-2 overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full bg-primary transition-all duration-300"
           style={{ width: `${percent}%` }}

@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { Monitor, Moon, Palette, Sun } from 'lucide-react';
+import { SunMoon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
+import { THEME_ICONS } from '@/components/layout/theme-icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,38 +13,46 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { THEME_CHOICES, getThemeLabelKey, type ThemeChoice } from '@/lib/theme/themes';
+
+const subscribeNoop = () => () => {};
+
+/** False during SSR and hydration, true afterwards — the theme is only known on the client. */
+function useIsClient() {
+  return React.useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false
+  );
+}
 
 export function ThemeToggle() {
-  const { setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const t = useTranslations();
+  const isClient = useIsClient();
+
+  // `resolvedTheme` turns `system` into light/dark, so the trigger shows what is on screen.
+  const ActiveIcon =
+    isClient && resolvedTheme ? (THEME_ICONS[resolvedTheme as ThemeChoice] ?? SunMoon) : SunMoon;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-          <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 [.pastel_&]:scale-0" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          <Palette className="absolute h-[1.2rem] w-[1.2rem] scale-0 transition-all [.pastel_&]:scale-100" />
+          <ActiveIcon className="h-[1.2rem] w-[1.2rem]" />
           <span className="sr-only">{t('ui.theme.toggle')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme('light')} className="gap-2">
-          <Sun className="h-4 w-4" />
-          {t('ui.theme.light')}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')} className="gap-2">
-          <Moon className="h-4 w-4" />
-          {t('ui.theme.dark')}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('pastel')} className="gap-2">
-          <Palette className="h-4 w-4" />
-          {t('ui.theme.pastel')}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')} className="gap-2">
-          <Monitor className="h-4 w-4" />
-          {t('ui.theme.system')}
-        </DropdownMenuItem>
+        {THEME_CHOICES.map((choice) => {
+          const Icon = THEME_ICONS[choice];
+          return (
+            <DropdownMenuItem key={choice} onClick={() => setTheme(choice)} className="gap-2">
+              <Icon className="h-4 w-4" />
+              {t(getThemeLabelKey(choice))}
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

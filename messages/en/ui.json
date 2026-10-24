@@ -23,6 +23,8 @@
       "light": "Light",
       "dark": "Dark",
       "pastel": "Pastel",
+      "paper": "Paper & Ink",
+      "paperDark": "Paper & Ink Dark",
       "system": "System"
     },
     "errorBoundary": {

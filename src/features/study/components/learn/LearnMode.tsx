@@ -298,8 +298,9 @@ export function LearnMode({ setId }: LearnModeProps) {
                   type="button"
                   disabled={Boolean(selected)}
                   onClick={() => void handleAnswer(option)}
+                  data-slot="answer-option"
                   className={cn(
-                    'soft-option flex items-center justify-between rounded-xl border p-4 text-left text-sm font-semibold transition-all',
+                    'flex items-center justify-between rounded-xl border p-4 text-left text-sm font-semibold transition-all',
                     optionClass
                   )}
                 >

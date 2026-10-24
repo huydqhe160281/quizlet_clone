@@ -125,7 +125,7 @@ export function ActivityHeatmap({ activity }: ActivityHeatmapProps) {
 
   return (
     <div className="glass-panel relative overflow-hidden rounded-xl p-5 shadow-sm">
-      <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl" />
+      <div className="decor-glow pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-2xl" />
       <div className="relative z-10 mb-4 flex items-center justify-between gap-3">
         <h3 className="flex items-center gap-2 text-lg font-semibold tracking-tight">
           <span className="h-2 w-2 rounded-full bg-primary" />

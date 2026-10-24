@@ -23,6 +23,8 @@
       "light": "Sáng",
       "dark": "Tối",
       "pastel": "Pastel",
+      "paper": "Paper & Ink",
+      "paperDark": "Paper & Ink tối",
       "system": "Hệ thống"
     },
     "errorBoundary": {

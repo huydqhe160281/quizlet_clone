@@ -1,0 +1,300 @@
+/*
+ * Pastel theme: Soft UI (neumorphism) + claymorphism on a warm cream base,
+ * peach primary, dusty-blue secondary.
+ *
+ * Imported after globals.css (see app/layout.tsx), so rules win over Tailwind
+ * utilities at equal specificity. Styles only shared hooks: shadcn primitives'
+ * `data-slot`s plus `flashcard-face`, `accent-surface`, `answer-option`,
+ * `well`, `progress-track`; and the `decor-*` decorations.
+ */
+
+/* ---- Tokens ------------------------------------------------------------- */
+
+.pastel {
+  --background: 30 50% 97%;
+  --foreground: 15 22% 20%;
+  --card: 30 60% 99%;
+  --card-foreground: 15 22% 20%;
+  --popover: 30 60% 99%;
+  --popover-foreground: 15 22% 20%;
+  --primary: 14 60% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 45% 92%;
+  --secondary-foreground: 212 35% 30%;
+  --muted: 25 40% 93%;
+  --muted-foreground: 15 12% 42%;
+  --accent: 18 70% 92%;
+  --accent-foreground: 14 45% 30%;
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 25 35% 87%;
+  --input: 25 35% 87%;
+  --ring: 14 60% 60%;
+  --radius: 1.25rem;
+  color-scheme: light;
+
+  /* Soft UI light source: top-left highlight, bottom-right warm shade */
+  --soft-light: 0 0% 100%;
+  --soft-shade: 22 40% 78%;
+  --soft-raised:
+    8px 8px 18px hsl(var(--soft-shade) / 0.55), -8px -8px 18px hsl(var(--soft-light) / 0.95);
+  --soft-raised-sm:
+    4px 4px 10px hsl(var(--soft-shade) / 0.5), -4px -4px 10px hsl(var(--soft-light) / 0.95);
+  --soft-inset:
+    inset 4px 4px 8px hsl(var(--soft-shade) / 0.5), inset -4px -4px 8px hsl(var(--soft-light) / 0.9);
+  /* Claymorphism: puffy outer drop + inner top gloss + inner bottom shade */
+  --clay:
+    0 14px 28px -10px hsl(var(--soft-shade) / 0.9), inset 0 -6px 12px hsl(var(--soft-shade) / 0.35),
+    inset 0 6px 12px hsl(var(--soft-light) / 0.9);
+  --clay-primary:
+    0 12px 22px -8px hsl(var(--primary) / 0.55), inset 0 -5px 10px hsl(14 60% 35% / 0.35),
+    inset 0 5px 10px hsl(0 0% 100% / 0.35);
+
+  /* Shared theme traits (globals.css): clay orbs replace the hero glows */
+  --page-backdrop: transparent;
+  --decor-backdrop: none;
+  --decor-orbs: block;
+}
+
+/* ---- Page --------------------------------------------------------------- */
+
+.pastel body {
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(at 0% 0%, hsl(18 80% 90% / 0.9) 0, transparent 45%),
+    radial-gradient(at 100% 0%, hsl(210 60% 88% / 0.9) 0, transparent 45%),
+    radial-gradient(at 100% 100%, hsl(340 60% 92% / 0.8) 0, transparent 45%),
+    radial-gradient(at 0% 100%, hsl(40 70% 92% / 0.8) 0, transparent 45%);
+  background-attachment: fixed;
+}
+
+/* ---- Surfaces ----------------------------------------------------------- */
+
+.pastel .glass-panel,
+.pastel [data-slot='card'] {
+  border-color: hsl(var(--soft-light) / 0.7);
+  background-color: hsl(var(--card));
+  backdrop-filter: none;
+  box-shadow: var(--clay), var(--soft-raised);
+}
+.pastel [data-slot='card']:hover {
+  box-shadow:
+    var(--clay),
+    12px 12px 26px hsl(var(--soft-shade) / 0.6),
+    -10px -10px 22px hsl(var(--soft-light) / 0.95);
+}
+.pastel .glass-nav {
+  border-color: hsl(var(--soft-light) / 0.6);
+  background-color: hsl(var(--background) / 0.75);
+  box-shadow: 0 6px 18px -10px hsl(var(--soft-shade) / 0.8);
+}
+
+/* Buttons */
+.pastel [data-slot='button'] {
+  border-radius: 9999px;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+.pastel [data-slot='button'][data-variant='default'] {
+  background-image: linear-gradient(160deg, hsl(18 75% 62%), hsl(var(--primary)));
+  box-shadow: var(--clay-primary);
+}
+.pastel [data-slot='button'][data-variant='destructive'] {
+  box-shadow:
+    0 12px 22px -8px hsl(var(--destructive) / 0.5),
+    inset 0 -5px 10px hsl(0 60% 35% / 0.3),
+    inset 0 5px 10px hsl(0 0% 100% / 0.3);
+}
+.pastel [data-slot='button'][data-variant='outline'],
+.pastel [data-slot='button'][data-variant='secondary'] {
+  border-color: transparent;
+  backdrop-filter: none;
+  box-shadow: var(--soft-raised-sm);
+}
+.pastel [data-slot='button'][data-variant='outline'] {
+  background-color: hsl(var(--background));
+  /* drop per-feature tints (e.g. the violet AI trigger) for the flat soft look */
+  background-image: none;
+}
+.pastel [data-slot='button']:not([data-variant='ghost']):not([data-variant='link']):hover {
+  transform: translateY(-1px);
+}
+.pastel [data-slot='button'][data-variant='ghost']:hover {
+  box-shadow: var(--soft-raised-sm);
+}
+.pastel [data-slot='button']:not([data-variant='link']):active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: var(--soft-inset);
+}
+.pastel [data-slot='button']:focus-visible {
+  box-shadow:
+    var(--soft-raised-sm),
+    0 0 0 3px hsl(var(--ring) / 0.45);
+}
+.pastel [data-slot='button'][data-variant='default']:focus-visible {
+  box-shadow:
+    var(--clay-primary),
+    0 0 0 3px hsl(var(--ring) / 0.45);
+}
+
+/* Interactive glass tiles (study-mode launcher, nav tiles) lift on hover */
+.pastel a.glass-panel:hover,
+.pastel button.glass-panel:not(:disabled):hover {
+  box-shadow:
+    var(--clay),
+    12px 12px 26px hsl(var(--soft-shade) / 0.6),
+    -10px -10px 22px hsl(var(--soft-light) / 0.95);
+}
+
+/* ---- Study surfaces ----------------------------------------------------- */
+.pastel [data-slot='flashcard-face'] {
+  border-color: hsl(var(--soft-light) / 0.8);
+  background-color: hsl(var(--card));
+  backdrop-filter: none;
+  box-shadow: var(--clay), var(--soft-raised);
+}
+.pastel [data-slot='accent-surface'] {
+  border-color: hsl(18 80% 72% / 0.6);
+  background-image: linear-gradient(150deg, hsl(18 75% 62%), hsl(var(--primary)) 70%);
+  box-shadow:
+    0 18px 32px -12px hsl(var(--primary) / 0.55),
+    inset 0 -8px 16px hsl(14 60% 35% / 0.3),
+    inset 0 8px 16px hsl(0 0% 100% / 0.3);
+}
+.pastel [data-slot='well'] {
+  border-color: transparent;
+  box-shadow: var(--soft-inset);
+}
+/* Progress bars: inset groove with a glossy peach fill */
+.pastel [data-slot='progress-track'] {
+  height: 0.625rem;
+  background-color: hsl(var(--muted));
+  box-shadow:
+    inset 2px 2px 4px hsl(var(--soft-shade) / 0.55),
+    inset -2px -2px 4px hsl(var(--soft-light) / 0.9);
+}
+.pastel [data-slot='progress-track'] > * {
+  height: 100%;
+  background-image: linear-gradient(90deg, hsl(18 75% 68%), hsl(var(--primary)));
+  box-shadow: inset 0 2px 3px hsl(0 0% 100% / 0.35);
+}
+.pastel [data-slot='answer-option'] {
+  /* keep the component's border: answer states (correct/wrong) are signalled by it */
+  box-shadow: var(--soft-raised-sm);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+.pastel [data-slot='answer-option']:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow:
+    6px 6px 14px hsl(var(--soft-shade) / 0.55),
+    -6px -6px 14px hsl(var(--soft-light) / 0.95);
+}
+.pastel [data-slot='answer-option']:not(:disabled):active,
+.pastel [data-slot='answer-option']:disabled {
+  transform: none;
+  box-shadow: var(--soft-inset);
+}
+
+/* Fields: pressed-into-the-surface wells */
+.pastel [data-slot='input'] {
+  border-color: transparent;
+  background-color: hsl(var(--background));
+  backdrop-filter: none;
+  box-shadow: var(--soft-inset);
+}
+.pastel [data-slot='input']:hover {
+  border-color: transparent;
+}
+.pastel [data-slot='input']:focus,
+.pastel [data-slot='input']:focus-visible {
+  border-color: hsl(var(--ring) / 0.5);
+  box-shadow:
+    var(--soft-inset),
+    0 0 0 4px hsl(var(--ring) / 0.18);
+}
+.pastel [data-slot='checkbox'] {
+  border-color: transparent;
+  background-color: hsl(var(--background));
+  box-shadow: var(--soft-inset);
+}
+.pastel [data-slot='checkbox'][data-state='checked'] {
+  background-color: hsl(var(--primary));
+  box-shadow: var(--clay-primary);
+}
+
+/* Tabs: inset track, raised active pill */
+.pastel [data-slot='tabs-list'] {
+  border-radius: 9999px;
+  background-color: hsl(var(--background));
+  box-shadow: var(--soft-inset);
+}
+.pastel [data-slot='tabs-trigger'] {
+  border-radius: 9999px;
+}
+.pastel [data-slot='tabs-trigger'][data-state='active'] {
+  background-color: hsl(var(--card));
+  color: hsl(var(--primary));
+  box-shadow: var(--soft-raised-sm);
+}
+
+/* Floating surfaces */
+.pastel [data-slot='popover'],
+.pastel [data-slot='dialog'] {
+  border-color: hsl(var(--soft-light) / 0.8);
+  background-color: hsl(var(--popover));
+  backdrop-filter: none;
+  box-shadow:
+    var(--clay),
+    0 24px 48px -16px hsl(var(--soft-shade) / 0.9);
+}
+.pastel [data-slot='dialog'] {
+  box-shadow:
+    var(--clay),
+    0 30px 60px -20px hsl(20 30% 30% / 0.35);
+}
+/* Warm haze instead of a near-black scrim */
+.pastel [data-slot='dialog-overlay'] {
+  background-color: hsl(20 25% 35% / 0.28);
+  backdrop-filter: blur(6px);
+}
+
+/* Slider: inset track, clay knob */
+.pastel [data-slot='slider-track'] {
+  background-color: hsl(var(--muted));
+  box-shadow: var(--soft-inset);
+}
+.pastel [data-slot='slider-thumb'] {
+  border-color: hsl(var(--soft-light));
+  background-image: linear-gradient(160deg, hsl(18 75% 66%), hsl(var(--primary)));
+  box-shadow: var(--clay-primary);
+}
+
+/* ---- Decorations: clay spheres (PastelOrbs, shown via --decor-orbs) ------- */
+.clay-orb {
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 32% 28%,
+    hsl(0 0% 100% / 0.95) 0%,
+    hsl(var(--orb) / 1) 38%,
+    hsl(var(--orb-deep) / 1) 100%
+  );
+  box-shadow:
+    18px 22px 40px -12px hsl(var(--orb-deep) / 0.55),
+    inset -10px -14px 24px hsl(var(--orb-deep) / 0.45),
+    inset 8px 10px 18px hsl(0 0% 100% / 0.6);
+  animation: clay-float 9s ease-in-out infinite;
+}
+@keyframes clay-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}

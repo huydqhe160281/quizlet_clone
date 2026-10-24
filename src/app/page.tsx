@@ -41,10 +41,10 @@ export default async function LandingPage() {
   ];
 
   return (
-    <main className="relative min-h-screen bg-background overflow-hidden [.pastel_&]:bg-transparent">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background [.pastel_&]:hidden" />
-      <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl opacity-50 pointer-events-none [.pastel_&]:hidden" />
-      <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none [.pastel_&]:hidden" />
+    <main className="relative min-h-screen page-backdrop overflow-hidden">
+      <div className="decor-backdrop absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
+      <div className="decor-backdrop absolute top-1/4 -left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl opacity-50 pointer-events-none" />
+      <div className="decor-backdrop absolute bottom-1/4 -right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
       <PastelOrbs />
 
       <header className="glass-nav sticky top-0 z-50 mx-auto flex w-full items-center justify-between gap-2 px-4 py-4 sm:px-6">
@@ -72,9 +72,7 @@ export default async function LandingPage() {
         <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-6xl font-black tracking-tighter text-transparent sm:text-8xl md:leading-[1.1]">
           {tr('landing.headlineBefore')}
           <br />
-          <span className="text-primary drop-shadow-[0_0_32px_rgba(var(--primary),0.3)]">
-            {tr('landing.headlineAccent')}
-          </span>
+          <span className="decor-highlight text-primary">{tr('landing.headlineAccent')}</span>
         </h1>
         <p className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground font-medium sm:text-2xl leading-relaxed">
           {tr('landing.subtitle')}
@@ -102,9 +100,9 @@ export default async function LandingPage() {
         {features.map((feature) => (
           <Card
             key={feature.title}
-            className="glass-panel relative overflow-hidden rounded-xl border-white/20 bg-card/40 p-4 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group"
+            className="glass-panel decor-tape relative overflow-hidden rounded-xl border-white/20 bg-card/40 p-4 shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/20 group"
           >
-            <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl transition-all duration-500 group-hover:bg-primary/30 [.pastel_&]:hidden" />
+            <div className="decor-backdrop absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary/20 blur-3xl transition-all duration-500 group-hover:bg-primary/30" />
             <CardHeader className="relative z-10">
               <CardTitle className="text-2xl font-bold">{feature.title}</CardTitle>
               <CardDescription className="text-base font-medium mt-2">

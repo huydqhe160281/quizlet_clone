@@ -35,7 +35,7 @@ const CORNER_ORBS: Orb[] = [
 export function PastelOrbs({ variant = 'hero' }: { variant?: 'hero' | 'corners' }) {
   const orbs = variant === 'hero' ? HERO_ORBS : CORNER_ORBS;
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 hidden [.pastel_&]:block">
+    <div aria-hidden className="decor-orbs pointer-events-none absolute inset-0">
       {orbs.map((orb, i) => (
         <div
           key={i}

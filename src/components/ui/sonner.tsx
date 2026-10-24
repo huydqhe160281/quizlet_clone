@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import { getThemeColorScheme } from '@/lib/theme/themes';
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = 'system' } = useTheme();
+  const { theme } = useTheme();
   const [position, setPosition] = useState<ToasterProps['position']>('bottom-right');
 
   useEffect(() => {
@@ -20,7 +21,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
   return (
     <Sonner
-      theme={(theme === 'pastel' ? 'light' : theme) as ToasterProps['theme']}
+      // Sonner only knows light/dark/system
+      theme={getThemeColorScheme(theme)}
       className="toaster group"
       position={position}
       toastOptions={{

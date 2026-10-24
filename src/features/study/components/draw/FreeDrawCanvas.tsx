@@ -136,7 +136,10 @@ export function FreeDrawCanvas({ character, onComplete, onSkip }: FreeDrawCanvas
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="soft-well relative rounded-xl border border-border bg-background shadow-inner">
+      <div
+        data-slot="well"
+        className="relative rounded-xl border border-border bg-background shadow-inner"
+      >
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0 flex select-none items-center justify-center text-8xl text-muted-foreground/25"

@@ -296,7 +296,10 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
       </p>
 
       {isLastCard && isFlipped && (
-        <div className="clay-primary-surface flex flex-col gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary to-primary/80 p-6 text-primary-foreground shadow-lg md:flex-row md:items-center md:justify-between">
+        <div
+          data-slot="accent-surface"
+          className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary to-primary/80 p-6 text-primary-foreground shadow-lg md:flex-row md:items-center md:justify-between"
+        >
           <div className="flex items-center gap-3.5">
             <div className="rounded-xl bg-primary-foreground/15 p-2.5">
               <Award className="h-7 w-7 text-primary-foreground" />

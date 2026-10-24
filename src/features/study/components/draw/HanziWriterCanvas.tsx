@@ -112,7 +112,8 @@ function HanziWriterQuizCanvas({ character, onComplete, onSkip }: HanziWriterQui
     <div className="flex flex-col items-center gap-4">
       <div
         ref={containerRef}
-        className="soft-well rounded-xl border border-border bg-background shadow-inner"
+        data-slot="well"
+        className="rounded-xl border border-border bg-background shadow-inner"
       />
       <Button variant="outline" size="sm" onClick={restartQuiz}>
         {t('studyUi.clearCanvas')}
