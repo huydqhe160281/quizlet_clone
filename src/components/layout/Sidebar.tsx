@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Settings } from 'lucide-react';
 import { APP_NAV_ITEMS } from '@/lib/navigation/navigation-data';
 import { dispatchNavReselect } from '@/lib/navigation/nav-reselect';
 import { NAV_ICON_MAP } from '@/lib/navigation/navigation-icons';
@@ -63,6 +63,21 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="border-t border-border/50 p-2 md:p-4">
+        <Link
+          href="/settings"
+          title={t('nav.settings')}
+          className={cn(
+            'flex items-center justify-center md:justify-start gap-3 rounded-xl px-0 md:px-4 py-3 text-sm font-semibold transition-colors',
+            pathname.startsWith('/settings')
+              ? 'bg-primary/10 text-primary'
+              : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+          )}
+        >
+          <Settings className="h-5 w-5 shrink-0" />
+          <span className="hidden md:inline">{t('nav.settings')}</span>
+        </Link>
+      </div>
     </aside>
   );
 }

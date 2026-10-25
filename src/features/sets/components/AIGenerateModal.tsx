@@ -258,7 +258,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="glass-panel max-h-[90vh] overflow-y-auto rounded-2xl border-border/50 sm:max-w-lg">
+      <DialogContent className="glass-panel rounded-2xl border-border/50 sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -409,8 +409,8 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
             <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border border-border/50 p-3">
               {generatedCards.map((card) => (
                 <div key={card.id} className="border-b border-border/30 pb-2 last:border-0">
-                  <p className="text-sm font-medium">{card.front}</p>
-                  <p className="text-sm text-muted-foreground">{card.back}</p>
+                  <p className="break-words text-sm font-medium">{card.front}</p>
+                  <p className="break-words text-sm text-muted-foreground">{card.back}</p>
                   {card.example && (
                     <p className="text-xs italic text-muted-foreground">{card.example}</p>
                   )}

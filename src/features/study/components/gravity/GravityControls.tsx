@@ -46,7 +46,7 @@ export const GravityControls = memo(function GravityControls({
               event.stopPropagation();
               onSpeak(feedbackPill.front);
             }}
-            className="rounded-full bg-indigo-500/40 p-1 text-indigo-100 transition hover:bg-indigo-500/70"
+            className="rounded-full bg-indigo-500/40 p-2 text-indigo-100 sm:p-1 transition hover:bg-indigo-500/70"
             aria-label={t('studyUi.speakTermAria')}
           >
             <Volume2 className="h-3 w-3" />
@@ -69,7 +69,7 @@ export const GravityControls = memo(function GravityControls({
               event.stopPropagation();
               onFocusInput();
             }}
-            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-sky-400 px-3 py-1 text-xs font-extrabold text-slate-950 transition hover:bg-sky-300"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-sky-400 px-3 py-2 text-xs sm:py-1 font-extrabold text-slate-950 transition hover:bg-sky-300"
           >
             <Keyboard className="h-3.5 w-3.5" />
             <span>{t('studyUi.gravityTapToType')}</span>
@@ -83,7 +83,7 @@ export const GravityControls = memo(function GravityControls({
             onHint();
           }}
           disabled={hintDisabled}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-extrabold text-slate-900 shadow-[0_4px_12px_rgba(255,255,255,0.25)] transition hover:scale-[1.03] hover:bg-slate-100 disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-2 text-xs sm:py-1 font-extrabold text-slate-900 shadow-[0_4px_12px_rgba(255,255,255,0.25)] transition hover:scale-[1.03] hover:bg-slate-100 disabled:opacity-50"
         >
           <HelpCircle className="h-3.5 w-3.5 text-slate-700" />
           <span>{t('studyUi.gravityHint')}</span>
@@ -100,7 +100,7 @@ export const GravityControls = memo(function GravityControls({
               ? t('studyUi.gravityDirectionTerm')
               : t('studyUi.gravityDirectionDef')
           }
-          className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 bg-slate-800 px-2.5 py-1 text-xs font-extrabold text-slate-100 transition hover:border-sky-400/40 hover:bg-slate-700"
+          className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 bg-slate-800 px-2.5 py-2 text-xs sm:py-1 font-extrabold text-slate-100 transition hover:border-sky-400/40 hover:bg-slate-700"
         >
           {direction === 'back_to_front' ? '汉 / A' : 'A → B'}
         </button>

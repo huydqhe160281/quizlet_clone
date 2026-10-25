@@ -1,0 +1,38 @@
+{
+  "settingsPage": {
+    "title": "Cài đặt",
+    "subtitle": "Tùy chỉnh giao diện, ngôn ngữ và tài khoản của bạn.",
+    "appearance": {
+      "title": "Giao diện",
+      "description": "Chọn phong cách hiển thị. \"Hệ thống\" tự đổi sáng/tối theo thiết bị."
+    },
+    "language": {
+      "title": "Ngôn ngữ",
+      "description": "Ngôn ngữ của ứng dụng. Nội dung thẻ học của bạn không bị dịch."
+    },
+    "account": {
+      "title": "Tài khoản",
+      "name": "Tên hiển thị",
+      "email": "Email",
+      "verified": "Đã xác minh",
+      "unverified": "Chưa xác minh",
+      "signOut": "Đăng xuất",
+      "signOutDescription": "Đăng xuất khỏi thiết bị này."
+    },
+    "password": {
+      "title": "Đổi mật khẩu",
+      "description": "Sau khi đổi, bạn sẽ được đăng xuất khỏi mọi thiết bị và cần đăng nhập lại.",
+      "current": "Mật khẩu hiện tại",
+      "new": "Mật khẩu mới",
+      "confirm": "Nhập lại mật khẩu mới",
+      "hint": "Tối thiểu 8 ký tự.",
+      "submit": "Đổi mật khẩu",
+      "submitting": "Đang cập nhật...",
+      "mismatch": "Mật khẩu nhập lại không khớp.",
+      "sameAsCurrent": "Mật khẩu mới phải khác mật khẩu hiện tại.",
+      "success": "Đã đổi mật khẩu. Vui lòng đăng nhập lại.",
+      "failed": "Không đổi được mật khẩu. Vui lòng thử lại.",
+      "oauthOnly": "Tài khoản này đăng nhập bằng Google nên không có mật khẩu để đổi."
+    }
+  }
+}

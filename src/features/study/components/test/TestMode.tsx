@@ -206,7 +206,7 @@ export function TestMode({ setId }: TestModeProps) {
         <div className="space-y-4">
           <p
             data-slot="well"
-            className="rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium"
+            className="break-words rounded-2xl bg-muted/50 p-4 text-center text-lg font-medium"
           >
             {currentQuestion.shownBack}
           </p>

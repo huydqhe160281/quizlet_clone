@@ -38,7 +38,7 @@ The system SHALL persist the user's theme preference in localStorage under key `
 
 ### Requirement: Theme Toggle Control
 
-The system SHALL expose a theme toggle in the Navbar accessible on desktop and mobile.
+The system SHALL expose a theme toggle in the Navbar for signed-out visitors on desktop and mobile. Signed-in users pick a theme on `/settings` (see `user-settings`).
 
 **Constraint**: MUST
 

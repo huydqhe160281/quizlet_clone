@@ -14,7 +14,7 @@ export default async function ImportSetPage() {
   const catalog = loadCatalog(locale);
 
   return (
-    <main className="container max-w-2xl mx-auto py-8 px-4">
+    <div className="mx-auto max-w-2xl">
       <div className="mb-4">
         <Button variant="ghost" size="sm" asChild className="-ml-3">
           <Link
@@ -27,6 +27,6 @@ export default async function ImportSetPage() {
         </Button>
       </div>
       <ImportSetWizard variant="page" />
-    </main>
+    </div>
   );
 }

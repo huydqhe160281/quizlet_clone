@@ -93,7 +93,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
           </Button>
         )}
       </form>
-      <p className="text-sm text-muted-foreground">
+      <p className="break-words text-sm text-muted-foreground">
         {isSearching
           ? t('searchPage.resultsFor', { query: submitted })
           : t('searchPage.showingAll')}

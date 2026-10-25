@@ -12,6 +12,7 @@ const CATALOG_FILES = [
   'ui.json',
   'today.json',
   'pwa.json',
+  'settings.json',
 ] as const;
 
 function readJsonSafe(filePath: string): Catalog | null {

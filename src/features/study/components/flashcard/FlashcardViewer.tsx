@@ -71,7 +71,7 @@ export function FlashcardViewer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-lg text-primary"
+                className="h-10 w-10 rounded-lg text-primary sm:h-8 sm:w-8"
                 onClick={(event) => {
                   event.stopPropagation();
                   onSpeakFront();
@@ -88,11 +88,17 @@ export function FlashcardViewer({
               'flex min-h-0 flex-1 flex-col px-4',
               multilineFront
                 ? 'items-stretch justify-start overflow-y-auto py-2 text-left'
-                : 'items-center justify-center text-center'
+                : 'items-center justify-center overflow-y-auto text-center'
             )}
           >
             <StudyCardText text={front} side="front" />
-            {!isFlipped && imageUrl && <CardMediaImage src={imageUrl} alt={front} />}
+            {!isFlipped && imageUrl && (
+              <CardMediaImage
+                src={imageUrl}
+                alt={front}
+                className="relative mx-auto mt-3 h-28 w-full max-w-xs shrink-0 overflow-hidden rounded-lg sm:h-40"
+              />
+            )}
           </div>
 
           <p className="text-[11px] font-semibold text-muted-foreground">{t('studyUi.flipHint')}</p>
@@ -113,7 +119,7 @@ export function FlashcardViewer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-lg text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                className="h-10 w-10 rounded-lg text-primary-foreground sm:h-8 sm:w-8 hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 onClick={(event) => {
                   event.stopPropagation();
                   onSpeakBack();

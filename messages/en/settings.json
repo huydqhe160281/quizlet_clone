@@ -1,0 +1,38 @@
+{
+  "settingsPage": {
+    "title": "Settings",
+    "subtitle": "Customise your appearance, language and account.",
+    "appearance": {
+      "title": "Appearance",
+      "description": "Pick a look. \"System\" follows your device's light or dark mode."
+    },
+    "language": {
+      "title": "Language",
+      "description": "The app's language. Your own study cards are never translated."
+    },
+    "account": {
+      "title": "Account",
+      "name": "Display name",
+      "email": "Email",
+      "verified": "Verified",
+      "unverified": "Not verified",
+      "signOut": "Sign out",
+      "signOutDescription": "Sign out of this device."
+    },
+    "password": {
+      "title": "Change password",
+      "description": "Changing it signs you out on every device, so you'll sign in again.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "hint": "At least 8 characters.",
+      "submit": "Change password",
+      "submitting": "Updating...",
+      "mismatch": "The passwords don't match.",
+      "sameAsCurrent": "The new password must differ from the current one.",
+      "success": "Password changed. Please sign in again.",
+      "failed": "Couldn't change your password. Please try again.",
+      "oauthOnly": "This account signs in with Google, so it has no password to change."
+    }
+  }
+}

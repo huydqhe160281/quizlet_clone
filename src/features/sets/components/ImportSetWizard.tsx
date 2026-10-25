@@ -583,7 +583,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
               }}
               rows={9}
               placeholder={SIMPLE_JSON_EXAMPLE}
-              className="max-w-full rounded-xl font-mono text-[11px] leading-relaxed"
+              className="max-w-full rounded-xl font-mono text-base leading-relaxed sm:text-[11px]"
             />
           </div>
           {error && (

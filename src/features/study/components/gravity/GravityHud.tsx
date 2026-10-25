@@ -22,7 +22,7 @@ type GravityHudProps = {
 };
 
 const PILL =
-  'inline-flex h-8 items-center rounded-full border border-white/15 bg-white/5 text-xs font-bold text-slate-200 transition hover:border-white/30 hover:bg-white/15';
+  'inline-flex h-9 items-center rounded-full border border-white/15 bg-white/5 text-xs font-bold text-slate-200 transition sm:h-8 hover:border-white/30 hover:bg-white/15';
 
 function nextSpeed(current: GravitySpeedMultiplier): GravitySpeedMultiplier {
   const index = GRAVITY_SPEED_MULTIPLIERS.indexOf(current);
@@ -143,7 +143,7 @@ export const GravityHud = memo(function GravityHud({
         <button
           type="button"
           onClick={onTogglePause}
-          className={cn(PILL, 'w-8 justify-center')}
+          className={cn(PILL, 'w-9 justify-center sm:w-8')}
           aria-label={paused ? t('studyUi.gravityResume') : t('studyUi.gravityPause')}
           title={paused ? t('studyUi.gravityResume') : t('studyUi.gravityPause')}
         >

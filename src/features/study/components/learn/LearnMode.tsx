@@ -254,7 +254,7 @@ export function LearnMode({ setId }: LearnModeProps) {
                 : t('studyUi.promptTypeAnswer')}
             </span>
           </div>
-          <h2 className="text-xl font-bold leading-relaxed md:text-2xl">
+          <h2 className="break-words text-xl font-bold leading-relaxed md:text-2xl">
             {isMultipleChoice ? mcPrompt : currentCard.front}
           </h2>
           {isMultipleChoice && (

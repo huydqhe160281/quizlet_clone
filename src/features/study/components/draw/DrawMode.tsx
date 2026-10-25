@@ -154,7 +154,7 @@ export function DrawMode({ setId }: DrawModeProps) {
         <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
           {t('studyUi.drawPrompt')}
         </p>
-        <p className="mt-2 text-2xl font-extrabold md:text-3xl">{currentCard.back}</p>
+        <p className="mt-2 break-words text-2xl font-extrabold md:text-3xl">{currentCard.back}</p>
       </div>
       <HanziWriterCanvas
         character={currentCard.front}

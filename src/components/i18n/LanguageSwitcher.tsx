@@ -1,8 +1,5 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,52 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { SUPPORTED_LOCALES, type Locale } from '@/lib/i18n/constants';
-import { persistLocaleClient } from '@/lib/i18n/client-locale';
-import { useLocale, useTranslations } from '@/lib/i18n/LocaleProvider';
+import { SUPPORTED_LOCALES } from '@/lib/i18n/constants';
+import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { useChangeLocale } from '@/lib/i18n/use-change-locale';
 
-function writeLocaleCookie(locale: Locale) {
-  persistLocaleClient(locale);
-}
-
+/** Compact language menu for signed-out pages; signed-in users switch on /settings. */
 export function LanguageSwitcher() {
-  const locale = useLocale();
   const t = useTranslations();
-  const router = useRouter();
-  const pathname = usePathname();
-  const { status } = useSession();
-  const [pending, startTransition] = useTransition();
-
-  const onSelect = (next: Locale) => {
-    if (next === locale || pending) return;
-
-    const inStudySession = pathname.startsWith('/study');
-    writeLocaleCookie(next);
-
-    startTransition(() => {
-      void (async () => {
-        if (status === 'authenticated') {
-          try {
-            await fetch('/api/v1/user/preferences', {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ preferredLocale: next }),
-            });
-          } catch {
-            // Soft-fail: cookie already updated; refresh still applies UI locale.
-          }
-        }
-
-        if (inStudySession) {
-          // Soft refresh is allowed mid-study; hard reload would need confirmation.
-          router.refresh();
-          return;
-        }
-
-        router.refresh();
-      })();
-    });
-  };
+  const { locale, changeLocale, pending } = useChangeLocale();
 
   return (
     <DropdownMenu>
@@ -74,7 +33,7 @@ export function LanguageSwitcher() {
         {SUPPORTED_LOCALES.map((code) => (
           <DropdownMenuItem
             key={code}
-            onClick={() => onSelect(code)}
+            onClick={() => changeLocale(code)}
             aria-pressed={code === locale}
             className={code === locale ? 'font-bold' : undefined}
           >

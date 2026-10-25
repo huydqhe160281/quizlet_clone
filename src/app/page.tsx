@@ -48,28 +48,28 @@ export default async function LandingPage() {
       <PastelOrbs />
 
       <header className="glass-nav sticky top-0 z-50 mx-auto flex w-full items-center justify-between gap-2 px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="flex h-9 w-9 shrink-0 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
             <span className="text-primary-foreground font-bold text-xl">Q</span>
           </div>
-          <span className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-xl font-extrabold sm:text-2xl tracking-tight text-transparent">
+          <span className="bg-gradient-to-br from-foreground to-foreground/70 truncate bg-clip-text text-lg font-extrabold sm:text-2xl tracking-tight text-transparent">
             {tr('app.name')}
           </span>
         </div>
-        <div className="flex items-center gap-1 sm:gap-4">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-4">
           <LanguageSwitcher />
           <ThemeToggle />
           <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link href="/login">{tr('nav.login')}</Link>
           </Button>
-          <Button asChild className="shadow-lg shadow-primary/20">
+          <Button asChild className="h-9 px-3 shadow-lg shadow-primary/20 sm:h-10 sm:px-4">
             <Link href="/register">{tr('nav.getStarted')}</Link>
           </Button>
         </div>
       </header>
 
-      <section className="relative z-10 mx-auto max-w-6xl px-6 py-32 text-center">
-        <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-6xl font-black tracking-tighter text-transparent sm:text-8xl md:leading-[1.1]">
+      <section className="relative z-10 mx-auto max-w-6xl px-6 py-16 text-center sm:py-32">
+        <h1 className="bg-gradient-to-br from-foreground to-foreground/60 bg-clip-text text-5xl font-black tracking-tighter text-transparent sm:text-8xl md:leading-[1.1]">
           {tr('landing.headlineBefore')}
           <br />
           <span className="decor-highlight text-primary">{tr('landing.headlineAccent')}</span>

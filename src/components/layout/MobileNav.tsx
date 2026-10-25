@@ -10,19 +10,31 @@ import { cn } from '@/lib/utils';
 import { useKeyboardOpen } from '@/lib/utils/use-keyboard-open';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
+function useMobileNavVisible() {
+  const pathname = usePathname();
+  const keyboardOpen = useKeyboardOpen();
+  // Focus mode: study screens get the full viewport; their header has an Exit control.
+  // While typing on a phone the keyboard pushes the bar up over the field's surroundings.
+  return !isStudySessionPath(pathname) && !keyboardOpen;
+}
+
+/** Reserves room under the page content for the floating bar, only while it is shown. */
+export function MobileNavSpacer() {
+  return useMobileNavVisible() ? (
+    <div aria-hidden className="h-[calc(6.5rem+env(safe-area-inset-bottom))] sm:hidden" />
+  ) : null;
+}
+
 export function MobileNav() {
   const pathname = usePathname();
   const t = useTranslations();
-  const keyboardOpen = useKeyboardOpen();
 
-  // Focus mode: study screens get the full viewport; their header has an Exit control.
-  // While typing on a phone the keyboard pushes the bar up over the field's surroundings.
-  if (isStudySessionPath(pathname) || keyboardOpen) {
+  if (!useMobileNavVisible()) {
     return null;
   }
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 sm:hidden pb-[env(safe-area-inset-bottom)] p-3 pointer-events-none">
+    <nav className="fixed inset-x-0 bottom-0 z-50 sm:hidden px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none">
       <div className="flex w-full justify-around rounded-2xl glass-panel p-2 shadow-2xl border-white/20 pointer-events-auto">
         {APP_NAV_ITEMS.map(({ href, mobileLabelKey, icon, guideTargetId }) => {
           const Icon = NAV_ICON_MAP[icon];
@@ -40,7 +52,7 @@ export function MobileNav() {
                 }
               }}
               className={cn(
-                'flex flex-1 flex-col items-center gap-1 py-2 px-1 rounded-xl text-[10px] font-semibold transition-all duration-300',
+                'flex min-w-0 flex-1 flex-col items-center gap-1 py-2 px-1 rounded-xl text-[10px] font-semibold transition-all duration-300',
                 active
                   ? 'text-primary bg-primary/10 shadow-sm'
                   : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -54,7 +66,12 @@ export function MobileNav() {
               >
                 <Icon className={cn('h-5 w-5', active && 'text-primary')} />
               </div>
-              <span className={cn('transition-all duration-300', active && '-translate-y-0.5')}>
+              <span
+                className={cn(
+                  'max-w-full truncate leading-tight transition-all duration-300',
+                  active && '-translate-y-0.5'
+                )}
+              >
                 {t(mobileLabelKey)}
               </span>
             </Link>

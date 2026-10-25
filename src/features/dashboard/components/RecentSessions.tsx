@@ -95,7 +95,7 @@ export function RecentSessions({ sessions, timeZone = 'UTC' }: RecentSessionsPro
               <p className="truncate font-semibold text-card-foreground transition-colors group-hover:text-primary">
                 {session.set.title}
               </p>
-              <p className="text-sm text-muted-foreground line-clamp-1 sm:line-clamp-none">
+              <p className="text-sm text-muted-foreground line-clamp-2 sm:line-clamp-none">
                 {details}
               </p>
             </div>

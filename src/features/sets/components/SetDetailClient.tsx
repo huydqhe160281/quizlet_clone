@@ -158,7 +158,7 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
                 <span className="hidden sm:inline">{t('ui.import')}</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[620px] flex flex-col max-h-[90vh] overflow-hidden">
+            <DialogContent className="sm:max-w-[620px] flex flex-col overflow-hidden">
               <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                 <ImportSetWizard
                   setId={setId}

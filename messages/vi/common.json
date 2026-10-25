@@ -27,7 +27,8 @@
     "getStarted": "Bắt đầu",
     "signOut": "Đăng xuất",
     "language": "Ngôn ngữ",
-    "userMenu": "Menu tài khoản"
+    "userMenu": "Menu tài khoản",
+    "settings": "Cài đặt"
   },
   "language": {
     "vi": "Tiếng Việt",
@@ -147,6 +148,8 @@
     "STORAGE_NOT_CONFIGURED": "Hiện chưa thể tải tệp lên.",
     "STORAGE_ERROR": "Không tải được tệp lên. Vui lòng thử lại.",
     "AI_GENERATION_FAILED": "AI chưa tạo được thẻ lần này. Vui lòng thử lại.",
-    "INTERNAL_ERROR": "Hệ thống gặp lỗi. Vui lòng thử lại."
+    "INTERNAL_ERROR": "Hệ thống gặp lỗi. Vui lòng thử lại.",
+    "INVALID_PASSWORD": "Mật khẩu hiện tại không đúng.",
+    "PASSWORD_NOT_SET": "Tài khoản này không dùng mật khẩu để đăng nhập."
   }
 }

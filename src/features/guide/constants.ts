@@ -5,4 +5,4 @@ export const ASSISTANT_MAX_HISTORY_MESSAGES = 20;
 export const ASSISTANT_MAX_PATHNAME_CHARS = 200;
 export const ASSISTANT_GUEST_RATE_LIMIT = 20;
 export const ASSISTANT_GUEST_RATE_LIMIT_MS = 3_600_000;
-export const GUIDE_CHAT_MOBILE_BOTTOM_OFFSET = '6rem';
+export const GUIDE_CHAT_MOBILE_BOTTOM_OFFSET = 'calc(7rem + env(safe-area-inset-bottom))';

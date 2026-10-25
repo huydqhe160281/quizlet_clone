@@ -1,3 +1,4 @@
+import type { Viewport } from 'next';
 import { Be_Vietnam_Pro, Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -49,6 +50,10 @@ export async function generateMetadata() {
     category: 'education',
   };
 }
+
+// `cover` makes env(safe-area-inset-*) report the notch / home-bar insets the
+// fixed mobile bars pad for; without it they are always 0.
+export const viewport: Viewport = { viewportFit: 'cover' };
 
 export default async function RootLayout({
   children,

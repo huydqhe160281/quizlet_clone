@@ -27,7 +27,8 @@
     "getStarted": "Get started",
     "signOut": "Sign out",
     "language": "Language",
-    "userMenu": "Account menu"
+    "userMenu": "Account menu",
+    "settings": "Settings"
   },
   "language": {
     "vi": "Tiếng Việt",
@@ -147,6 +148,8 @@
     "STORAGE_NOT_CONFIGURED": "Media upload is not available right now.",
     "STORAGE_ERROR": "The file could not be uploaded. Please try again.",
     "AI_GENERATION_FAILED": "The AI could not create cards this time. Please try again.",
-    "INTERNAL_ERROR": "Something went wrong on our side. Please try again."
+    "INTERNAL_ERROR": "Something went wrong on our side. Please try again.",
+    "INVALID_PASSWORD": "Your current password is incorrect.",
+    "PASSWORD_NOT_SET": "This account does not sign in with a password."
   }
 }

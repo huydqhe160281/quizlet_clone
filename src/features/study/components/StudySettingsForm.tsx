@@ -186,7 +186,7 @@ export function StudySettingsForm({
       )}
 
       <div className="glass-panel space-y-3 rounded-2xl border border-border/50 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <Label htmlFor="cards-per-round-input">{t('study.settings.cardsPerRound')}</Label>
           <div className="flex items-center gap-2">
             <input
@@ -204,7 +204,7 @@ export function StudySettingsForm({
                   }));
                 }
               }}
-              className="w-16 rounded-lg border border-input bg-transparent px-2 py-1 text-right text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="w-16 rounded-lg border border-input bg-transparent px-2 py-1 text-right text-base shadow-sm sm:text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
             <span className="text-sm text-muted-foreground">{t('study.settings.cardsUnit')}</span>
           </div>

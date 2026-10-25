@@ -195,7 +195,7 @@ export function TodayPageClient() {
             <label className="space-y-1 text-sm">
               <span className="text-muted-foreground">{t('todayPage.timezoneLabel')}</span>
               <select
-                className="flex h-9 w-full min-w-[12rem] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                className="flex h-10 w-full min-w-[12rem] rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm sm:h-9 sm:text-sm"
                 value={timezoneDraft}
                 onChange={(e) => {
                   setTimezoneDraft(e.target.value);

@@ -314,7 +314,7 @@ export function SpacedRepetitionStudy() {
                       }));
                     }
                   }}
-                  className="w-16 rounded-md border border-input bg-transparent px-2 py-1 text-right text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="w-16 rounded-md border border-input bg-transparent px-2 py-1 text-right text-base shadow-sm sm:text-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
                 <span className="text-sm text-muted-foreground">
                   {t('study.settings.cardsUnit')}
@@ -421,14 +421,14 @@ export function SpacedRepetitionStudy() {
         <>
           <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
             <p className="text-sm text-muted-foreground">{t('studyUi.spacedChooseAnswer')}</p>
-            <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
+            <p className="mt-2 break-words text-2xl font-semibold">{currentCard.front}</p>
           </div>
           <div className="grid gap-2">
             {options.map((option) => (
               <Button
                 key={option}
                 variant={selectedOption === option ? 'default' : 'outline'}
-                className="h-auto whitespace-normal py-3 text-left"
+                className="h-auto whitespace-normal break-words py-3 text-left"
                 disabled={Boolean(selectedOption)}
                 onClick={() => {
                   void handleMCQAnswer(option);
@@ -443,7 +443,7 @@ export function SpacedRepetitionStudy() {
         <>
           <div className="glass-panel rounded-2xl p-6 text-center shadow-sm">
             <p className="text-sm text-muted-foreground">{t('studyUi.spacedTypeAnswer')}</p>
-            <p className="mt-2 text-2xl font-semibold">{currentCard.front}</p>
+            <p className="mt-2 break-words text-2xl font-semibold">{currentCard.front}</p>
           </div>
           <div className="space-y-4">
             <Textarea
