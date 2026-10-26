@@ -15,6 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useNeedsEmailVerification } from '@/features/auth/hooks/useNeedsEmailVerification';
+import { PublicVisibilityHint } from '@/features/sets/components/PublicVisibilityHint';
+import { isClientFetchError } from '@/features/sets/api/sets-api';
+import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type SetFormProps = {
@@ -45,10 +49,23 @@ export function SetForm({
   const [title, setTitle] = useState(initial?.title ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [language, setLanguage] = useState(initial?.language ?? '');
-  const [visibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC'>(
+  const [chosenVisibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC'>(
     initial?.visibility ?? 'PRIVATE'
   );
   const [error, setError] = useState<string | null>(null);
+  // An already-public set may stay public; only new publishing needs a verified email.
+  const publicLocked = useNeedsEmailVerification() && initial?.visibility !== 'PUBLIC';
+  // Public may have been picked before the account status loaded; never submit it once locked.
+  const visibility = publicLocked ? 'PRIVATE' : chosenVisibility;
+  const showError = (err: Error) =>
+    setError(
+      apiErrorMessage(
+        t,
+        { error: isClientFetchError(err) ? err.code : undefined, message: err.message },
+        'setsPage.saveFailed',
+        { trustMessage: true }
+      )
+    );
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -69,7 +86,7 @@ export function SetForm({
             if (onSuccess) onSuccess();
             else router.push(`/sets/${setId}`);
           },
-          onError: (err) => setError(err.message),
+          onError: showError,
         }
       );
       return;
@@ -80,7 +97,7 @@ export function SetForm({
         if (onSuccess) onSuccess();
         router.push(`/sets/${result.data.id}`);
       },
-      onError: (err) => setError(err.message),
+      onError: showError,
     });
   };
 
@@ -122,9 +139,12 @@ export function SetForm({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="PRIVATE">{t('ui.private')}</SelectItem>
-              <SelectItem value="PUBLIC">{t('ui.public')}</SelectItem>
+              <SelectItem value="PUBLIC" disabled={publicLocked}>
+                {t('ui.public')}
+              </SelectItem>
             </SelectContent>
           </Select>
+          {publicLocked && <PublicVisibilityHint />}
         </div>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

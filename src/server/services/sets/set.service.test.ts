@@ -11,6 +11,9 @@ const prismaMock = vi.hoisted(() => ({
   flashcard: {
     findMany: vi.fn(),
   },
+  user: {
+    findUnique: vi.fn(),
+  },
   $transaction: vi.fn(),
 }));
 
@@ -73,6 +76,60 @@ describe('set.service', () => {
         }),
       })
     );
+  });
+
+  describe('publishing needs a verified email', () => {
+    const unverified = { emailVerified: null, passwordHash: 'hash' };
+
+    it('rejects creating a public set while the email is unverified', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(unverified);
+      await expect(
+        createSet('user-a', { title: 'Public', visibility: 'PUBLIC' })
+      ).rejects.toMatchObject({ code: 'EMAIL_NOT_VERIFIED', status: 403 });
+      expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
+    });
+
+    it('allows a public set once verified, and Google-only accounts', async () => {
+      prismaMock.flashcardSet.create.mockResolvedValue({ id: 's', visibility: 'PUBLIC' });
+      prismaMock.user.findUnique.mockResolvedValueOnce({
+        emailVerified: new Date(),
+        passwordHash: 'hash',
+      });
+      await createSet('user-a', { title: 'Public', visibility: 'PUBLIC' });
+      prismaMock.user.findUnique.mockResolvedValueOnce({ emailVerified: null, passwordHash: null });
+      await createSet('user-a', { title: 'Public', visibility: 'PUBLIC' });
+      expect(prismaMock.flashcardSet.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not check private sets', async () => {
+      prismaMock.flashcardSet.create.mockResolvedValue({ id: 's', visibility: 'PRIVATE' });
+      await createSet('user-a', { title: 'Mine', visibility: 'PRIVATE' });
+      expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('rejects switching a private set to public while unverified', async () => {
+      prismaMock.flashcardSet.findUnique.mockResolvedValue({
+        id: 'set-1',
+        userId: 'user-a',
+        visibility: 'PRIVATE',
+      });
+      prismaMock.user.findUnique.mockResolvedValue(unverified);
+      await expect(updateSet('set-1', 'user-a', { visibility: 'PUBLIC' })).rejects.toMatchObject({
+        code: 'EMAIL_NOT_VERIFIED',
+      });
+      expect(prismaMock.flashcardSet.update).not.toHaveBeenCalled();
+    });
+
+    it('lets an already public set be edited without re-checking', async () => {
+      prismaMock.flashcardSet.findUnique.mockResolvedValue({
+        id: 'set-1',
+        userId: 'user-a',
+        visibility: 'PUBLIC',
+      });
+      prismaMock.flashcardSet.update.mockResolvedValue({ id: 'set-1', visibility: 'PUBLIC' });
+      await updateSet('set-1', 'user-a', { title: 'Renamed', visibility: 'PUBLIC' });
+      expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+    });
   });
 
   it('test_create_set_with_tags: attaches tag relations', async () => {

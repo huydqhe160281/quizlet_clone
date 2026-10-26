@@ -3,6 +3,7 @@
 import { Check } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { THEME_ICONS } from '@/components/layout/theme-icons';
+import { useIsClient } from '@/hooks/use-is-client';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import {
   SYSTEM_THEME,
@@ -49,6 +50,8 @@ function ThemeSwatch({ choice }: { choice: ThemeChoice }) {
  */
 export function ThemePicker({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
+  // The stored theme is unknown on the server; mark nothing selected until hydrated.
+  const isClient = useIsClient();
   const t = useTranslations();
 
   return (
@@ -59,7 +62,7 @@ export function ThemePicker({ className }: { className?: string }) {
     >
       {THEME_CHOICES.map((choice) => {
         const Icon = THEME_ICONS[choice];
-        const active = theme === choice;
+        const active = isClient && theme === choice;
         return (
           <button
             key={choice}

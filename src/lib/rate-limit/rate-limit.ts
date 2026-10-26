@@ -1,4 +1,5 @@
 import { LRUCache } from 'lru-cache';
+import { AI_GENERATE_UNVERIFIED_DAILY_LIMIT } from '@/lib/auth/verification-policy';
 import { prisma } from '@/server/db';
 
 type RateLimitOptions = {
@@ -79,6 +80,21 @@ export const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions)
         return checkLocal(key);
       }
     },
+
+    /** Gives back one counted request, e.g. when the work it paid for failed. */
+    async release(key: string): Promise<void> {
+      if (rateLimitsDisabledForTests()) return;
+      const entry = cache.get(key);
+      if (entry && entry.count > 0) cache.set(key, { ...entry, count: entry.count - 1 });
+      try {
+        await prisma.$executeRaw`
+          UPDATE rate_limit_buckets SET "count" = GREATEST("count" - 1, 0), "updatedAt" = ${new Date()}
+          WHERE "key" = ${key} AND "resetAt" > ${new Date()}
+        `;
+      } catch {
+        // Best effort: the slot simply stays used until the window resets.
+      }
+    },
   };
 };
 
@@ -87,6 +103,10 @@ export const apiRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests:
 export const uploadRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 10 });
 export const reviewRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 200 });
 export const aiGenerateRateLimit = createRateLimiter({ intervalMs: 3_600_000, maxRequests: 10 });
+export const aiGenerateUnverifiedRateLimit = createRateLimiter({
+  intervalMs: 86_400_000,
+  maxRequests: AI_GENERATE_UNVERIFIED_DAILY_LIMIT,
+});
 export const assistantGuestRateLimit = createRateLimiter({
   intervalMs: 3_600_000,
   maxRequests: 20,

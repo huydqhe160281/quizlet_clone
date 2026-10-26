@@ -13,6 +13,13 @@
       "cta": "Xác nhận địa chỉ email",
       "expiry": "Liên kết này hết hạn sau 24 giờ.",
       "ignore": "Nếu bạn không tạo tài khoản, hãy bỏ qua email này."
+    },
+    "accountClaimed": {
+      "subject": "Tài khoản QuizFree của bạn giờ đăng nhập bằng Google",
+      "intro": "Ai đó vừa đăng nhập QuizFree bằng tài khoản Google có địa chỉ email này. Tài khoản QuizFree dùng email này trước đó chưa được xác minh, nên chúng tôi đã chuyển nó sang đăng nhập bằng Google.",
+      "passwordRemoved": "Mật khẩu cũ không còn dùng được và mọi phiên đăng nhập khác đã bị đăng xuất. Nếu muốn đăng nhập bằng mật khẩu, bạn có thể đặt mật khẩu mới:",
+      "cta": "Đặt mật khẩu mới",
+      "ignore": "Nếu chính bạn vừa đăng nhập bằng Google, bạn có thể bỏ qua email này."
     }
   }
 }

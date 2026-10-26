@@ -54,6 +54,44 @@ same flow as the guest switcher (cookie first, `PATCH /api/v1/user/preferences`,
 
 **Constraint**: MUST
 
+### Requirement: Email Verification Status
+
+The Account section SHALL show whether the email is verified. OAuth-only accounts (no
+password) SHALL count as verified (`isEmailConsideredVerified` in
+`src/server/auth/email-verified.ts`, shared with `/api/v1/auth/me`). While a password account
+is unverified, the section SHALL explain the limits below and offer a resend button that calls
+`POST /api/v1/auth/verify-email/resend` (rate limited per user), so the user can still resend
+after dismissing the app-wide banner.
+
+#### Scenario: Resend from settings
+
+- **WHEN** an unverified password user taps resend
+- **THEN** a new link is emailed, older links stop working, and the page says where it was sent
+
+#### Scenario: Google account
+
+- **WHEN** a Google-only user opens the settings page
+- **THEN** the email shows as verified and no resend button appears
+
+### Requirement: Limits for Unverified Accounts
+
+Unverified accounts SHALL be able to sign in and study, with two limits enforced on the server:
+
+- Publishing: creating, importing or switching a set to `PUBLIC` SHALL fail with `403 EMAIL_NOT_VERIFIED` (`assertCanPublish`). Sets that are already public may stay public and be edited. The create/edit and import forms disable the Public option and link to Settings.
+- AI set generation: at most `AI_GENERATE_UNVERIFIED_DAILY_LIMIT` (3) generations per 24 hours, on top of the hourly limit; the next request fails with `429 AI_QUOTA_UNVERIFIED` and the modal asks the user to verify. A generation that fails (or is refused) gives its slot back, so the allowance counts sets actually created. The assistant chat is not affected.
+
+#### Scenario: Unverified user tries to publish
+
+- **GIVEN** an unverified password account
+- **WHEN** it creates a set with visibility `PUBLIC`
+- **THEN** the API returns 403 `EMAIL_NOT_VERIFIED` and no set is created
+
+#### Scenario: Unverified user exceeds the AI allowance
+
+- **GIVEN** an unverified account that generated 3 sets with AI in the last 24 hours
+- **WHEN** it requests another generation
+- **THEN** the API returns 429 `AI_QUOTA_UNVERIFIED`
+
 ### Requirement: Change Password
 
 `POST /api/v1/user/password` SHALL accept `{ currentPassword, newPassword }` (new: ≥ 8 chars,
@@ -71,7 +109,7 @@ the auth limiter; same-origin only.
 #### Scenario: OAuth-only account
 
 - **GIVEN** an account without a password hash (Google sign-in)
-- **THEN** the page explains there is no password to change, and the API answers 400 `PASSWORD_NOT_SET`
+- **THEN** the page explains there is no password yet and links to `/forgot-password` to set one, and the API answers 400 `PASSWORD_NOT_SET`
 
 #### Scenario: Successful change
 

@@ -30,9 +30,10 @@ export function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(() => {
-    if (searchParams.get('error') === 'OAuthAccountNotLinked') {
-      return t('auth.oauthNotLinked');
-    }
+    const oauthError = searchParams.get('error');
+    if (oauthError === 'OAuthAccountNotLinked') return t('auth.oauthNotLinked');
+    // prepareGoogleSignIn refused it: Google did not verify the address.
+    if (oauthError === 'GoogleEmailUnverified') return t('auth.googleEmailUnverified');
     return null;
   });
   const [loading, setLoading] = useState(false);

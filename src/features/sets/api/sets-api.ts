@@ -6,7 +6,9 @@ export type PaginatedResponse<T> = {
 export class ClientFetchError extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
+    /** API error code (e.g. EMAIL_NOT_VERIFIED), for localized messages. */
+    public code?: string
   ) {
     super(message);
     this.name = 'ClientFetchError';
@@ -50,7 +52,8 @@ async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new ClientFetchError(
       payload.message ?? payload.error ?? 'Request failed',
-      response.status
+      response.status,
+      payload.error
     );
   }
   return payload;

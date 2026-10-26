@@ -1,6 +1,7 @@
 import { auth } from '@/server/auth/auth';
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { prisma } from '@/server/db';
+import { isEmailConsideredVerified } from '@/server/auth/email-verified';
 
 export const GET = withErrorHandler(async () => {
   const session = await auth();
@@ -19,8 +20,7 @@ export const GET = withErrorHandler(async () => {
       email: session.user.email,
       name: session.user.name,
       image: session.user.image,
-      // Only password sign-ups are asked to confirm; OAuth providers vouch for the address.
-      needsEmailVerification: Boolean(user?.passwordHash) && !user?.emailVerified,
+      needsEmailVerification: user ? !isEmailConsideredVerified(user) : false,
     },
   });
 });

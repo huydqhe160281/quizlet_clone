@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { MailWarning, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAccountStatus } from '@/features/auth/hooks/useAccountStatus';
+import { useResendVerification } from '@/features/auth/hooks/useResendVerification';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 const DISMISS_KEY = 'email-verification-banner-dismissed';
@@ -25,19 +26,9 @@ export function EmailVerificationBanner() {
   const [dismissed, setDismissed] = useState(() =>
     typeof window === 'undefined' ? false : readDismissed()
   );
-  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const { state, resend } = useResendVerification();
 
   if (!account?.needsEmailVerification || dismissed) return null;
-
-  const resend = async () => {
-    setState('sending');
-    try {
-      const response = await fetch('/api/v1/auth/verify-email/resend', { method: 'POST' });
-      setState(response.ok ? 'sent' : 'error');
-    } catch {
-      setState('error');
-    }
-  };
 
   const dismiss = () => {
     try {
@@ -60,9 +51,9 @@ export function EmailVerificationBanner() {
         variant="outline"
         className="h-8 shrink-0 px-3 text-xs sm:h-9 sm:text-sm"
         onClick={resend}
-        disabled={state === 'sending' || state === 'sent'}
+        disabled={state.status === 'sending' || state.status === 'sent'}
       >
-        {state === 'sent' ? t('auth.verifyBannerSent') : t('auth.verifyBannerResend')}
+        {state.status === 'sent' ? t('auth.verifyBannerSent') : t('auth.verifyBannerResend')}
       </Button>
       <Button
         size="icon"

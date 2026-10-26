@@ -1,5 +1,6 @@
 import { parse as parseCsv } from 'papaparse';
 import { ApiError } from '@/lib/api-error';
+import { assertCanPublish } from '@/server/auth/email-verified';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
 import {
@@ -98,6 +99,7 @@ async function createImport(
   if (cards.length === 0) {
     throw new ApiError('VALIDATION_ERROR', 'No valid cards found in import', 400);
   }
+  if (meta.visibility === 'PUBLIC') await assertCanPublish(userId);
 
   if (cards.length > IMPORT_CARD_LIMIT) {
     throw new ApiError(

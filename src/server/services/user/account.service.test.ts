@@ -35,6 +35,27 @@ describe('account.service', () => {
     });
   });
 
+  it('treats OAuth-only accounts as verified and unconfirmed password accounts as not', async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      name: null,
+      email: 'g@example.com',
+      emailVerified: null,
+      passwordHash: null,
+    });
+    await expect(getAccountSummary('u1')).resolves.toMatchObject({
+      emailVerified: true,
+      hasPassword: false,
+    });
+
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      name: null,
+      email: 'p@example.com',
+      emailVerified: null,
+      passwordHash: 'hash',
+    });
+    await expect(getAccountSummary('u2')).resolves.toMatchObject({ emailVerified: false });
+  });
+
   it('rejects accounts without a password', async () => {
     prismaMock.user.findUnique.mockResolvedValue({ passwordHash: null });
     await expect(changePassword('u1', input)).rejects.toMatchObject({

@@ -8,6 +8,7 @@ import { authConfig } from '@/server/auth/auth.config';
 import { prisma } from '@/server/db';
 import { burnPasswordCheck, verifyPassword } from '@/server/auth/password';
 import { applySessionVersion } from '@/server/auth/session-version';
+import { markGoogleEmailVerified, prepareGoogleSignIn } from '@/server/auth/google-account-claim';
 
 const googleProvider =
   env.googleClientId && env.googleClientSecret
@@ -15,6 +16,19 @@ const googleProvider =
         Google({
           clientId: env.googleClientId,
           clientSecret: env.googleClientSecret,
+          // Safe only with prepareGoogleSignIn: it requires a Google-verified address and
+          // takes over unconfirmed password accounts instead of sharing them.
+          allowDangerousEmailAccountLinking: true,
+          // Same shape as the provider default, but with the email lowercased like credentials
+          // sign-ups, so the adapter's lookup by email matches the row prepareGoogleSignIn saw.
+          profile(profile) {
+            return {
+              id: profile.sub,
+              name: profile.name,
+              email: profile.email?.toLowerCase(),
+              image: profile.picture,
+            };
+          },
         }),
       ]
     : [];
@@ -25,6 +39,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: env.authSecret,
   callbacks: {
     ...authConfig.callbacks,
+    signIn({ account, profile }) {
+      return prepareGoogleSignIn(account, profile);
+    },
     // Node-only: the edge config (middleware) cannot reach the DB, so revocation is checked here.
     async jwt(params) {
       const token = await authConfig.callbacks!.jwt!(params);
@@ -32,6 +49,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   events: {
+    async linkAccount({ user, account }) {
+      await markGoogleEmailVerified(user.id, account);
+    },
     async signIn({ user }) {
       if (!user.id) return;
       try {

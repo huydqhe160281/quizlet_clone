@@ -12,19 +12,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useIsClient } from '@/hooks/use-is-client';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { THEME_CHOICES, getThemeLabelKey, type ThemeChoice } from '@/lib/theme/themes';
-
-const subscribeNoop = () => () => {};
-
-/** False during SSR and hydration, true afterwards — the theme is only known on the client. */
-function useIsClient() {
-  return React.useSyncExternalStore(
-    subscribeNoop,
-    () => true,
-    () => false
-  );
-}
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();

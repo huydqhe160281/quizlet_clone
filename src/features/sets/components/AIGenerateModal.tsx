@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { apiErrorMessage } from '@/lib/i18n/api-error-message';
+import { AI_GENERATE_UNVERIFIED_DAILY_LIMIT } from '@/lib/auth/verification-policy';
 
 const DEFAULT_CARD_COUNT = 15;
 
@@ -204,14 +205,19 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
         data?: { set: GeneratedSet; cards: GeneratedCard[] };
         error?: string;
         message?: string;
+        details?: { limit?: number };
       };
 
       if (!response.ok) {
         setStep('form');
         const message =
-          response.status === 429
-            ? t('aiGenerate.errorRateLimit')
-            : apiErrorMessage(t, payload, 'aiGenerate.errorGenerateFailed');
+          payload.error === 'AI_QUOTA_UNVERIFIED'
+            ? t('apiErrors.AI_QUOTA_UNVERIFIED', {
+                limit: payload.details?.limit ?? AI_GENERATE_UNVERIFIED_DAILY_LIMIT,
+              })
+            : response.status === 429
+              ? t('aiGenerate.errorRateLimit')
+              : apiErrorMessage(t, payload, 'aiGenerate.errorGenerateFailed');
         toast.error(message);
         return;
       }

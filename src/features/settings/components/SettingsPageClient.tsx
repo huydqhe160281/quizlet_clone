@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
   BookOpen,
@@ -17,6 +18,7 @@ import { LanguagePicker } from '@/components/i18n/LanguagePicker';
 import { ThemePicker } from '@/components/layout/ThemePicker';
 import { useSignOut } from '@/features/auth/hooks/useSignOut';
 import { ChangePasswordForm } from '@/features/settings/components/ChangePasswordForm';
+import { EmailVerificationNotice } from '@/features/settings/components/EmailVerificationNotice';
 import { StudySoundToggle } from '@/features/settings/components/StudySoundToggle';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import type { AccountSummary } from '@/features/settings/types';
@@ -52,7 +54,9 @@ function AccountRow({ label, children }: { label: string; children: ReactNode })
   return (
     <div className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="flex min-w-0 items-center gap-2 text-sm font-semibold">{children}</dd>
+      <dd className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold">
+        {children}
+      </dd>
     </div>
   );
 }
@@ -113,6 +117,7 @@ export function SettingsPageClient({ account }: { account: AccountSummary }) {
             </Badge>
           </AccountRow>
         </dl>
+        {!account.emailVerified && <EmailVerificationNotice email={account.email} />}
       </SettingsSection>
 
       <SettingsSection
@@ -124,7 +129,12 @@ export function SettingsPageClient({ account }: { account: AccountSummary }) {
         {account.hasPassword ? (
           <ChangePasswordForm />
         ) : (
-          <p className="text-sm text-muted-foreground">{t('settingsPage.password.oauthOnly')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t('settingsPage.password.oauthOnly')}{' '}
+            <Link href="/forgot-password" className="font-medium text-primary underline">
+              {t('settingsPage.password.forgotLink')}
+            </Link>
+          </p>
         )}
       </SettingsSection>
 

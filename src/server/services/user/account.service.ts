@@ -3,6 +3,7 @@ import type { ChangePasswordInput } from '@/features/auth/schemas/auth.schema';
 import type { AccountSummary } from '@/features/settings/types';
 import { prisma } from '@/server/db';
 import { hashPassword, verifyPassword } from '@/server/auth/password';
+import { isEmailConsideredVerified } from '@/server/auth/email-verified';
 import { forgetSessionVersion } from '@/server/auth/session-version';
 
 export async function getAccountSummary(userId: string): Promise<AccountSummary | null> {
@@ -14,7 +15,7 @@ export async function getAccountSummary(userId: string): Promise<AccountSummary 
   return {
     name: user.name,
     email: user.email,
-    emailVerified: user.emailVerified !== null,
+    emailVerified: isEmailConsideredVerified(user),
     hasPassword: user.passwordHash !== null,
   };
 }

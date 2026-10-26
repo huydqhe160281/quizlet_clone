@@ -153,7 +153,10 @@
     "editTitle": "セットを編集",
     "formHint": "学習教材のメタデータを追加します。",
     "deleteTitle": "セットを削除しますか？",
-    "deleteDescription": "「{title}」と {count} 枚のカード、学習の進捗が完全に削除されます。元に戻すことはできません。"
+    "deleteDescription": "「{title}」と {count} 枚のカード、学習の進捗が完全に削除されます。元に戻すことはできません。",
+    "publicNeedsVerification": "セットを公開するにはメールアドレスを確認してください。",
+    "goToSettings": "設定へ",
+    "saveFailed": "セットを保存できませんでした。もう一度お試しください。"
   },
   "shared": {
     "signInToDuplicate": "ログインすると、このセットをライブラリに複製できます。",

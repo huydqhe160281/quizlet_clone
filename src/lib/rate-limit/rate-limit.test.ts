@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const prismaMock = vi.hoisted(() => ({ $queryRaw: vi.fn(), $transaction: vi.fn() }));
+const prismaMock = vi.hoisted(() => ({
+  $queryRaw: vi.fn(),
+  $executeRaw: vi.fn(),
+  $transaction: vi.fn(),
+}));
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 
 import { createRateLimiter } from '@/lib/rate-limit/rate-limit';
@@ -61,5 +65,26 @@ describe('rateLimitsDisabledForTests', () => {
       } as never)
     ).toBe(false);
     expect(rateLimitsDisabledForTests({} as never)).toBe(false);
+  });
+
+  it('release decrements the bucket without going below zero', async () => {
+    const limiter = createRateLimiter({ intervalMs: 60_000, maxRequests: 2 });
+    prismaMock.$executeRaw.mockResolvedValue(1);
+
+    await limiter.release('k');
+
+    const sql = (prismaMock.$executeRaw.mock.calls[0]?.[0] as TemplateStringsArray).join('?');
+    expect(sql).toContain('GREATEST("count" - 1, 0)');
+  });
+
+  it('release frees a slot in the in-memory fallback too', async () => {
+    const limiter = createRateLimiter({ intervalMs: 60_000, maxRequests: 1 });
+    prismaMock.$queryRaw.mockRejectedValue(new Error('db down'));
+    prismaMock.$executeRaw.mockRejectedValue(new Error('db down'));
+
+    expect((await limiter.check('k')).limited).toBe(false);
+    await limiter.release('k');
+    expect((await limiter.check('k')).limited).toBe(false);
+    expect((await limiter.check('k')).limited).toBe(true);
   });
 });

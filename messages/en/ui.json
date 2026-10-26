@@ -153,7 +153,10 @@
     "editTitle": "Edit set",
     "formHint": "Add metadata for your study material.",
     "deleteTitle": "Delete this set?",
-    "deleteDescription": "“{title}” and its {count} cards, including study progress, will be permanently deleted. This cannot be undone."
+    "deleteDescription": "“{title}” and its {count} cards, including study progress, will be permanently deleted. This cannot be undone.",
+    "publicNeedsVerification": "Verify your email to make sets public.",
+    "goToSettings": "Go to Settings",
+    "saveFailed": "Could not save the set. Please try again."
   },
   "shared": {
     "signInToDuplicate": "Sign in to duplicate this set to your library.",

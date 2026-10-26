@@ -83,6 +83,31 @@ export async function sendPasswordResetEmail(
   await sendEmail(email, renderPasswordResetEmail(resetUrl, locale), resetUrl);
 }
 
+export function renderAccountClaimedEmail(
+  forgotPasswordUrl: string,
+  locale: Locale
+): PasswordResetEmailContent {
+  const catalog = loadCatalog(locale);
+  return {
+    subject: t(catalog, 'emails.accountClaimed.subject'),
+    html: `
+    <p>${t(catalog, 'emails.accountClaimed.intro')}</p>
+    <p>${t(catalog, 'emails.accountClaimed.passwordRemoved')}</p>
+    <p><a href="${forgotPasswordUrl}">${t(catalog, 'emails.accountClaimed.cta')}</a></p>
+    <p>${t(catalog, 'emails.accountClaimed.ignore')}</p>
+  `,
+  };
+}
+
+/** Sent after a Google sign-in took over an unverified password account (google-account-claim). */
+export async function sendAccountClaimedEmail(
+  email: string,
+  forgotPasswordUrl: string,
+  locale: Locale = DEFAULT_LOCALE
+): Promise<void> {
+  await sendEmail(email, renderAccountClaimedEmail(forgotPasswordUrl, locale), forgotPasswordUrl);
+}
+
 export async function sendEmailVerificationEmail(
   email: string,
   verifyUrl: string,

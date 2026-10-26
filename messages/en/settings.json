@@ -25,6 +25,14 @@
       "signOut": "Sign out",
       "signOutDescription": "Sign out of this device."
     },
+    "verify": {
+      "description": "Open the link in the confirmation email to verify this address. Until then you cannot make sets public and can generate with AI {limit} times a day. Can't find it? Check your spam folder or resend it below (links are valid for 24 hours).",
+      "resend": "Resend confirmation email",
+      "sending": "Sending...",
+      "sent": "Sent",
+      "sentHint": "A new link was sent to {email}. Older links no longer work.",
+      "failed": "Could not send the email. Please try again."
+    },
     "password": {
       "title": "Change password",
       "description": "Changing it signs you out on every device, so you'll sign in again.",
@@ -38,7 +46,8 @@
       "sameAsCurrent": "The new password must differ from the current one.",
       "success": "Password changed. Please sign in again.",
       "failed": "Couldn't change your password. Please try again.",
-      "oauthOnly": "This account signs in with Google, so it has no password to change."
+      "oauthOnly": "This account signs in with Google, so it has no password yet. To sign in with a password, set one via",
+      "forgotLink": "Forgot password"
     }
   }
 }

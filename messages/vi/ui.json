@@ -153,7 +153,10 @@
     "editTitle": "Sửa bộ thẻ",
     "formHint": "Thêm thông tin cho tài liệu học của bạn.",
     "deleteTitle": "Xóa bộ thẻ?",
-    "deleteDescription": "Bộ thẻ “{title}” cùng {count} thẻ và tiến độ học sẽ bị xóa vĩnh viễn. Không thể hoàn tác."
+    "deleteDescription": "Bộ thẻ “{title}” cùng {count} thẻ và tiến độ học sẽ bị xóa vĩnh viễn. Không thể hoàn tác.",
+    "publicNeedsVerification": "Xác minh email để công khai bộ thẻ.",
+    "goToSettings": "Đi tới Cài đặt",
+    "saveFailed": "Không lưu được bộ thẻ. Vui lòng thử lại."
   },
   "shared": {
     "signInToDuplicate": "Đăng nhập để sao chép bộ thẻ vào thư viện của bạn.",

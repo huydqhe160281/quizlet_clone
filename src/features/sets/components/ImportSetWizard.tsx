@@ -18,6 +18,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSetMutations } from '@/features/sets/hooks/useSets';
+import { useNeedsEmailVerification } from '@/features/auth/hooks/useNeedsEmailVerification';
+import { PublicVisibilityHint } from '@/features/sets/components/PublicVisibilityHint';
 import {
   Select,
   SelectContent,
@@ -314,7 +316,10 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC'>('PRIVATE');
+  const [chosenVisibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC'>('PRIVATE');
+  const publicLocked = useNeedsEmailVerification();
+  // Public may have been picked before the account status loaded; never submit it once locked.
+  const visibility = publicLocked ? 'PRIVATE' : chosenVisibility;
   const [jsonText, setJsonText] = useState('');
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -497,9 +502,12 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="PRIVATE">{t('ui.private')}</SelectItem>
-                <SelectItem value="PUBLIC">{t('ui.public')}</SelectItem>
+                <SelectItem value="PUBLIC" disabled={publicLocked}>
+                  {t('ui.public')}
+                </SelectItem>
               </SelectContent>
             </Select>
+            {publicLocked && <PublicVisibilityHint />}
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
   flashcardSet: { create: vi.fn() },
+  user: { findUnique: vi.fn() },
 }));
 
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
@@ -34,6 +35,14 @@ describe('import.service', () => {
       code: 'VALIDATION_ERROR',
       details: expect.objectContaining({ row: 3 }),
     });
+  });
+
+  it('refuses a public import until the email is verified', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({ emailVerified: null, passwordHash: 'hash' });
+    await expect(
+      importCsv('u', { ...meta, visibility: 'PUBLIC' }, csv('front,back\na,b\n'))
+    ).rejects.toMatchObject({ code: 'EMAIL_NOT_VERIFIED' });
+    expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
   });
 
   it('still skips blank rows and imports the rest', async () => {

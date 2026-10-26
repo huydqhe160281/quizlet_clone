@@ -13,6 +13,13 @@
       "cta": "Confirm email address",
       "expiry": "This link expires in 24 hours.",
       "ignore": "If you did not create an account, you can ignore this email."
+    },
+    "accountClaimed": {
+      "subject": "Your QuizFree account now signs in with Google",
+      "intro": "Someone just signed in to QuizFree with the Google account for this email address. The QuizFree account using this address had not been verified, so it now signs in with Google.",
+      "passwordRemoved": "The old password no longer works and every other session was signed out. To sign in with a password, set a new one:",
+      "cta": "Set a new password",
+      "ignore": "If you just signed in with Google, you can ignore this email."
     }
   }
 }

@@ -150,6 +150,8 @@
     "AI_GENERATION_FAILED": "The AI could not create cards this time. Please try again.",
     "INTERNAL_ERROR": "Something went wrong on our side. Please try again.",
     "INVALID_PASSWORD": "Your current password is incorrect.",
-    "PASSWORD_NOT_SET": "This account does not sign in with a password."
+    "PASSWORD_NOT_SET": "This account does not sign in with a password.",
+    "EMAIL_NOT_VERIFIED": "Verify your email before making a set public.",
+    "AI_QUOTA_UNVERIFIED": "Accounts without a verified email can generate with AI {limit} times a day. Verify your email in Settings to continue."
   }
 }

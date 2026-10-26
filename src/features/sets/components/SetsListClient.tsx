@@ -87,7 +87,7 @@ export function SetsListClient() {
 
   if (sets.length === 0) {
     return (
-      <>
+      <div className="space-y-4">
         <PageHeader
           title={t('setsPage.title')}
           subtitle={t('setsPage.subtitle')}
@@ -100,7 +100,7 @@ export function SetsListClient() {
         />
         <AIGenerateModal open={aiModalOpen} onOpenChange={setAiModalOpen} />
         {createDialog}
-      </>
+      </div>
     );
   }
 

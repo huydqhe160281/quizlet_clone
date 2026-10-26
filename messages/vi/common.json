@@ -150,6 +150,8 @@
     "AI_GENERATION_FAILED": "AI chưa tạo được thẻ lần này. Vui lòng thử lại.",
     "INTERNAL_ERROR": "Hệ thống gặp lỗi. Vui lòng thử lại.",
     "INVALID_PASSWORD": "Mật khẩu hiện tại không đúng.",
-    "PASSWORD_NOT_SET": "Tài khoản này không dùng mật khẩu để đăng nhập."
+    "PASSWORD_NOT_SET": "Tài khoản này không dùng mật khẩu để đăng nhập.",
+    "EMAIL_NOT_VERIFIED": "Hãy xác minh email trước khi công khai bộ thẻ.",
+    "AI_QUOTA_UNVERIFIED": "Tài khoản chưa xác minh email chỉ được tạo bằng AI {limit} lần mỗi ngày. Xác minh email trong Cài đặt để tiếp tục."
   }
 }

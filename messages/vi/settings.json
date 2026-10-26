@@ -25,6 +25,14 @@
       "signOut": "Đăng xuất",
       "signOutDescription": "Đăng xuất khỏi thiết bị này."
     },
+    "verify": {
+      "description": "Hãy mở liên kết trong email xác nhận để xác minh địa chỉ này. Khi chưa xác minh, bạn chưa thể công khai bộ thẻ và chỉ được tạo bằng AI {limit} lần mỗi ngày. Không thấy email? Kiểm tra mục Spam hoặc gửi lại bên dưới (liên kết có hiệu lực 24 giờ).",
+      "resend": "Gửi lại email xác nhận",
+      "sending": "Đang gửi...",
+      "sent": "Đã gửi",
+      "sentHint": "Đã gửi liên kết mới tới {email}. Liên kết cũ không còn dùng được.",
+      "failed": "Không gửi được email. Vui lòng thử lại."
+    },
     "password": {
       "title": "Đổi mật khẩu",
       "description": "Sau khi đổi, bạn sẽ được đăng xuất khỏi mọi thiết bị và cần đăng nhập lại.",
@@ -38,7 +46,8 @@
       "sameAsCurrent": "Mật khẩu mới phải khác mật khẩu hiện tại.",
       "success": "Đã đổi mật khẩu. Vui lòng đăng nhập lại.",
       "failed": "Không đổi được mật khẩu. Vui lòng thử lại.",
-      "oauthOnly": "Tài khoản này đăng nhập bằng Google nên không có mật khẩu để đổi."
+      "oauthOnly": "Tài khoản này đăng nhập bằng Google nên chưa có mật khẩu. Muốn đăng nhập bằng mật khẩu, hãy đặt mật khẩu qua",
+      "forgotLink": "Quên mật khẩu"
     }
   }
 }

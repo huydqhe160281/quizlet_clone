@@ -12,6 +12,7 @@ import {
   MIN_MERGE_SETS,
   MAX_SPLIT_PARTS,
 } from '@/features/sets/schemas/set.schema';
+import { assertCanPublish } from '@/server/auth/email-verified';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
 import { SET_TITLE_MAX } from '@/features/sets/schemas/set.schema';
@@ -98,6 +99,7 @@ export async function getSet(setId: string, userId?: string) {
 }
 
 export async function createSet(userId: string, input: CreateSetInput) {
+  if (input.visibility === 'PUBLIC') await assertCanPublish(userId);
   const set = await prisma.flashcardSet.create({
     data: {
       title: input.title,
@@ -126,6 +128,9 @@ export async function updateSet(setId: string, userId: string, input: UpdateSetI
     throw new ApiError('NOT_FOUND', 'Set not found', 404);
   }
   assertOwner(existing, userId);
+  if (input.visibility === 'PUBLIC' && existing.visibility !== 'PUBLIC') {
+    await assertCanPublish(userId);
+  }
 
   const tagUpdate =
     input.tagIds === undefined
