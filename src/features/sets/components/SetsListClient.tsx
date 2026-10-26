@@ -112,10 +112,7 @@ export function SetsListClient() {
         actions={toolbarActions}
       />
       {mergeSelection !== null && (
-        <div
-          data-slot="accent-surface"
-          className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-primary/30 bg-background/90 p-3 shadow-sm backdrop-blur"
-        >
+        <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-primary/30 bg-background/90 p-3 shadow-sm backdrop-blur">
           <p className="text-sm">
             {t('setsPage.mergeSelectHint', { count: mergeSelection.length })}
           </p>

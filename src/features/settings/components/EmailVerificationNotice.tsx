@@ -24,12 +24,12 @@ export function EmailVerificationNotice({ email }: { email: string }) {
   const sent = state.status === 'sent';
 
   return (
-    <div
-      data-slot="accent-surface"
-      className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 sm:p-4"
-    >
+    <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 sm:p-4">
       <div className="flex items-start gap-2.5">
-        <MailWarning className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+        <MailWarning
+          className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+          aria-hidden
+        />
         <div className="min-w-0 flex-1 space-y-3">
           <p className="text-sm">
             {t('settingsPage.verify.description', { limit: AI_GENERATE_UNVERIFIED_DAILY_LIMIT })}

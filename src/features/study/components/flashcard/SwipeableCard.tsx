@@ -77,9 +77,12 @@ export function SwipeableCard({ onSwipe, children }: SwipeableCardProps) {
   };
 
   return (
+    // touch-action stops at the nearest scroll container, so the card's scrollable text
+    // would hand horizontal touches to the browser (pointercancel ends the drag).
+    // Pin every descendant to pan-y: vertical scroll still works, horizontal is ours.
     <motion.div
       data-testid="swipeable-card"
-      className="relative touch-pan-y"
+      className="relative touch-pan-y [&_*]:touch-pan-y"
       style={{ x, rotate }}
       drag="x"
       dragElastic={0.18}
