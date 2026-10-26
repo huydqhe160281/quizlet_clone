@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { RedirectingNotice } from '@/components/shared/RedirectingNotice';
 import { CardEditor } from '@/features/sets/cards/components/CardEditor';
 import { StudyLauncher } from '@/features/study/components/StudyLauncher';
@@ -49,6 +50,8 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
   const [chunkSizeInput, setChunkSizeInput] = useState(String(DEFAULT_CHUNK_SIZE));
   const [splitError, setSplitError] = useState<string | null>(null);
   const [mergeOpen, setMergeOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { data: set, isLoading, error: setError } = useSet(setId);
   const { data: cards, error: cardsError } = useCards(setId);
   const { deleteSet, duplicateSet, splitSet } = useSetMutations();
@@ -299,15 +302,33 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
               className="gap-1.5"
               aria-label={t('ui.delete')}
               onClick={() => {
-                if (window.confirm(t('setsPage.deleteConfirm'))) {
-                  deleteSet.mutate(setId, { onSuccess: () => router.push('/sets') });
-                }
+                setDeleteError(null);
+                setDeleteOpen(true);
               }}
             >
               <Trash2 className="h-4 w-4" />
               <span className="hidden sm:inline">{t('ui.delete')}</span>
             </Button>
           </div>
+          <ConfirmDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            destructive
+            title={t('setsPage.deleteTitle')}
+            description={t('setsPage.deleteDescription', { title: set.title, count: cardCount })}
+            confirmLabel={t('ui.delete')}
+            pendingLabel={t('ui.deleting')}
+            // Stays pending through the redirect so the set can't be deleted twice.
+            isPending={deleteSet.isPending || deleteSet.isSuccess}
+            error={deleteError}
+            onConfirm={() => {
+              setDeleteError(null);
+              deleteSet.mutate(setId, {
+                onSuccess: () => router.push('/sets'),
+                onError: () => setDeleteError(t('ui.deleteFailed')),
+              });
+            }}
+          />
         </div>
       </div>
       <Suspense

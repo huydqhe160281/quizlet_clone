@@ -31,7 +31,9 @@
       "message": "問題が発生しました。",
       "tryAgain": "再試行",
       "redirecting": "問題が発生しました。戻っています…"
-    }
+    },
+    "deleting": "削除中…",
+    "deleteFailed": "削除できませんでした。もう一度お試しください。"
   },
   "library": {
     "title": "公開ライブラリ",
@@ -107,7 +109,6 @@
     "loadingSet": "セットを読み込み中…",
     "notFound": "セットが見つかりません。戻ります…",
     "editSet": "セットを編集",
-    "deleteConfirm": "このセットとすべてのカードを削除しますか？",
     "splitTitle": "セットを分割",
     "splitHint": "カードは現在の並び順のままです。元のセットは変更されません。",
     "splitChunkSize": "新しいセットあたりのカード数",
@@ -150,7 +151,9 @@
     "saveChanges": "変更を保存",
     "createTitle": "新しいフラッシュカードセット",
     "editTitle": "セットを編集",
-    "formHint": "学習教材のメタデータを追加します。"
+    "formHint": "学習教材のメタデータを追加します。",
+    "deleteTitle": "セットを削除しますか？",
+    "deleteDescription": "「{title}」と {count} 枚のカード、学習の進捗が完全に削除されます。元に戻すことはできません。"
   },
   "shared": {
     "signInToDuplicate": "ログインすると、このセットをライブラリに複製できます。",
@@ -180,7 +183,8 @@
     "audioOptional": "音声（任意）",
     "uploadRequestFailed": "アップロード要求に失敗しました",
     "uploadStorageFailed": "ストレージへのアップロードに失敗しました",
-    "uploading": "アップロード中…"
+    "uploading": "アップロード中…",
+    "deleteSelectedTitle": "選択したカードを削除しますか？"
   },
   "guideUi": {
     "dialogAria": "ガイドアシスタント",

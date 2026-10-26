@@ -31,7 +31,9 @@
       "message": "Something went wrong.",
       "tryAgain": "Try again",
       "redirecting": "Something went wrong. Going back…"
-    }
+    },
+    "deleting": "Deleting…",
+    "deleteFailed": "Could not delete. Please try again."
   },
   "library": {
     "title": "Public library",
@@ -107,7 +109,6 @@
     "loadingSet": "Loading set…",
     "notFound": "Set not found. Going back…",
     "editSet": "Edit set",
-    "deleteConfirm": "Delete this set and all cards?",
     "splitTitle": "Split into smaller sets",
     "splitHint": "Cards stay in their current order. The original set is not changed.",
     "splitChunkSize": "Cards per new set",
@@ -150,7 +151,9 @@
     "saveChanges": "Save changes",
     "createTitle": "New flashcard set",
     "editTitle": "Edit set",
-    "formHint": "Add metadata for your study material."
+    "formHint": "Add metadata for your study material.",
+    "deleteTitle": "Delete this set?",
+    "deleteDescription": "“{title}” and its {count} cards, including study progress, will be permanently deleted. This cannot be undone."
   },
   "shared": {
     "signInToDuplicate": "Sign in to duplicate this set to your library.",
@@ -180,7 +183,8 @@
     "audioOptional": "Audio (optional)",
     "uploadRequestFailed": "Upload request failed",
     "uploadStorageFailed": "Upload to storage failed",
-    "uploading": "Uploading…"
+    "uploading": "Uploading…",
+    "deleteSelectedTitle": "Delete selected cards?"
   },
   "guideUi": {
     "dialogAria": "Guide assistant",

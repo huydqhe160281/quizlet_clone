@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { VirtualList } from '@/components/shared/VirtualList';
 import { MediaUpload } from '@/features/sets/cards/components/MediaUpload';
 import type { FlashcardItem } from '@/features/sets/api/sets-api';
@@ -164,6 +165,8 @@ export function CardEditor({ setId }: CardEditorProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
 
   const hasAdvancedValues = Boolean(example.trim() || imageUrl || audioUrl || cardType);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
@@ -368,18 +371,8 @@ export function CardEditor({ setId }: CardEditorProps) {
               variant="destructive"
               size="sm"
               onClick={() => {
-                if (
-                  window.confirm(t('cards.deleteSelectedConfirm', { count: selectedIds.length }))
-                ) {
-                  deleteCards.mutate(
-                    { setId, cardIds: selectedIds },
-                    {
-                      onSuccess: () => {
-                        setSelectedIds([]);
-                      },
-                    }
-                  );
-                }
+                setBulkDeleteError(null);
+                setBulkDeleteOpen(true);
               }}
               disabled={deleteCards.isPending}
             >
@@ -387,6 +380,30 @@ export function CardEditor({ setId }: CardEditorProps) {
               {t('cards.deleteSelected', { count: selectedIds.length })}
             </Button>
           )}
+          <ConfirmDialog
+            open={bulkDeleteOpen}
+            onOpenChange={setBulkDeleteOpen}
+            destructive
+            title={t('cards.deleteSelectedTitle')}
+            description={t('cards.deleteSelectedConfirm', { count: selectedIds.length })}
+            confirmLabel={t('ui.delete')}
+            pendingLabel={t('ui.deleting')}
+            isPending={deleteCards.isPending}
+            error={bulkDeleteError}
+            onConfirm={() => {
+              setBulkDeleteError(null);
+              deleteCards.mutate(
+                { setId, cardIds: selectedIds },
+                {
+                  onSuccess: () => {
+                    setSelectedIds([]);
+                    setBulkDeleteOpen(false);
+                  },
+                  onError: () => setBulkDeleteError(t('ui.deleteFailed')),
+                }
+              );
+            }}
+          />
         </div>
 
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

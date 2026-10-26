@@ -31,7 +31,9 @@
       "message": "Đã xảy ra lỗi.",
       "tryAgain": "Thử lại",
       "redirecting": "Đã xảy ra lỗi. Đang quay lại…"
-    }
+    },
+    "deleting": "Đang xóa…",
+    "deleteFailed": "Không thể xóa. Vui lòng thử lại."
   },
   "library": {
     "title": "Thư viện công khai",
@@ -107,7 +109,6 @@
     "loadingSet": "Đang tải bộ thẻ…",
     "notFound": "Không tìm thấy bộ thẻ. Đang quay lại…",
     "editSet": "Sửa bộ thẻ",
-    "deleteConfirm": "Xóa bộ thẻ này và toàn bộ thẻ?",
     "splitTitle": "Chia thành các bộ thẻ nhỏ hơn",
     "splitHint": "Thẻ giữ nguyên thứ tự hiện tại. Bộ gốc không bị thay đổi.",
     "splitChunkSize": "Số thẻ mỗi bộ mới",
@@ -150,7 +151,9 @@
     "saveChanges": "Lưu thay đổi",
     "createTitle": "Bộ thẻ mới",
     "editTitle": "Sửa bộ thẻ",
-    "formHint": "Thêm thông tin cho tài liệu học của bạn."
+    "formHint": "Thêm thông tin cho tài liệu học của bạn.",
+    "deleteTitle": "Xóa bộ thẻ?",
+    "deleteDescription": "Bộ thẻ “{title}” cùng {count} thẻ và tiến độ học sẽ bị xóa vĩnh viễn. Không thể hoàn tác."
   },
   "shared": {
     "signInToDuplicate": "Đăng nhập để sao chép bộ thẻ vào thư viện của bạn.",
@@ -180,7 +183,8 @@
     "audioOptional": "Âm thanh (tuỳ chọn)",
     "uploadRequestFailed": "Yêu cầu tải lên thất bại",
     "uploadStorageFailed": "Tải lên bộ nhớ thất bại",
-    "uploading": "Đang tải lên…"
+    "uploading": "Đang tải lên…",
+    "deleteSelectedTitle": "Xóa thẻ đã chọn?"
   },
   "guideUi": {
     "dialogAria": "Trợ lý hướng dẫn",
