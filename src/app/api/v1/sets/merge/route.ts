@@ -7,8 +7,8 @@ import { mergeSets } from '@/server/services/sets/set.service';
 export const POST = withErrorHandler(async (req) => {
   await assertApiRateLimit(req);
   const userId = await requireUserId();
-  const body = await req.json();
-  const input = mergeSetsSchema.parse(body);
+  // A malformed body becomes a 400 VALIDATION_ERROR instead of a 500.
+  const input = mergeSetsSchema.parse(await req.json().catch(() => null));
   const { set, duplicatesSkipped } = await mergeSets(userId, input);
   return Response.json({ data: set, meta: { duplicatesSkipped } }, { status: 201 });
 });

@@ -20,5 +20,7 @@ describe('mergeSetsSchema', () => {
   it('requires a non-blank title', () => {
     expect(mergeSetsSchema.safeParse({ setIds: ['a', 'b'], title: '   ' }).success).toBe(false);
     expect(mergeSetsSchema.safeParse({ setIds: ['a', 'b'] }).success).toBe(false);
+    // The route parses a malformed JSON body as null.
+    expect(mergeSetsSchema.safeParse(null).success).toBe(false);
   });
 });

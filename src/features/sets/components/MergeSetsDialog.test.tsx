@@ -5,7 +5,8 @@ import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderWithLocale } from '@/test/render-with-locale';
 
-const { pushMock, mutateMock, toastSuccess } = vi.hoisted(() => ({
+const { pushMock, mutateMock, toastSuccess, useSetsCalls } = vi.hoisted(() => ({
+  useSetsCalls: { count: 0 },
   pushMock: vi.fn(),
   mutateMock: vi.fn(),
   toastSuccess: vi.fn(),
@@ -34,22 +35,25 @@ const listedSet = (id: string, title: string, cards: number) => ({
 });
 
 vi.mock('@/features/sets/hooks/useSets', () => ({
-  useSets: () => ({
-    data: {
-      pages: [
-        {
-          data: [
-            listedSet('s1', 'Vocab (1/5)', 10),
-            listedSet('s2', 'Vocab (2/5)', 10),
-            listedSet('s3', 'Vocab (3/5)', 8),
-          ],
-        },
-      ],
-    },
-    fetchNextPage: vi.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-  }),
+  useSets: () => {
+    useSetsCalls.count += 1;
+    return {
+      data: {
+        pages: [
+          {
+            data: [
+              listedSet('s1', 'Vocab (1/5)', 10),
+              listedSet('s2', 'Vocab (2/5)', 10),
+              listedSet('s3', 'Vocab (3/5)', 8),
+            ],
+          },
+        ],
+      },
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    };
+  },
   useSetMutations: () => ({ mergeSets: { mutate: mutateMock, isPending: false } }),
 }));
 
@@ -60,9 +64,19 @@ describe('MergeSetsDialog', () => {
     pushMock.mockReset();
     mutateMock.mockReset();
     toastSuccess.mockReset();
+    useSetsCalls.count = 0;
   });
 
   afterEach(cleanup);
+
+  it('does not load the set list while closed', () => {
+    renderWithLocale(
+      <MergeSetsDialog open={false} onOpenChange={vi.fn()} initialSelection={[]} />,
+      { locale: 'en' }
+    );
+
+    expect(useSetsCalls.count).toBe(0);
+  });
 
   it('needs a second set before merging', () => {
     renderWithLocale(
