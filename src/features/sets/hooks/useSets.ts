@@ -1,7 +1,11 @@
 'use client';
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateSetInput, UpdateSetInput } from '@/features/sets/schemas/set.schema';
+import type {
+  CreateSetInput,
+  MergeSetsInput,
+  UpdateSetInput,
+} from '@/features/sets/schemas/set.schema';
 import {
   fetchCards,
   fetchSet,
@@ -136,6 +140,26 @@ export function useSetMutations() {
         throw new Error('Failed to split set');
       }
       return (await response.json()) as { data: FlashcardSetSummary[] };
+    },
+    onSuccess: invalidateSets,
+  });
+
+  const mergeSets = useMutation({
+    mutationFn: async (input: MergeSetsInput) => {
+      const response = await fetch('/api/v1/sets/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        // The API error code lets the dialog explain limits (e.g. CARD_LIMIT_EXCEEDED).
+        throw new Error(payload.error ?? 'Failed to merge sets');
+      }
+      return (await response.json()) as {
+        data: FlashcardSetSummary;
+        meta: { duplicatesSkipped: number };
+      };
     },
     onSuccess: invalidateSets,
   });
@@ -333,6 +357,7 @@ export function useSetMutations() {
     deleteSet,
     duplicateSet,
     splitSet,
+    mergeSets,
     createCard,
     updateCard,
     deleteCard,

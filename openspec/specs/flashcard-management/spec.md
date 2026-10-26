@@ -52,6 +52,55 @@ The system SHALL allow any authenticated user to duplicate any set (public or th
 
 ---
 
+### Requirement: Merge Sets
+
+The system SHALL allow an authenticated user to merge two or more of their own sets into one new set, e.g. to review or test several parts of a split set together. Merging copies cards; it never changes or deletes the source sets.
+**Constraint**: MUST
+**Verification**: Unit tests `src/server/services/sets/set.service.test.ts` (`mergeSets`), `src/features/sets/schemas/__tests__/merge.schema.test.ts`, `src/features/sets/components/MergeSetsDialog.test.tsx`, `src/features/sets/lib/merge-title.test.ts`
+
+- API: POST `/api/v1/sets/merge` with `{ setIds: string[] (2–20), title (1–200 chars), description? (≤1000), removeDuplicates = true }` → 201 `{ data: set, meta: { duplicatesSkipped } }`. Rate-limited like other mutating routes.
+- The new set is `PRIVATE`, owned by the caller, has no cover image, and keeps the shared `language` only when every source has the same one (otherwise `null`).
+- Cards are copied (front, back, example, image, audio, type) in the order of `setIds`, each set's cards in their `sortOrder`; the copies are renumbered from 0. Repeated ids count once.
+- Copies start with no `CardProgress` / `ReviewHistory` (fresh SM-2), like duplicate and split; the sources keep theirs.
+- With `removeDuplicates`, a card whose front and back equal an earlier card's (trimmed, case-insensitive, NFC) is skipped and counted in `duplicatesSkipped`.
+- Entry points: My Sets "Merge sets" toggles a selection mode (tap cards in merge order, then continue), and the set detail page's "Merge with…" opens the same dialog with that set preselected. The dialog lists the user's sets with checkboxes (pick order shown), a suggested title, an optional description and the duplicate toggle; on success it toasts and opens the new set.
+- Suggested title: parts of the same split (`Vocab (1/5)`, `Vocab (3/5)`) become `Vocab (1, 3/5)`; other titles are joined with `+`, truncated to 200 chars.
+
+#### Scenario: Merge parts of a split set
+
+- **GIVEN** user A owns `Vocab (1/5)`, `Vocab (2/5)` and `Vocab (3/5)` with 20 cards each and no shared cards
+- **WHEN** A merges them with title `Vocab (1, 2, 3/5)`
+- **THEN** a new private set with 60 cards in part order is created, and the three source sets and their study progress are unchanged
+
+#### Scenario: Duplicate cards removed
+
+- **GIVEN** set X has card `apple / quả táo` and set Y has card ` Apple / Quả táo`
+- **WHEN** the owner merges X and Y with `removeDuplicates = true`
+- **THEN** the new set contains the card once and the response reports `duplicatesSkipped = 1`
+
+#### Scenario: Duplicates kept on request
+
+- **WHEN** the same sets are merged with `removeDuplicates = false`
+- **THEN** both cards are copied and `duplicatesSkipped = 0`
+
+#### Scenario: Another user's set
+
+- **GIVEN** set Y belongs to user B (public or private)
+- **WHEN** user A merges X and Y
+- **THEN** the API returns 403 `FORBIDDEN` and no set is created
+
+#### Scenario: Invalid selection
+
+- **WHEN** fewer than 2 distinct sets, more than 20 sets, or a blank title is sent
+- **THEN** the API returns 400 `VALIDATION_ERROR`; a missing set id returns 404 `NOT_FOUND`; sets with no cards return 400 `VALIDATION_ERROR`
+
+#### Scenario: Card limit
+
+- **WHEN** the merged result would exceed 5000 cards
+- **THEN** the API returns 400 `CARD_LIMIT_EXCEEDED` and no set is created
+
+---
+
 ### Requirement: Card CRUD with Media
 
 The system SHALL allow set owners to add/edit/delete cards with optional image and audio fields.

@@ -4,9 +4,14 @@ import { ApiError } from '@/lib/api-error';
 import type {
   CreateSetInput,
   ListSetsQuery,
+  MergeSetsInput,
   UpdateSetInput,
 } from '@/features/sets/schemas/set.schema';
-import { MAX_SPLIT_PARTS } from '@/features/sets/schemas/set.schema';
+import {
+  MAX_MERGED_CARDS,
+  MIN_MERGE_SETS,
+  MAX_SPLIT_PARTS,
+} from '@/features/sets/schemas/set.schema';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
 import { SET_TITLE_MAX } from '@/features/sets/schemas/set.schema';
@@ -278,4 +283,90 @@ export async function splitSet(setId: string, userId: string, chunkSize: number)
 
   invalidateSetCache(userId, 'PRIVATE');
   return sets;
+}
+
+/** Same front + back ignoring surrounding whitespace, case and Unicode composition. */
+function mergeDuplicateKey(card: { front: string; back: string }): string {
+  const normalize = (value: string) => value.normalize('NFC').trim().toLocaleLowerCase();
+  return `${normalize(card.front)}\u0000${normalize(card.back)}`;
+}
+
+/**
+ * Copies the cards of several owned sets into one new private set, in the order the
+ * sets were given. Source sets and their study progress are left untouched; the copies
+ * start with fresh SM-2 progress like duplicate/split.
+ */
+export async function mergeSets(userId: string, input: MergeSetsInput) {
+  const setIds = [...new Set(input.setIds)];
+  if (setIds.length < MIN_MERGE_SETS) {
+    throw new ApiError('VALIDATION_ERROR', `Select at least ${MIN_MERGE_SETS} different sets`, 400);
+  }
+
+  const sources = await prisma.flashcardSet.findMany({
+    where: { id: { in: setIds } },
+    include: { cards: { orderBy: { sortOrder: 'asc' } } },
+  });
+  if (sources.length !== setIds.length) {
+    throw new ApiError('NOT_FOUND', 'Set not found', 404);
+  }
+  sources.forEach((source) => assertOwner(source, userId));
+
+  const byId = new Map(sources.map((source) => [source.id, source]));
+  const ordered = setIds.map((id) => byId.get(id)!);
+
+  const seen = new Set<string>();
+  let duplicatesSkipped = 0;
+  const cards = ordered
+    .flatMap((source) => source.cards)
+    .filter((card) => {
+      if (!input.removeDuplicates) {
+        return true;
+      }
+      const key = mergeDuplicateKey(card);
+      if (seen.has(key)) {
+        duplicatesSkipped += 1;
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+
+  if (cards.length === 0) {
+    throw new ApiError('VALIDATION_ERROR', 'Selected sets have no cards to merge', 400);
+  }
+  if (cards.length > MAX_MERGED_CARDS) {
+    throw new ApiError(
+      'CARD_LIMIT_EXCEEDED',
+      `A merged set can hold at most ${MAX_MERGED_CARDS} cards`,
+      400
+    );
+  }
+
+  const languages = new Set(ordered.map((source) => source.language));
+  const set = await prisma.flashcardSet.create({
+    data: {
+      title: input.title,
+      description: input.description || null,
+      language: languages.size === 1 ? ordered[0]!.language : null,
+      visibility: 'PRIVATE',
+      userId,
+      cards: {
+        createMany: {
+          data: cards.map((card, index) => ({
+            front: card.front,
+            back: card.back,
+            example: card.example,
+            imageUrl: card.imageUrl,
+            audioUrl: card.audioUrl,
+            type: card.type,
+            sortOrder: index,
+          })),
+        },
+      },
+    },
+    include: setInclude,
+  });
+
+  invalidateSetCache(userId, set.visibility);
+  return { set, duplicatesSkipped };
 }

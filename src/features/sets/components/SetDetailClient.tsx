@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Suspense, useState } from 'react';
-import { ArrowLeft, Copy, Pencil, Scissors, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, Combine, Copy, Pencil, Scissors, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +20,7 @@ import { CardEditor } from '@/features/sets/cards/components/CardEditor';
 import { StudyLauncher } from '@/features/study/components/StudyLauncher';
 import { useSet, useSetMutations, useCards } from '@/features/sets/hooks/useSets';
 import { ImportSetWizard } from '@/features/sets/components/ImportSetWizard';
+import { MergeSetsDialog } from '@/features/sets/components/MergeSetsDialog';
 import { SetForm } from '@/features/sets/components/SetForm';
 import { MAX_SPLIT_PARTS } from '@/features/sets/schemas/set.schema';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -47,6 +48,7 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
   const [splitOpen, setSplitOpen] = useState(false);
   const [chunkSizeInput, setChunkSizeInput] = useState(String(DEFAULT_CHUNK_SIZE));
   const [splitError, setSplitError] = useState<string | null>(null);
+  const [mergeOpen, setMergeOpen] = useState(false);
   const { data: set, isLoading, error: setError } = useSet(setId);
   const { data: cards, error: cardsError } = useCards(setId);
   const { deleteSet, duplicateSet, splitSet } = useSetMutations();
@@ -274,6 +276,21 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
               )}
             </DialogContent>
           </Dialog>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            aria-label={t('setsPage.mergeWith')}
+            onClick={() => setMergeOpen(true)}
+          >
+            <Combine className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('setsPage.mergeWith')}</span>
+          </Button>
+          <MergeSetsDialog
+            open={mergeOpen}
+            onOpenChange={setMergeOpen}
+            initialSelection={[{ id: set.id, title: set.title, cardCount }]}
+          />
           {/* Visually separated destructive action */}
           <div className="ml-auto sm:ml-0">
             <Button

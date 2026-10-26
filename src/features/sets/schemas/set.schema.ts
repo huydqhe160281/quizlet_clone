@@ -32,7 +32,20 @@ export const splitSetSchema = z.object({
   chunkSize: z.number().int().positive(),
 });
 
+/** Bounds for merging several of the user's sets into one new set. */
+export const MIN_MERGE_SETS = 2;
+export const MAX_MERGE_SETS = 20;
+export const MAX_MERGED_CARDS = 5000;
+
+export const mergeSetsSchema = z.object({
+  setIds: z.array(z.string().min(1).max(64)).min(MIN_MERGE_SETS).max(MAX_MERGE_SETS),
+  title: z.string().trim().min(1).max(SET_TITLE_MAX),
+  description: z.string().trim().max(SET_DESCRIPTION_MAX).optional(),
+  removeDuplicates: z.boolean().default(true),
+});
+
 export type CreateSetInput = z.infer<typeof createSetSchema>;
 export type UpdateSetInput = z.infer<typeof updateSetSchema>;
 export type ListSetsQuery = z.infer<typeof listSetsQuerySchema>;
 export type SplitSetInput = z.infer<typeof splitSetSchema>;
+export type MergeSetsInput = z.infer<typeof mergeSetsSchema>;

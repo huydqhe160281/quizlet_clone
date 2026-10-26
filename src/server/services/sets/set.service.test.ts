@@ -32,6 +32,7 @@ import {
   duplicateSet,
   getSet,
   getSets,
+  mergeSets,
   splitSet,
   updateSet,
 } from '@/server/services/sets/set.service';
@@ -413,6 +414,154 @@ describe('set.service', () => {
     await expect(splitSet('empty-set', 'user-a', 20)).rejects.toMatchObject({
       code: 'VALIDATION_ERROR',
       status: 400,
+    });
+  });
+
+  describe('mergeSets', () => {
+    const card = (front: string, back: string, extra: Record<string, unknown> = {}) => ({
+      front,
+      back,
+      example: null,
+      imageUrl: null,
+      audioUrl: null,
+      type: null,
+      sortOrder: 0,
+      ...extra,
+    });
+
+    const partOne = {
+      id: 'part-1',
+      title: 'Vocab (1/5)',
+      userId: 'user-a',
+      language: 'en',
+      cards: [card('apple', 'quả táo', { type: 'new-word' }), card('cat', 'con mèo')],
+    };
+    const partTwo = {
+      id: 'part-2',
+      title: 'Vocab (2/5)',
+      userId: 'user-a',
+      language: 'en',
+      cards: [card(' Apple ', 'Quả táo'), card('dog', 'con chó', { example: 'A dog barks' })],
+    };
+
+    beforeEach(() => {
+      prismaMock.flashcardSet.create.mockResolvedValue({
+        id: 'merged',
+        title: 'Vocab (1, 2/5)',
+        visibility: 'PRIVATE',
+        tags: [],
+        _count: { cards: 3 },
+      });
+    });
+
+    it('copies cards in the requested set order and skips duplicates', async () => {
+      // Prisma returns rows in any order; the request order must win.
+      prismaMock.flashcardSet.findMany.mockResolvedValue([partTwo, partOne]);
+
+      const result = await mergeSets('user-a', {
+        setIds: ['part-1', 'part-2'],
+        title: 'Vocab (1, 2/5)',
+        removeDuplicates: true,
+      });
+
+      expect(result.duplicatesSkipped).toBe(1);
+      expect(result.set.id).toBe('merged');
+      const data = prismaMock.flashcardSet.create.mock.calls[0]?.[0].data;
+      expect(data).toMatchObject({
+        title: 'Vocab (1, 2/5)',
+        description: null,
+        language: 'en',
+        visibility: 'PRIVATE',
+        userId: 'user-a',
+      });
+      expect(data.cards.createMany.data).toEqual([
+        expect.objectContaining({ front: 'apple', type: 'new-word', sortOrder: 0 }),
+        expect.objectContaining({ front: 'cat', sortOrder: 1 }),
+        expect.objectContaining({ front: 'dog', example: 'A dog barks', sortOrder: 2 }),
+      ]);
+      // Source sets are never modified or deleted.
+      expect(prismaMock.flashcardSet.update).not.toHaveBeenCalled();
+      expect(prismaMock.flashcardSet.delete).not.toHaveBeenCalled();
+    });
+
+    it('keeps duplicates when removeDuplicates is off', async () => {
+      prismaMock.flashcardSet.findMany.mockResolvedValue([partOne, partTwo]);
+
+      const result = await mergeSets('user-a', {
+        setIds: ['part-1', 'part-2'],
+        title: 'All',
+        description: 'Week 1',
+        removeDuplicates: false,
+      });
+
+      expect(result.duplicatesSkipped).toBe(0);
+      const data = prismaMock.flashcardSet.create.mock.calls[0]?.[0].data;
+      expect(data.description).toBe('Week 1');
+      expect(data.cards.createMany.data).toHaveLength(4);
+    });
+
+    it('drops the language when the sources disagree', async () => {
+      prismaMock.flashcardSet.findMany.mockResolvedValue([partOne, { ...partTwo, language: 'ja' }]);
+
+      await mergeSets('user-a', {
+        setIds: ['part-1', 'part-2'],
+        title: 'Mixed',
+        removeDuplicates: true,
+      });
+
+      expect(prismaMock.flashcardSet.create.mock.calls[0]?.[0].data.language).toBeNull();
+    });
+
+    it('rejects fewer than two distinct sets', async () => {
+      await expect(
+        mergeSets('user-a', { setIds: ['part-1', 'part-1'], title: 'x', removeDuplicates: true })
+      ).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
+      expect(prismaMock.flashcardSet.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when a set does not exist', async () => {
+      prismaMock.flashcardSet.findMany.mockResolvedValue([partOne]);
+
+      await expect(
+        mergeSets('user-a', { setIds: ['part-1', 'gone'], title: 'x', removeDuplicates: true })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND', status: 404 });
+      expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
+    });
+
+    it("rejects merging another user's set", async () => {
+      prismaMock.flashcardSet.findMany.mockResolvedValue([
+        partOne,
+        { ...partTwo, userId: 'user-b' },
+      ]);
+
+      await expect(
+        mergeSets('user-a', { setIds: ['part-1', 'part-2'], title: 'x', removeDuplicates: true })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN', status: 403 });
+      expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects sets without cards', async () => {
+      prismaMock.flashcardSet.findMany.mockResolvedValue([
+        { ...partOne, cards: [] },
+        { ...partTwo, cards: [] },
+      ]);
+
+      await expect(
+        mergeSets('user-a', { setIds: ['part-1', 'part-2'], title: 'x', removeDuplicates: true })
+      ).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
+    });
+
+    it('rejects results above the card limit', async () => {
+      const many = Array.from({ length: 2501 }, (_, index) => card(`f${index}`, `b${index}`));
+      prismaMock.flashcardSet.findMany.mockResolvedValue([
+        { ...partOne, cards: many },
+        { ...partTwo, cards: many.map((item) => ({ ...item, back: `${item.back}!` })) },
+      ]);
+
+      await expect(
+        mergeSets('user-a', { setIds: ['part-1', 'part-2'], title: 'x', removeDuplicates: true })
+      ).rejects.toMatchObject({ code: 'CARD_LIMIT_EXCEEDED', status: 400 });
+      expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
     });
   });
 });
