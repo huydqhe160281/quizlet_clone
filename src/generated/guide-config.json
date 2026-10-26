@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-24T07:27:13.686Z",
+  "generatedAt": "2026-10-26T04:44:30.866Z",
   "site": {
     "name": "QuizFree",
     "locale": "runtime"
@@ -141,6 +141,11 @@
     {
       "path": "/sets/new",
       "title": "New",
+      "auth": "required"
+    },
+    {
+      "path": "/settings",
+      "title": "Settings",
       "auth": "required"
     },
     {
