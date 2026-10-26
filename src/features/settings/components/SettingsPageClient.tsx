@@ -1,7 +1,15 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Globe, KeyRound, LogOut, Palette, UserRound, type LucideIcon } from 'lucide-react';
+import {
+  BookOpen,
+  Globe,
+  KeyRound,
+  LogOut,
+  Palette,
+  UserRound,
+  type LucideIcon,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,6 +17,7 @@ import { LanguagePicker } from '@/components/i18n/LanguagePicker';
 import { ThemePicker } from '@/components/layout/ThemePicker';
 import { useSignOut } from '@/features/auth/hooks/useSignOut';
 import { ChangePasswordForm } from '@/features/settings/components/ChangePasswordForm';
+import { StudySoundToggle } from '@/features/settings/components/StudySoundToggle';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import type { AccountSummary } from '@/features/settings/types';
 
@@ -68,6 +77,15 @@ export function SettingsPageClient({ account }: { account: AccountSummary }) {
         description={t('settingsPage.appearance.description')}
       >
         <ThemePicker />
+      </SettingsSection>
+
+      <SettingsSection
+        id="study"
+        icon={BookOpen}
+        title={t('settingsPage.study.title')}
+        description={t('settingsPage.study.description')}
+      >
+        <StudySoundToggle />
       </SettingsSection>
 
       <SettingsSection

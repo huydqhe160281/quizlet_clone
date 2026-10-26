@@ -6,6 +6,12 @@
       "title": "Appearance",
       "description": "Pick a look. \"System\" follows your device's light or dark mode."
     },
+    "study": {
+      "title": "Study",
+      "description": "Customise the study modes on this device.",
+      "soundLabel": "Correct-answer sound",
+      "soundHint": "Play a chime when you answer correctly or swipe a card as “Know it”."
+    },
     "language": {
       "title": "Language",
       "description": "The app's language. Your own study cards are never translated."

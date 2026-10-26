@@ -40,7 +40,8 @@ export function SessionComplete({
         {mode === 'FLASHCARD' ? (
           <div>
             <p className="text-4xl font-extrabold tracking-tight">
-              {reviewedCount ?? total}/{total}
+              {/* Requeued "Still learning" cards are seen more than once; never show 13/10. */}
+              {Math.min(reviewedCount ?? total, total)}/{total}
             </p>
             <p className="mt-1 text-sm text-muted-foreground">{t('study.reviewedCards')}</p>
           </div>

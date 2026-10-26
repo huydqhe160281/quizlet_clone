@@ -6,6 +6,12 @@
       "title": "Giao diện",
       "description": "Chọn phong cách hiển thị. \"Hệ thống\" tự đổi sáng/tối theo thiết bị."
     },
+    "study": {
+      "title": "Học tập",
+      "description": "Tùy chỉnh trải nghiệm trong các chế độ học trên thiết bị này.",
+      "soundLabel": "Âm thanh khi trả lời đúng",
+      "soundHint": "Phát âm báo khi bạn trả lời đúng hoặc gạt thẻ “Đã thuộc”."
+    },
     "language": {
       "title": "Ngôn ngữ",
       "description": "Ngôn ngữ của ứng dụng. Nội dung thẻ học của bạn không bị dịch."

@@ -65,33 +65,52 @@ TBD - created by archiving change flashcard-app-system-design. Update Purpose af
 
 ### Requirement: Flashcard Mode
 
-The system SHALL display cards one at a time with a 3D flip animation, supporting keyboard navigation and mobile swipe.
+The system SHALL display cards one at a time with a 3D flip animation and let the learner grade each card as "Know it" or "Still learning" by keyboard, button, or swipe.
 **Constraint**: MUST
-**Verification**: E2E test `study/flashcard-mode.spec.ts`
+**Verification**: E2E test `study/flashcard-mode.spec.ts`; unit tests `FlashcardMode.complete.test.tsx`, `FlashcardMode.swipe.test.tsx`
 
 #### Scenario: Card Flip
 
 - **GIVEN** user is in Flashcard Mode viewing card front
 - **WHEN** they press Space or click the card
 - **THEN** a CSS 3D flip animation plays (< 400ms) revealing the card back
+- **AND** Space flips even when a grading button still has focus (it never re-clicks that button)
 
-#### Scenario: Keyboard Navigation
+#### Scenario: Know it
 
 - **GIVEN** user is in Flashcard Mode
-- **WHEN** they press ArrowRight
-- **THEN** the next card is shown; WHEN they press ArrowLeft, the previous card is shown
+- **WHEN** they press ArrowRight, tap "Know it", or swipe the card right
+- **THEN** the card is recorded as correct, the correct-answer chime plays (when enabled), and the next card is shown
 
-#### Scenario: Mobile Swipe
+#### Scenario: Still learning
 
-- **GIVEN** user on a mobile device in Flashcard Mode
-- **WHEN** they swipe right
-- **THEN** the next card is shown; swipe left shows previous card
+- **GIVEN** user is in Flashcard Mode
+- **WHEN** they press ArrowLeft, tap "Still learning", or swipe the card left
+- **THEN** the card is recorded as incorrect without a chime, the next card is shown, and the card returns in a later round (also for legacy sessions without stored settings) unless the learner turned requeue off
+
+#### Scenario: One grade per card
+
+- **GIVEN** a card is being swiped off-screen
+- **WHEN** a key or button grades the same card before the swipe finishes
+- **THEN** the card is recorded once and the following card is not skipped; there is no "previous card" control, so a card cannot be graded twice in a round
+
+#### Scenario: Keys typed into fields are ignored
+
+- **GIVEN** focus is in a text field (e.g. the guide chat)
+- **WHEN** the learner presses Space or an arrow key
+- **THEN** Flashcard Mode does not flip or grade, and the key keeps its default behavior in the field
+
+#### Scenario: Autoplay does not grade
+
+- **GIVEN** autoplay is on
+- **WHEN** it moves past a card
+- **THEN** the card is passed without a chime, without being sent as an answer, and without counting toward "Know it"
 
 #### Scenario: End of Deck
 
 - **GIVEN** user is on the last card
-- **WHEN** they press ArrowRight
-- **THEN** the session complete screen is shown with summary (X/Y cards reviewed)
+- **WHEN** they grade it and no "Still learning" cards remain
+- **THEN** the session complete screen is shown with summary (X/Y cards reviewed, X never above Y)
 
 ---
 
@@ -254,6 +273,32 @@ The system MUST provide immediate correctness, progress, and completion feedback
 - **GIVEN** an unauthenticated or stale-session learner hits dashboard or study entry
 - **WHEN** existing auth-entry-redirect behavior applies
 - **THEN** optimization playbook changes MUST NOT rewrite auth flows; Observe may only flag auth issues as P0 for a separate change unless the user explicitly expands scope
+
+---
+
+### Requirement: Answer Feedback Auto-Advance
+
+Learn, Write, Test and spaced-repetition review SHALL share one answer feedback flow (`useAnswerAutoAdvance`, `playAnswerFeedback`). Draw keeps its stroke-hint delay but uses the same chime and Continue control.
+**Constraint**: MUST
+**Verification**: unit tests `useAnswerAutoAdvance.test.ts`, `TestMode.test.tsx`, `TestMode.typing.test.tsx`
+
+#### Scenario: Correct answer
+
+- **GIVEN** a learner answers correctly
+- **WHEN** feedback is shown
+- **THEN** the correct-answer chime plays (when enabled) and the next question appears after 1s
+
+#### Scenario: Incorrect answer
+
+- **GIVEN** a learner answers incorrectly
+- **WHEN** feedback is shown
+- **THEN** no sound plays and the next question appears after 5s, or immediately via Continue / Enter
+
+#### Scenario: Enter belongs to the focused field
+
+- **GIVEN** feedback is shown or a typed answer is being composed with an IME
+- **WHEN** the learner presses Enter inside another text field, or to confirm an IME conversion
+- **THEN** the study mode neither advances nor submits
 
 ---
 

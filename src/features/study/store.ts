@@ -67,8 +67,16 @@ type StudyState = {
     cards: StudyCard[];
     settings?: StudySessionSettings | null;
   }) => void;
-  /** Record an answer for a cardId. Returns true if the round just completed. */
-  recordRoundAnswer: (cardId: string, isCorrect: boolean) => boolean;
+  /**
+   * Record an answer for a cardId. Returns true if the round just completed.
+   * `countAsCorrect: false` passes the card (no requeue) without adding to the
+   * correct counts — used when Flashcard autoplay moves past a card.
+   */
+  recordRoundAnswer: (
+    cardId: string,
+    isCorrect: boolean,
+    options?: { countAsCorrect?: boolean }
+  ) => boolean;
   /** Buffer a newly recorded answer — mints clientMutationId once. */
   addPendingAnswer: (cardId: string, isCorrect: boolean) => void;
   /**
@@ -135,6 +143,8 @@ export const useStudyStore = create<StudyState>((set, get) => ({
         ...STUDY_SESSION_SETTINGS_DEFAULTS,
         ...LEGACY_SESSION_SETTINGS_FALLBACK,
         cardsPerRound: totalCards,
+        // V1 flashcards had no "Still learning" answer; those cards must still come back.
+        ...(mode === 'FLASHCARD' ? { requeueWrong: true } : {}),
       };
     } else {
       effectiveSettings = settings;
@@ -160,11 +170,11 @@ export const useStudyStore = create<StudyState>((set, get) => ({
     });
   },
 
-  recordRoundAnswer: (cardId, isCorrect) => {
+  recordRoundAnswer: (cardId, isCorrect, { countAsCorrect = isCorrect } = {}) => {
     const { roundEngine, roundResults, roundIndex, correctInRound } = get();
     if (!roundEngine) return false;
 
-    if (isCorrect) {
+    if (isCorrect && countAsCorrect) {
       set({ correctCount: get().correctCount + 1, correctInRound: correctInRound + 1 });
     }
     set({ reviewedCount: get().reviewedCount + 1 });

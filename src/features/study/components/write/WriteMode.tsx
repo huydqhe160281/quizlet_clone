@@ -5,12 +5,15 @@ import { Check, ChevronRight, Edit3, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
+import { isImeComposing } from '@/lib/utils/keyboard';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
+import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvance';
+import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import {
   studyContinueKey,
   studyProgressWhileFeedback,
@@ -73,11 +76,17 @@ export function WriteMode({ setId }: WriteModeProps) {
     setIsCorrectAnswer(null);
   };
 
+  const { advanceNow } = useAnswerAutoAdvance({
+    result: submitted ? isCorrectAnswer : null,
+    onAdvance: finishIfLast,
+  });
+
   const handleSubmit = () => {
     if (!currentCard || submitted) {
       return;
     }
     const isCorrect = fuzzyMatch(answer, currentCard.back);
+    playAnswerFeedback(isCorrect);
     setSubmitted(true);
     setIsCorrectAnswer(isCorrect);
     setAnsweredCard(currentCard);
@@ -163,7 +172,12 @@ export function WriteMode({ setId }: WriteModeProps) {
         value={answer}
         onChange={(event) => setAnswer(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey && !submitted) {
+          if (
+            event.key === 'Enter' &&
+            !event.shiftKey &&
+            !isImeComposing(event.nativeEvent) &&
+            !submitted
+          ) {
             event.preventDefault();
             void handleSubmit();
           }
@@ -211,7 +225,7 @@ export function WriteMode({ setId }: WriteModeProps) {
               {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
             </div>
           </div>
-          <Button type="button" className="shrink-0 font-bold" onClick={finishIfLast}>
+          <Button type="button" className="shrink-0 font-bold" onClick={advanceNow}>
             {t(studyContinueKey(roundEndedThisStep))}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>

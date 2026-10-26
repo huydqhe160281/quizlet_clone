@@ -2,6 +2,8 @@
 
 ## Completed
 
+- **2026-10-26 — study-auto-advance**: Shared answer feedback for Learn, Write, Test and spaced review (`useAnswerAutoAdvance`: correct → chime + 1s, incorrect → 5s, Continue / Enter skips; Draw adds chime + Continue). Flashcard grading: → / swipe right / "Know it" (chime) and ← / swipe left / "Still learning" (card returns next round); back button and end-of-round banner removed, autoplay passes cards without grading, swipe fly-out cannot grade twice, Space/arrows ignored in text fields, IME Enter never submits. Settings gain a Study section with a chime toggle. Specs updated (`study-modes`, `user-settings`).
+
 - **2026-10-25 — settings-page + mobile polish**: New `/settings` page (Appearance: registry-driven theme preview cards; Language: native-name list; Account; Change password via `POST /api/v1/user/password`, which revokes all sessions). Avatar menu reduced to Settings + Sign out on every width, sidebar gains a Settings link; shared `useChangeLocale` / `useSignOut` hooks. Mobile fixes: dialogs inset from screen edges and scroll within `100dvh`, select values truncate instead of widening dialogs, menus keep 8px collision padding, inputs use 16px text on phones (no iOS focus zoom), landing header fits 375px. Spec added (`user-settings`).
 
 - **2026-10-24 — paper-ink-theme**: Fourth visual theme "Paper & Ink" in light (`paper`) and dark (`paper-dark`): editorial notebook look (cream paper with faint rules, navy ink outlines, sticky-yellow offset shadows, Be Vietnam Pro). Theme plumbing centralised: registry `src/lib/theme/themes.ts` drives next-themes, ThemeToggle, ThemePicker (3×2, token-based swatches), Sonner and Tailwind `dark:`; per-theme CSS in `src/styles/themes/`; neutral `data-slot` hooks (`flashcard-face`, `accent-surface`, `answer-option`, `well`, `progress-track`, `tile`) replace the pastel-named classes; decorations switch via trait tokens (`page-backdrop`, `decor-backdrop`, `decor-glow`, `decor-orbs`). Test-mode correct option also shows a check icon. Spec updated (`ui-design-system`).
@@ -22,4 +24,4 @@
 
 - [x] **i18n-multilingual-vi-en-ja**: VI/EN/JA UI + system copy; cookie/DB preference; LanguageSwitcher; study content unchanged. (implementation done — verify/checkpoint remaining)
 
-Cập nhật lần cuối: 2026-10-25
+Cập nhật lần cuối: 2026-10-26

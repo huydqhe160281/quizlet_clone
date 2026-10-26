@@ -1,14 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { HanziWriterCanvas } from '@/features/study/components/draw/HanziWriterCanvas';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
+import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvance';
+import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import { HINT_DISPLAY_MS } from '@/features/study/lib/draw-config';
-import { studyProgressWhileFeedback } from '@/features/study/lib/study-continue-label';
+import {
+  studyContinueKey,
+  studyProgressWhileFeedback,
+} from '@/features/study/lib/study-continue-label';
 import { useStudyStore, type StudyCard } from '@/features/study/store';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
@@ -26,7 +33,9 @@ export function DrawMode({ setId }: DrawModeProps) {
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
-  const [awaitingAdvance, setAwaitingAdvance] = useState(false);
+  /** Result of the answered card while its hint is shown; `null` before answering. */
+  const [lastResult, setLastResult] = useState<boolean | null>(null);
+  const awaitingAdvance = lastResult !== null;
 
   const roundCards = useMemo(() => {
     if (!study.currentRound) {
@@ -41,22 +50,12 @@ export function DrawMode({ setId }: DrawModeProps) {
   // keep the answered card on screen while its hint is shown.
   const [answeredCard, setAnsweredCard] = useState<StudyCard | null>(null);
   const currentCard = answeredCard ?? roundCards[study.currentIndex];
-  const advanceTimerRef = useRef<number | null>(null);
 
-  useEffect(
-    () => () => {
-      if (advanceTimerRef.current !== null) window.clearTimeout(advanceTimerRef.current);
-    },
-    []
-  );
-
-  // `roundEnded` is passed in rather than read from state: the timer runs with the
-  // closure of the render that scheduled it, before setRoundEndedThisStep re-rendered.
-  const finishIfLast = (roundEnded: boolean) => {
-    advanceTimerRef.current = null;
+  const finishIfLast = () => {
+    const roundEnded = roundEndedThisStep;
     setAnsweredCard(null);
     setHint(null);
-    setAwaitingAdvance(false);
+    setLastResult(null);
     setRoundEndedThisStep(false);
 
     if (roundEnded) {
@@ -70,6 +69,13 @@ export function DrawMode({ setId }: DrawModeProps) {
 
     study.nextCard();
   };
+
+  // Keep the stroke hint on screen for HINT_DISPLAY_MS; Continue / Enter skips the wait.
+  const { advanceNow } = useAnswerAutoAdvance({
+    result: lastResult,
+    onAdvance: finishIfLast,
+    delayMs: HINT_DISPLAY_MS,
+  });
 
   const handleSkip = () => {
     handleComplete(false);
@@ -90,11 +96,8 @@ export function DrawMode({ setId }: DrawModeProps) {
 
     setRoundEndedThisStep(roundEnded);
     setHint(`${currentCard.back} — ${currentCard.front}`);
-    setAwaitingAdvance(true);
-
-    advanceTimerRef.current = window.setTimeout(() => {
-      finishIfLast(roundEnded);
-    }, HINT_DISPLAY_MS);
+    playAnswerFeedback(isCorrect);
+    setLastResult(isCorrect);
   };
 
   if (study.isLoading) {
@@ -163,6 +166,12 @@ export function DrawMode({ setId }: DrawModeProps) {
         onSkip={handleSkip}
       />
       {hint && <p className="text-center text-sm text-muted-foreground">{hint}</p>}
+      {awaitingAdvance && (
+        <Button type="button" className="w-full font-bold" onClick={advanceNow}>
+          {t(studyContinueKey(roundEndedThisStep))}
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      )}
     </StudyModeShell>
   );
 }

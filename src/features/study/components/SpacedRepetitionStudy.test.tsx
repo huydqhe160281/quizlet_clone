@@ -107,4 +107,32 @@ describe('SpacedRepetitionStudy grading', () => {
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('1')).toBeInTheDocument();
   });
+
+  it('requeues wrong MCQ answers synchronously even when submitReview is still in flight', () => {
+    vi.useFakeTimers();
+    try {
+      // Never-resolving review mutation simulates slow network.
+      submitReviewMock.mockImplementation(() => new Promise(() => undefined));
+      renderWithLocale(<SpacedRepetitionStudy />, { locale: 'en' });
+      fireEvent.click(screen.getByRole('button', { name: 'Start review' }));
+
+      // Answer all 3 cards in Round 1: first wrong, next two right.
+      fireEvent.click(screen.getByRole('button', { name: 'back-b' }));
+      fireEvent.click(screen.getByRole('button', { name: /Next question/i }));
+
+      fireEvent.click(screen.getByRole('button', { name: 'back-b' }));
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'back-c' }));
+      fireEvent.click(screen.getByRole('button', { name: /Finish round/i }));
+
+      // Start Round 2 -> card 'a' must be in the remediation round despite in-flight review.
+      fireEvent.click(screen.getByRole('button', { name: /Next round/i }));
+      expect(screen.getByText('front-a')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

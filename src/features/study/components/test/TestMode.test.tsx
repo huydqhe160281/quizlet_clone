@@ -1,8 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { TestMode } from './TestMode';
 import { useStudyStore, type StudyCard } from '@/features/study/store';
 import { renderWithLocale } from '@/test/render-with-locale';
@@ -61,6 +61,10 @@ describe('TestMode round boundary', () => {
     });
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   it('keeps showing the answered question and its continue button when the next round is smaller', () => {
     renderWithLocale(<TestMode setId="set-1" />, { locale: 'en' });
 
@@ -81,5 +85,22 @@ describe('TestMode round boundary', () => {
     // Round summary, then round 2.
     fireEvent.click(screen.getByRole('button', { name: /Next round|Continue|Start/ }));
     expect(screen.getByText('front-2')).toBeInTheDocument();
+  });
+
+  it('auto-advances after answering a question', () => {
+    vi.useFakeTimers();
+    try {
+      renderWithLocale(<TestMode setId="set-1" />, { locale: 'en' });
+
+      expect(screen.getByText('front-0')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'True' }));
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+      expect(screen.getByText('front-1')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

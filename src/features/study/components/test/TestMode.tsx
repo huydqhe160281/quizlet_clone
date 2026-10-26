@@ -11,6 +11,9 @@ import { StudySessionError } from '@/features/study/components/shared/StudySessi
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { StudyCardText } from '@/features/study/components/shared/StudyCardText';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
+import { isImeComposing } from '@/lib/utils/keyboard';
+import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvance';
+import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import { generateTestQuestions, type TestQuestion } from '@/features/study/lib/test-generator';
 import {
   STUDY_CONTINUE_NEXT_QUESTION_KEY,
@@ -91,7 +94,13 @@ export function TestMode({ setId }: TestModeProps) {
     setIsCorrectAnswer(null);
   };
 
+  const { advanceNow } = useAnswerAutoAdvance({
+    result: answered ? isCorrectAnswer : null,
+    onAdvance: goNext,
+  });
+
   const recordResult = (cardId: string, isCorrect: boolean, message: string) => {
+    playAnswerFeedback(isCorrect);
     if (currentQuestion) setAnsweredQuestion(currentQuestion);
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
@@ -104,6 +113,18 @@ export function TestMode({ setId }: TestModeProps) {
 
     setRoundEndedThisStep(roundEnded);
     setAnswered(true);
+  };
+
+  const submitTypingAnswer = () => {
+    if (currentQuestion?.type !== 'typing' || answered || !typingAnswer.trim()) return;
+    const isCorrect = fuzzyMatch(typingAnswer, currentQuestion.back);
+    recordResult(
+      currentQuestion.cardId,
+      isCorrect,
+      isCorrect
+        ? t('studyUi.feedbackCorrect')
+        : t('studyUi.incorrectWithAnswer', { answer: currentQuestion.back })
+    );
   };
 
   if (study.isLoading) {
@@ -250,6 +271,12 @@ export function TestMode({ setId }: TestModeProps) {
           <Input
             value={typingAnswer}
             onChange={(event) => setTypingAnswer(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !isImeComposing(event.nativeEvent)) {
+                event.preventDefault();
+                submitTypingAnswer();
+              }
+            }}
             placeholder={t('studyUi.answerPlaceholder')}
             disabled={answered}
             className="rounded-xl"
@@ -258,17 +285,7 @@ export function TestMode({ setId }: TestModeProps) {
             <Button
               className="w-full rounded-xl font-bold"
               disabled={!typingAnswer.trim()}
-              onClick={() => {
-                const isCorrect = fuzzyMatch(typingAnswer, currentQuestion.back);
-                const correctAnswer = currentQuestion.back;
-                recordResult(
-                  currentQuestion.cardId,
-                  isCorrect,
-                  isCorrect
-                    ? t('studyUi.feedbackCorrect')
-                    : t('studyUi.incorrectWithAnswer', { answer: correctAnswer })
-                );
-              }}
+              onClick={submitTypingAnswer}
             >
               {t('studyUi.submit')}
             </Button>
@@ -305,7 +322,7 @@ export function TestMode({ setId }: TestModeProps) {
               {feedback && <p className="mt-0.5 text-xs font-semibold opacity-90">{feedback}</p>}
             </div>
           </div>
-          <Button type="button" className="shrink-0 font-bold" onClick={goNext}>
+          <Button type="button" className="shrink-0 font-bold" onClick={advanceNow}>
             {t(studyContinueKey(roundEndedThisStep, STUDY_CONTINUE_NEXT_QUESTION_KEY))}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>

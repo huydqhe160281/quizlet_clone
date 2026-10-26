@@ -41,6 +41,12 @@ theme's own tokens. Adding a theme to the registry adds its card with no setting
 - **WHEN** the user taps the "Paper & Ink" card
 - **THEN** the theme applies immediately and the card is `aria-checked="true"`
 
+### Requirement: Study Section
+
+The Study section SHALL offer a device-local toggle (persisted in `localStorage`, default on) for the correct-answer chime used by every study mode and by "Know it" in Flashcard Mode.
+
+**Constraint**: MUST
+
 ### Requirement: Language Section
 
 The Language section SHALL list `SUPPORTED_LOCALES` by native name and switch locale through the

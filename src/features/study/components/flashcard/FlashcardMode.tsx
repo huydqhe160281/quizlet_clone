@@ -1,32 +1,27 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Award,
-  ChevronLeft,
-  ChevronRight,
-  Layers,
-  Pause,
-  Play,
-  Shuffle,
-  Sparkles,
-  Volume2,
-} from 'lucide-react';
+import { Check, Pause, Play, Shuffle, Sparkles, Volume2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   FlashcardViewer,
   speakStudyText,
   useFlipState,
 } from '@/features/study/components/flashcard/FlashcardViewer';
+import {
+  SwipeableCard,
+  type SwipeDirection,
+} from '@/features/study/components/flashcard/SwipeableCard';
 import { SessionComplete } from '@/features/study/components/shared/SessionComplete';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { StudySessionError } from '@/features/study/components/shared/StudySessionError';
 import { StudyModeShell } from '@/features/study/components/shared/StudyModeShell';
 import { useStudySession } from '@/features/study/hooks/useStudySession';
 import { hasKana } from '@/features/study/lib/speech-lang';
+import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import { useStudyStore } from '@/features/study/store';
 import type { StudyCard } from '@/features/study/store';
-import { cn } from '@/lib/utils';
+import { isTextEntryElement } from '@/lib/utils/touch';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
@@ -38,13 +33,16 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   const t = useTranslations();
   const study = useStudySession(setId, 'FLASHCARD');
   const { isFlipped, flip, resetFlip } = useFlipState();
-  const touchStartX = useRef<number | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [lastRoundIndex, setLastRoundIndex] = useState(0);
   const [lastRoundSize, setLastRoundSize] = useState(0);
+  const [lastRoundKnown, setLastRoundKnown] = useState(0);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [autoplay, setAutoplay] = useState(false);
   const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Key of the last answered card: a swipe whose fly-out finishes after a key/button
+  // already answered that card must not record it again (and skip the next one).
+  const answeredKeyRef = useRef<string | null>(null);
 
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
@@ -58,56 +56,88 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
     () => ({ japanese: study.cards.some((card) => hasKana(`${card.front}${card.back}`)) }),
     [study.cards]
   );
-  const isLastCard = study.currentIndex >= roundCards.length - 1;
 
-  const goNext = useCallback(async () => {
-    if (!currentCard) return;
-    resetFlip();
+  /**
+   * Records the current card as known (swipe right / → / "Know it") or still
+   * learning (swipe left / ← / "Still learning"). Still-learning cards come back
+   * in a later round via the round engine's remediation queue.
+   *
+   * `passive` (autoplay) moves past the card without grading it: no sound, no
+   * requeue, and nothing sent to the server, so autoplay never inflates the score.
+   */
+  const answer = useCallback(
+    async (isKnown: boolean, { passive = false }: { passive?: boolean } = {}) => {
+      if (!currentCard) return;
+      const answerKey = `${study.sessionId}:${study.roundIndex}:${study.currentIndex}:${currentCard.cardId}`;
+      if (answeredKeyRef.current === answerKey) return;
+      answeredKeyRef.current = answerKey;
 
-    setLastRoundIndex(study.roundIndex);
-    setLastRoundSize(roundCards.length);
-
-    const roundEnded = study.recordRoundAnswer(currentCard.cardId, true);
-    study.recordAnswer(currentCard.cardId, true);
-
-    if (roundEnded) {
-      // recordRoundAnswer updated the store synchronously; `study` is this render's
-      // snapshot, so read completion from the store or the final round never completes.
-      if (useStudyStore.getState().isComplete) {
-        await study.completeSession(study.reviewedCount + 1);
-      } else {
-        setShowSummary(true);
+      const countsAsKnown = isKnown && !passive;
+      if (!passive) {
+        playAnswerFeedback(isKnown);
       }
-    } else {
-      study.nextCard();
-    }
-  }, [currentCard, study, roundCards.length, resetFlip]);
+      resetFlip();
 
-  const goPrev = useCallback(() => {
-    resetFlip();
-    study.prevCard();
-  }, [study, resetFlip]);
+      setLastRoundIndex(study.roundIndex);
+      setLastRoundSize(roundCards.length);
+      setLastRoundKnown(study.correctInRound + (countsAsKnown ? 1 : 0));
+
+      const roundEnded = study.recordRoundAnswer(currentCard.cardId, isKnown || passive, {
+        countAsCorrect: countsAsKnown,
+      });
+      if (!passive) {
+        study.recordAnswer(currentCard.cardId, isKnown);
+      }
+
+      if (roundEnded) {
+        // recordRoundAnswer updated the store synchronously; `study` is this render's
+        // snapshot, so read completion from the store or the final round never completes.
+        if (useStudyStore.getState().isComplete) {
+          await study.completeSession(study.reviewedCount + 1);
+        } else {
+          setShowSummary(true);
+        }
+      } else {
+        study.nextCard();
+      }
+    },
+    [currentCard, study, roundCards.length, resetFlip]
+  );
+
+  const handleSwipe = useCallback(
+    (direction: SwipeDirection) => void answer(direction === 'right'),
+    [answer]
+  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (study.isComplete || showSummary || !currentCard) {
+      if (study.isComplete || showSummary || !currentCard || event.repeat) {
         return;
       }
+      // Keys typed into a field (e.g. the guide chat) belong to that field.
+      if (event.target instanceof Element && isTextEntryElement(event.target)) {
+        return;
+      }
+
       if (event.code === 'Space') {
+        // preventDefault also stops Space from re-clicking a focused button such as
+        // "Know it", which would grade the next card instead of flipping it.
         event.preventDefault();
         flip();
       }
       if (event.code === 'ArrowRight') {
-        void goNext();
+        event.preventDefault();
+        void answer(true);
       }
       if (event.code === 'ArrowLeft') {
-        goPrev();
+        event.preventDefault();
+        void answer(false);
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [study.isComplete, showSummary, currentCard, flip, goNext, goPrev]);
+  }, [study.isComplete, showSummary, currentCard, flip, answer]);
 
   useEffect(() => {
     if (!speechEnabled || !currentCard || isFlipped) {
@@ -132,7 +162,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
           speakStudyText(currentCard.back, undefined, speechHints);
         }
       } else {
-        void goNext();
+        void answer(true, { passive: true });
       }
     }, 4000);
 
@@ -141,7 +171,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         clearInterval(autoplayTimerRef.current);
       }
     };
-  }, [autoplay, currentCard, isFlipped, flip, goNext, speechEnabled, speechHints]);
+  }, [autoplay, currentCard, isFlipped, flip, answer, speechEnabled, speechHints]);
 
   if (study.isLoading) {
     return (
@@ -159,7 +189,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
     return (
       <RoundSummary
         roundIndex={lastRoundIndex}
-        correctCount={lastRoundSize}
+        correctCount={lastRoundKnown}
         total={lastRoundSize}
         mode="FLASHCARD"
         onNextRound={() => setShowSummary(false)}
@@ -199,25 +229,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         </span>
       }
     >
-      <div
-        className="glass-panel flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/50 p-4 text-xs"
-        onTouchStart={(event) => {
-          touchStartX.current = event.touches[0]?.clientX ?? null;
-        }}
-        onTouchEnd={(event) => {
-          const start = touchStartX.current;
-          const end = event.changedTouches[0]?.clientX;
-          if (start === null || end === undefined) {
-            return;
-          }
-          const delta = end - start;
-          if (delta > 50) {
-            goPrev();
-          } else if (delta < -50) {
-            void goNext();
-          }
-        }}
-      >
+      <div className="glass-panel flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/50 p-4 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
@@ -252,92 +264,49 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         )}
       </div>
 
-      <FlashcardViewer
-        front={currentCard.front}
-        back={currentCard.back}
-        example={currentCard.example}
-        imageUrl={currentCard.imageUrl}
-        isFlipped={isFlipped}
-        onFlip={flip}
-        speechEnabled={speechEnabled}
-        onSpeakFront={() => speakStudyText(currentCard.front, undefined, speechHints)}
-        onSpeakBack={() => speakStudyText(currentCard.back, undefined, speechHints)}
-      />
+      <SwipeableCard key={`${study.roundIndex}-${currentCard.cardId}`} onSwipe={handleSwipe}>
+        {({ guardClick }) => (
+          <FlashcardViewer
+            front={currentCard.front}
+            back={currentCard.back}
+            example={currentCard.example}
+            imageUrl={currentCard.imageUrl}
+            isFlipped={isFlipped}
+            onFlip={guardClick(flip)}
+            speechEnabled={speechEnabled}
+            onSpeakFront={() => speakStudyText(currentCard.front, undefined, speechHints)}
+            onSpeakBack={() => speakStudyText(currentCard.back, undefined, speechHints)}
+          />
+        )}
+      </SwipeableCard>
 
-      <div className="flex items-center justify-center gap-6">
+      <div className="flex items-center justify-center gap-3 sm:gap-4">
         <Button
           type="button"
           variant="outline"
-          size="icon"
-          className="h-12 w-12 rounded-full shadow-sm"
-          onClick={goPrev}
-          disabled={study.currentIndex === 0}
-          aria-label={t('studyUi.prevCardAria')}
+          className="h-12 flex-1 rounded-full border-destructive/40 font-bold text-destructive hover:bg-destructive/10 hover:text-destructive sm:max-w-48"
+          onClick={() => void answer(false)}
         >
-          <ChevronLeft className="h-6 w-6" />
+          <X className="mr-1.5 h-5 w-5" />
+          {t('studyUi.stillLearning')}
         </Button>
-        <span className="rounded-full bg-muted px-4 py-1.5 text-sm font-bold">
+        <span className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-sm font-bold">
           {study.currentIndex + 1} / {roundCards.length}
         </span>
         <Button
           type="button"
           variant="outline"
-          size="icon"
-          className="h-12 w-12 rounded-full shadow-sm"
-          onClick={() => void goNext()}
-          aria-label={t('studyUi.nextCardAria')}
+          className="h-12 flex-1 rounded-full border-emerald-500/40 font-bold text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 sm:max-w-48"
+          onClick={() => void answer(true)}
         >
-          <ChevronRight className="h-6 w-6" />
+          <Check className="mr-1.5 h-5 w-5" />
+          {t('studyUi.knowIt')}
         </Button>
       </div>
 
       <p className="hidden text-center text-[11px] font-semibold text-muted-foreground sm:block">
         {t('studyUi.navTip')}
       </p>
-
-      {isLastCard && isFlipped && (
-        <div
-          data-slot="accent-surface"
-          className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-gradient-to-r from-primary to-primary/80 p-6 text-primary-foreground shadow-lg md:flex-row md:items-center md:justify-between"
-        >
-          <div className="flex items-center gap-3.5">
-            <div className="rounded-xl bg-primary-foreground/15 p-2.5">
-              <Award className="h-7 w-7 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="text-base font-bold">{t('studyUi.roundDoneTitle')}</h3>
-              <p className="mt-0.5 text-xs text-primary-foreground/80">
-                {t('studyUi.roundDoneHint')}
-              </p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            className={cn('shrink-0 font-extrabold')}
-            onClick={() => void goNext()}
-          >
-            {study.currentIndex >= roundCards.length - 1
-              ? t('study.nextRound')
-              : t('studyUi.continue')}
-          </Button>
-        </div>
-      )}
-
-      <div className="flex justify-center">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="text-muted-foreground"
-          onClick={() => void goNext()}
-        >
-          <Layers className="mr-2 h-4 w-4" />
-          {study.currentIndex >= roundCards.length - 1
-            ? t('study.nextRound')
-            : t('studyUi.nextCard')}
-        </Button>
-      </div>
     </StudyModeShell>
   );
 }

@@ -46,3 +46,59 @@ describe('study store pending answers', () => {
     expect(answers[1]?.clientMutationId).toBe(original.clientMutationId);
   });
 });
+
+describe('study store round answers', () => {
+  const cards = ['c0', 'c1'].map((cardId) => ({
+    sessionCardId: `sc-${cardId}`,
+    cardId,
+    front: cardId,
+    back: cardId,
+    example: null,
+    imageUrl: null,
+  }));
+
+  beforeEach(() => {
+    useStudyStore.getState().reset();
+  });
+
+  it('brings "Still learning" cards back in legacy Flashcard sessions (null settings)', () => {
+    useStudyStore
+      .getState()
+      .initSession({ sessionId: 's1', setId: 'set-1', mode: 'FLASHCARD', cards, settings: null });
+    const [first, second] = useStudyStore.getState().currentRound;
+
+    useStudyStore.getState().recordRoundAnswer(first!, false);
+    const roundEnded = useStudyStore.getState().recordRoundAnswer(second!, true);
+
+    expect(roundEnded).toBe(true);
+    expect(useStudyStore.getState().isComplete).toBe(false);
+    expect(useStudyStore.getState().currentRound).toEqual([first]);
+  });
+
+  it('keeps the V1 no-requeue fallback for other legacy modes', () => {
+    useStudyStore
+      .getState()
+      .initSession({ sessionId: 's1', setId: 'set-1', mode: 'LEARN', cards, settings: null });
+    const [first, second] = useStudyStore.getState().currentRound;
+
+    useStudyStore.getState().recordRoundAnswer(first!, false);
+    useStudyStore.getState().recordRoundAnswer(second!, true);
+
+    expect(useStudyStore.getState().isComplete).toBe(true);
+  });
+
+  it('countAsCorrect: false passes a card without counting it as correct', () => {
+    useStudyStore
+      .getState()
+      .initSession({ sessionId: 's1', setId: 'set-1', mode: 'FLASHCARD', cards, settings: null });
+    const [first] = useStudyStore.getState().currentRound;
+
+    useStudyStore.getState().recordRoundAnswer(first!, true, { countAsCorrect: false });
+
+    const state = useStudyStore.getState();
+    expect(state.correctCount).toBe(0);
+    expect(state.correctInRound).toBe(0);
+    expect(state.reviewedCount).toBe(1);
+    expect(state.roundEngine?.remediationQueue).toEqual([]);
+  });
+});

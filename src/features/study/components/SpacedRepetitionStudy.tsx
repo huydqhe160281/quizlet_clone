@@ -24,9 +24,12 @@ import { SessionComplete } from '@/features/study/components/shared/SessionCompl
 import { StudyProgress } from '@/features/study/components/shared/StudyProgress';
 import { RoundSummary } from '@/features/study/components/shared/RoundSummary';
 import { useDueCards, useSubmitReview } from '@/features/study/hooks/useSpacedRepetition';
+import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvance';
+import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import { generateLearnOptions } from '@/features/study/lib/test-generator';
 import { isCorrectGrade } from '@/features/study/lib/sm2';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
+import { isImeComposing } from '@/lib/utils/keyboard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 type StudyStyle = 'flashcard' | 'multiple_choice' | 'default';
@@ -70,7 +73,7 @@ export function SpacedRepetitionStudy() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackOk, setFeedbackOk] = useState(false);
 
-  const cards = data?.data ?? [];
+  const cards = useMemo(() => data?.data ?? [], [data?.data]);
   const totalCards = cards.length;
 
   const roundCards = useMemo(() => {
@@ -117,6 +120,7 @@ export function SpacedRepetitionStudy() {
     if (!currentCard || gradingRef.current) return;
     gradingRef.current = true;
     setIsGrading(true);
+    playAnswerFeedback(isCorrectGrade(grade));
     try {
       await submitReview(currentCard.cardId, grade);
     } finally {
@@ -150,16 +154,16 @@ export function SpacedRepetitionStudy() {
     setSelectedOption(option);
     const isCorrect = option === currentCard.back;
 
+    playAnswerFeedback(isCorrect);
     if (isCorrect) {
       setFeedback(t('studyUi.spacedCorrect'));
       setFeedbackOk(true);
       setCorrectCount((c) => c + 1);
       setCorrectInRound((c) => c + 1);
-      await submitReview(currentCard.cardId, 'GOOD');
+      void submitReview(currentCard.cardId, 'GOOD');
     } else {
       setFeedback(t('studyUi.incorrectWithAnswer', { answer: currentCard.back }));
       setFeedbackOk(false);
-      await submitReview(currentCard.cardId, 'AGAIN');
       if (settings.requeueWrong) {
         setRemediationQueue((q) => {
           if (!q.includes(currentCard.cardId)) {
@@ -168,6 +172,7 @@ export function SpacedRepetitionStudy() {
           return q;
         });
       }
+      void submitReview(currentCard.cardId, 'AGAIN');
     }
   };
 
@@ -176,16 +181,16 @@ export function SpacedRepetitionStudy() {
     setSelectedOption(typedAnswer);
     const isCorrect = fuzzyMatch(typedAnswer, currentCard.back);
 
+    playAnswerFeedback(isCorrect);
     if (isCorrect) {
       setFeedback(t('studyUi.spacedCorrect'));
       setFeedbackOk(true);
       setCorrectCount((c) => c + 1);
       setCorrectInRound((c) => c + 1);
-      await submitReview(currentCard.cardId, 'GOOD');
+      void submitReview(currentCard.cardId, 'GOOD');
     } else {
       setFeedback(t('studyUi.incorrectWithAnswer', { answer: currentCard.back }));
       setFeedbackOk(false);
-      await submitReview(currentCard.cardId, 'AGAIN');
       if (settings.requeueWrong) {
         setRemediationQueue((q) => {
           if (!q.includes(currentCard.cardId)) {
@@ -194,6 +199,7 @@ export function SpacedRepetitionStudy() {
           return q;
         });
       }
+      void submitReview(currentCard.cardId, 'AGAIN');
     }
   };
 
@@ -209,6 +215,11 @@ export function SpacedRepetitionStudy() {
       setCurrentIndex((prev) => prev + 1);
     }
   };
+
+  const { advanceNow } = useAnswerAutoAdvance({
+    result: selectedOption && feedback ? feedbackOk : null,
+    onAdvance: handleNextQuestion,
+  });
 
   const handleNextRound = () => {
     setShowRoundSummary(false);
@@ -450,7 +461,12 @@ export function SpacedRepetitionStudy() {
               value={typedAnswer}
               onChange={(e) => setTypedAnswer(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && !selectedOption) {
+                if (
+                  e.key === 'Enter' &&
+                  !e.shiftKey &&
+                  !isImeComposing(e.nativeEvent) &&
+                  !selectedOption
+                ) {
                   e.preventDefault();
                   void handleWrittenAnswer();
                 }
@@ -478,7 +494,7 @@ export function SpacedRepetitionStudy() {
         </p>
       )}
       {selectedOption && (
-        <Button className="w-full" onClick={handleNextQuestion}>
+        <Button className="w-full" onClick={advanceNow}>
           {currentIndex >= currentRound.length - 1
             ? t('studyUi.spacedFinishRound')
             : t('studyUi.nextQuestion')}

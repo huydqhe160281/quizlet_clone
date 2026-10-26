@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, ChevronRight, HelpCircle, Volume2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,17 +16,23 @@ import {
   studyContinueKey,
   studyProgressWhileFeedback,
 } from '@/features/study/lib/study-continue-label';
-import { playCorrectFeedbackSound } from '@/features/study/lib/study-feedback-sound';
+import {
+  CORRECT_AUTO_ADVANCE_MS,
+  INCORRECT_AUTO_ADVANCE_MS,
+  playAnswerFeedback,
+} from '@/features/study/lib/answer-feedback';
+import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvance';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
+import { isImeComposing } from '@/lib/utils/keyboard';
 import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 
 /** Brief pause so correct-answer feedback is visible before auto-advance. */
-export const LEARN_CORRECT_AUTO_ADVANCE_MS = 1000;
+export const LEARN_CORRECT_AUTO_ADVANCE_MS = CORRECT_AUTO_ADVANCE_MS;
 /** Longer pause on incorrect answers; Continue still advances immediately. */
-export const LEARN_INCORRECT_AUTO_ADVANCE_MS = 5000;
+export const LEARN_INCORRECT_AUTO_ADVANCE_MS = INCORRECT_AUTO_ADVANCE_MS;
 
 type LearnModeProps = {
   setId: string;
@@ -49,7 +55,6 @@ export function LearnMode({ setId }: LearnModeProps) {
   const [lastRoundIndex, setLastRoundIndex] = useState(0);
   const [lastRoundCorrect, setLastRoundCorrect] = useState(0);
   const [lastRoundTotal, setLastRoundTotal] = useState(0);
-  const isAdvancingRef = useRef(false);
   // The store moves to the next round synchronously on a round's last answer;
   // keep the answered card (and its options) on screen until the learner advances.
   const [answeredCard, setAnsweredCard] = useState<StudyCard | null>(null);
@@ -109,42 +114,15 @@ export function LearnMode({ setId }: LearnModeProps) {
     resetQuestionState();
   };
 
-  const finishIfLastRef = useRef(finishIfLast);
-  finishIfLastRef.current = finishIfLast;
-
-  const advanceAfterAnswer = () => {
-    if (isAdvancingRef.current) {
-      return;
-    }
-    isAdvancingRef.current = true;
-    finishIfLastRef.current();
-  };
-
-  useEffect(() => {
-    if (selected === null || isCorrectAnswer === null) {
-      isAdvancingRef.current = false;
-      return;
-    }
-
-    const delayMs = isCorrectAnswer
-      ? LEARN_CORRECT_AUTO_ADVANCE_MS
-      : LEARN_INCORRECT_AUTO_ADVANCE_MS;
-
-    const timerId = window.setTimeout(() => {
-      advanceAfterAnswer();
-    }, delayMs);
-
-    return () => {
-      window.clearTimeout(timerId);
-    };
-  }, [selected, isCorrectAnswer]);
+  const { advanceNow: advanceAfterAnswer } = useAnswerAutoAdvance({
+    result: selected === null ? null : isCorrectAnswer,
+    onAdvance: finishIfLast,
+  });
 
   const recordAnswer = (isCorrect: boolean) => {
     if (!currentCard) return;
 
-    if (isCorrect) {
-      playCorrectFeedbackSound();
-    }
+    playAnswerFeedback(isCorrect);
 
     setLastRoundIndex(study.roundIndex);
     setLastRoundTotal(roundCards.length);
@@ -317,7 +295,12 @@ export function LearnMode({ setId }: LearnModeProps) {
               value={answer}
               onChange={(event) => setAnswer(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey && !selected) {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  !isImeComposing(event.nativeEvent) &&
+                  !selected
+                ) {
                   event.preventDefault();
                   void handleWrittenAnswer();
                 }
