@@ -111,7 +111,8 @@ After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLo
 3. Set `NEXTAUTH_URL` / `AUTH_URL` to your production domain (e.g. `https://your-app.vercel.app`)
 4. **Supabase Storage**: In Supabase Dashboard → Storage → create a **public** bucket named `flashcard-media` (or match `SUPABASE_MEDIA_BUCKET`). Allow image/audio MIME types.
 5. **Resend** (optional prod): Set `RESEND_API_KEY` for forgot-password emails
-6. Deploy
+6. **SEO**: set `SITE_URL` to the public domain Google should index (canonical links, `sitemap.xml`, `robots.txt`); without it Production uses `VERCEL_PROJECT_PRODUCTION_URL`. Set `GOOGLE_SITE_VERIFICATION` to verify the domain in Google Search Console with the HTML-tag method. Preview deployments serve a `Disallow: /` robots.txt.
+7. Deploy
 
 ### Quality gates
 

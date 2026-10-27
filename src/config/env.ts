@@ -37,10 +37,41 @@ export const resolveAuthUrl = (): string => {
   );
 };
 
+const normalizeUrl = (url: string): string => {
+  const trimmed = url.trim().replace(/\/$/, '');
+  return trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+};
+
+/**
+ * Public canonical origin for SEO (canonical links, sitemap, robots, JSON-LD).
+ * Unlike the auth URL it must never be a per-deployment `VERCEL_URL`
+ * (`<project>-<hash>.vercel.app`): Google would index those hosts instead of the real domain.
+ */
+export const resolveSiteUrl = (): string => {
+  const explicit = process.env.SITE_URL?.trim();
+  if (explicit) return normalizeUrl(explicit);
+
+  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (process.env.VERCEL_ENV === 'production' && productionUrl) {
+    return normalizeUrl(productionUrl);
+  }
+
+  return resolveAuthUrl();
+};
+
+/** True only where search engines should index the site (not Vercel Preview/Development). */
+export const isIndexableDeployment = (): boolean =>
+  !process.env.VERCEL_ENV || process.env.VERCEL_ENV === 'production';
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   authSecret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET ?? required('NEXTAUTH_SECRET'),
   authUrl: resolveAuthUrl(),
+  get siteUrl(): string {
+    return resolveSiteUrl();
+  },
+  /** Search Console HTML-tag verification token (`<meta name="google-site-verification">`). */
+  googleSiteVerification: process.env.GOOGLE_SITE_VERIFICATION?.trim() || undefined,
   googleClientId: process.env.GOOGLE_CLIENT_ID ?? '',
   googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
   googleAuthEnabled:

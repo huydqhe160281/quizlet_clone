@@ -5,7 +5,7 @@ import { OG_LOCALE_MAP, type Locale, DEFAULT_LOCALE } from '@/lib/i18n/constants
 import { loadCatalog } from '@/lib/i18n/catalog';
 import { t } from '@/lib/i18n/t';
 
-export const getSiteUrl = (): string => env.authUrl;
+export const getSiteUrl = (): string => env.siteUrl;
 
 const buildOpenGraph = (
   title: string,
@@ -29,8 +29,9 @@ const buildOpenGraph = (
   ],
 });
 
+// `summary`: the share image is the square app icon, which `summary_large_image` would crop.
 const buildTwitter = (title: string, description: string): NonNullable<Metadata['twitter']> => ({
-  card: 'summary_large_image',
+  card: 'summary',
   title,
   description,
   images: [siteConfig.ogImagePath],
@@ -58,6 +59,7 @@ export const createRootMetadata = (locale: Locale = DEFAULT_LOCALE): Metadata =>
     },
     description,
     keywords: [...siteConfig.keywords],
+    ...(env.googleSiteVerification ? { verification: { google: env.googleSiteVerification } } : {}),
     robots: {
       index: true,
       follow: true,
