@@ -6,7 +6,7 @@ import { zonedCalendarDay } from '@/server/services/learning/zoned-day';
 export const startOfUtcDay = (date: Date) =>
   new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 
-const dayDiff = (a: Date, b: Date) => {
+export const dayDiff = (a: Date, b: Date) => {
   const msPerDay = 86_400_000;
   return Math.floor((startOfUtcDay(a).getTime() - startOfUtcDay(b).getTime()) / msPerDay);
 };
@@ -32,6 +32,16 @@ export function getEffectiveStreak(
   return 0;
 }
 
+/** Remember a streak that just broke so it can be restored (see streak-restore.service). */
+export function captureBrokenStreak(
+  currentStreak: number,
+  lastStudiedDate: Date | null
+): { brokenStreak?: number; brokenStreakLastDate?: Date } {
+  return currentStreak > 0 && lastStudiedDate
+    ? { brokenStreak: currentStreak, brokenStreakLastDate: lastStudiedDate }
+    : {};
+}
+
 function computeNextStreak(
   currentStreak: number,
   longestStreak: number,
@@ -46,6 +56,7 @@ function computeNextStreak(
       currentStreak,
       longestStreak,
       lastStudiedDate,
+      broken: {},
       changed: false,
     };
   }
@@ -57,6 +68,7 @@ function computeNextStreak(
     currentStreak: nextStreak,
     longestStreak: Math.max(longestStreak, nextStreak),
     lastStudiedDate: today,
+    broken: gap !== null && gap > 1 ? captureBrokenStreak(currentStreak, lastStudiedDate) : {},
     changed: true,
   };
 }
@@ -101,6 +113,7 @@ export async function recordDailyStudyActivity(userId: string, studiedAt = new D
       currentStreak: next.currentStreak,
       longestStreak: next.longestStreak,
       lastStudiedDate: next.lastStudiedDate,
+      ...next.broken,
     },
   });
 
@@ -123,6 +136,7 @@ export async function updateStreak(userId: string, studiedAt = new Date()) {
       currentStreak: next.currentStreak,
       longestStreak: next.longestStreak,
       lastStudiedDate: next.lastStudiedDate,
+      ...next.broken,
       totalReviews: { increment: 1 },
     },
   });
@@ -140,7 +154,10 @@ export async function getStreakSnapshot(userId: string) {
   if (currentStreak === 0 && stats.currentStreak > 0) {
     await prisma.userStats.update({
       where: { userId },
-      data: { currentStreak: 0 },
+      data: {
+        currentStreak: 0,
+        ...captureBrokenStreak(stats.currentStreak, stats.lastStudiedDate),
+      },
     });
   }
 

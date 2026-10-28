@@ -20,7 +20,10 @@
       "reminderNeedsInstall": "リマインダーは HTTPS で配信される本番アプリでのみ使えます。",
       "reminderEnabled": "この端末で学習リマインダーを有効にしました。",
       "reminderDisabled": "この端末で学習リマインダーをオフにしました。",
-      "reminderFailed": "リマインダーを有効にできませんでした。もう一度お試しください。"
+      "reminderFailed": "リマインダーを有効にできませんでした。もう一度お試しください。",
+      "restoresLabel": "連続記録の復活チケット: {balance}/{max}",
+      "restoresHint": "1〜3日休んでも、戻ったときに休んだ日数分のチケットを使って連続記録を保てます。{reviews}回復習するごとに1枚（最大{max}枚）、毎月初めに3枚未満なら3枚まで補充されます。",
+      "restoresProgress": "あと{count}回復習すると1枚もらえます。"
     },
     "language": {
       "title": "言語",

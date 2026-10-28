@@ -116,3 +116,61 @@ export async function syncDetectedTimeZone(userId: string): Promise<boolean> {
   }
   return true;
 }
+
+export type StreakRestoreStatus = {
+  balance: number;
+  maxBalance: number;
+  reviewsPerRestore: number;
+  reviewsToNext: number | null;
+  offer: {
+    streak: number;
+    missedDays: number;
+    cost: number;
+    affordable: boolean;
+    studiedToday: boolean;
+  } | null;
+};
+
+const RESTORE_ENDPOINT = '/api/v1/user/streak/restore';
+
+export async function fetchStreakRestoreStatus(): Promise<StreakRestoreStatus> {
+  const response = await fetch(RESTORE_ENDPOINT);
+  if (!response.ok) {
+    throw new Error('Failed to load streak restores');
+  }
+  const { data } = (await response.json()) as { data: StreakRestoreStatus };
+  return data;
+}
+
+export async function requestStreakRestore(userId: string) {
+  const response = await fetch(RESTORE_ENDPOINT, { method: 'POST' });
+  if (!response.ok) {
+    throw new Error('Failed to restore streak');
+  }
+  const { data } = (await response.json()) as {
+    data: StreakSnapshot & { balance: number; spent: number };
+  };
+  const snapshot = { currentStreak: data.currentStreak, longestStreak: data.longestStreak };
+  writeStreakCache(userId, snapshot);
+  notifyStreakUpdated({ ...snapshot, changed: true });
+  return data;
+}
+
+const restoreDismissKey = (userId: string) => `quizlet-clone-streak-restore-dismissed:${userId}`;
+
+/** "Not now" hides the restore prompt for the rest of the local day. */
+export function isStreakRestoreDismissed(userId: string): boolean {
+  try {
+    return localStorage.getItem(restoreDismissKey(userId)) === localDateKey();
+  } catch {
+    return false;
+  }
+}
+
+export function dismissStreakRestore(userId: string): void {
+  try {
+    localStorage.setItem(restoreDismissKey(userId), localDateKey());
+  } catch {
+    // ignore
+  }
+}

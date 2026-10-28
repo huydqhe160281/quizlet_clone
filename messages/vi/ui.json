@@ -401,5 +401,16 @@
     "gravityStatDestroyed": "Đã bắn hạ",
     "gravitySpeedAria": "Tốc độ rơi",
     "gravityTapToType": "Chạm để gõ"
+  },
+  "streakRestore": {
+    "title": "Khôi phục chuỗi {streak} ngày?",
+    "description": "Bạn đã lỡ {missed} ngày. Dùng {cost} lượt khôi phục để giữ chuỗi (đang có {balance}/{max} lượt).",
+    "studiedToday": "Hôm nay bạn đã học, nên chuỗi sẽ thành {next} ngày.",
+    "notEnough": "Cần {cost} lượt nhưng bạn chỉ còn {balance}. Mỗi {reviews} lượt ôn được thêm 1 lượt, và đầu mỗi tháng được nâng lên 3 lượt.",
+    "restore": "Khôi phục ({cost} lượt)",
+    "dismiss": "Bỏ qua",
+    "close": "Đóng",
+    "restored": "Đã khôi phục chuỗi {streak} ngày 🔥",
+    "failed": "Không khôi phục được chuỗi. Vui lòng thử lại."
   }
 }

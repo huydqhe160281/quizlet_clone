@@ -360,7 +360,7 @@ describe('user stats rows and streak writes', () => {
     });
   });
 
-  it('getStreakSnapshot persists a lapsed streak as 0', async () => {
+  it('getStreakSnapshot persists a lapsed streak as 0 and keeps it for a restore', async () => {
     prismaMock.userStats.findUnique.mockResolvedValue({
       userId: 'u',
       currentStreak: 5,
@@ -377,7 +377,35 @@ describe('user stats rows and streak writes', () => {
     });
     expect(prismaMock.userStats.update).toHaveBeenCalledWith({
       where: { userId: 'u' },
-      data: { currentStreak: 0 },
+      data: {
+        currentStreak: 0,
+        brokenStreak: 5,
+        brokenStreakLastDate: new Date('2026-06-10T00:00:00.000Z'),
+      },
+    });
+  });
+
+  it('recordDailyStudyActivity remembers the streak that a gap broke', async () => {
+    prismaMock.userStats.findUnique.mockResolvedValue({
+      userId: 'u',
+      currentStreak: 7,
+      longestStreak: 7,
+      lastStudiedDate: new Date('2026-06-10T00:00:00.000Z'),
+      preferredTimezone: 'UTC',
+    });
+    prismaMock.userStats.update.mockResolvedValue({});
+
+    await recordDailyStudyActivity('u', new Date('2026-06-13T08:00:00.000Z'));
+
+    expect(prismaMock.userStats.update).toHaveBeenCalledWith({
+      where: { userId: 'u' },
+      data: {
+        currentStreak: 1,
+        longestStreak: 7,
+        lastStudiedDate: new Date('2026-06-13T00:00:00.000Z'),
+        brokenStreak: 7,
+        brokenStreakLastDate: new Date('2026-06-10T00:00:00.000Z'),
+      },
     });
   });
 

@@ -19,6 +19,7 @@ import { ThemePicker } from '@/components/layout/ThemePicker';
 import { useSignOut } from '@/features/auth/hooks/useSignOut';
 import { ChangePasswordForm } from '@/features/settings/components/ChangePasswordForm';
 import { EmailVerificationNotice } from '@/features/settings/components/EmailVerificationNotice';
+import { StreakRestoreInfo } from '@/features/settings/components/StreakRestoreInfo';
 import { StudyReminderToggle } from '@/features/settings/components/StudyReminderToggle';
 import { StudySoundToggle } from '@/features/settings/components/StudySoundToggle';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -93,6 +94,7 @@ export function SettingsPageClient({ account }: { account: AccountSummary }) {
         <div className="space-y-5">
           <StudySoundToggle />
           <StudyReminderToggle />
+          <StreakRestoreInfo />
         </div>
       </SettingsSection>
 

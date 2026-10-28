@@ -10,5 +10,17 @@
   {
     "q": "Các chế độ học khác nhau thế nào?",
     "a": "Mỗi bộ thẻ hỗ trợ Flashcards, Learn, Write, Test, Draw (CJK) và Gravity (Bắn thiên thạch). Vào trang bộ thẻ → Study để chọn mode."
+  },
+  {
+    "q": "Chuỗi ngày học (streak) được tính thế nào?",
+    "a": "Mỗi ngày bạn bắt đầu hoặc hoàn thành một buổi học, chuỗi tăng 1 nếu hôm qua bạn cũng học. Ngày được tính theo múi giờ của bạn (xem ở trang Hôm nay)."
+  },
+  {
+    "q": "Lỡ mất vài ngày thì có giữ được chuỗi không?",
+    "a": "Có. Nếu lỡ 1–3 ngày, khi vào lại app sẽ hiện hộp thoại khôi phục; mỗi ngày lỡ tốn 1 lượt khôi phục. Bạn có 5 lượt ban đầu, đầu mỗi tháng được nâng lên 3 nếu đang ít hơn, và cứ 400 lượt ôn được thêm 1 lượt (tối đa 5). Xem số lượt tại Cài đặt → Học tập."
+  },
+  {
+    "q": "Làm sao để nhận thông báo nhắc học?",
+    "a": "Vào Cài đặt → Học tập và bật Nhắc học hằng ngày trên từng thiết bị. Khoảng 20:00, nếu hôm đó bạn chưa học, app sẽ gửi thông báo. Trên iPhone cần Thêm vào Màn hình chính (iOS 16.4+) rồi mở app từ biểu tượng đó."
   }
 ]

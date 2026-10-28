@@ -401,5 +401,16 @@
     "gravityStatDestroyed": "Destroyed",
     "gravitySpeedAria": "Fall speed",
     "gravityTapToType": "Tap to type"
+  },
+  "streakRestore": {
+    "title": "Restore your {streak}-day streak?",
+    "description": "You missed {missed} day(s). Use {cost} streak restore(s) to keep it (you have {balance}/{max}).",
+    "studiedToday": "You've already studied today, so your streak becomes {next} days.",
+    "notEnough": "You need {cost} restore(s) but have {balance}. You earn 1 for every {reviews} reviews, and get topped up to 3 each month.",
+    "restore": "Restore ({cost})",
+    "dismiss": "Not now",
+    "close": "Close",
+    "restored": "{streak}-day streak restored 🔥",
+    "failed": "Couldn't restore your streak. Please try again."
   }
 }

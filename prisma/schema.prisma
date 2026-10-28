@@ -296,6 +296,15 @@ model UserStats {
   lastStudiedDate DateTime?
   dailyGoalCards  Int       @default(20)
   preferredTimezone String  @default("UTC")
+  /// Streak restores left (cap 5); see openspec/changes/streak-restore.
+  streakRestores        Int       @default(5)
+  /// "YYYY-MM" in preferredTimezone of the last monthly top-up check.
+  streakRestoresMonth   String?
+  /// Review activity already converted into restores (400 per restore).
+  streakRestoreCredited Int?
+  /// Streak lost at the last break and its last study date, for restore offers.
+  brokenStreak          Int       @default(0)
+  brokenStreakLastDate  DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

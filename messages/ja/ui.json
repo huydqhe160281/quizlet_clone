@@ -401,5 +401,16 @@
     "gravityStatDestroyed": "撃破数",
     "gravitySpeedAria": "落下速度",
     "gravityTapToType": "タップして入力"
+  },
+  "streakRestore": {
+    "title": "{streak}日連続を復活しますか？",
+    "description": "{missed}日間学習がありませんでした。復活チケットを{cost}枚使って連続記録を保てます（所持 {balance}/{max}）。",
+    "studiedToday": "今日はすでに学習済みなので、連続記録は{next}日になります。",
+    "notEnough": "{cost}枚必要ですが、所持は{balance}枚です。{reviews}回復習するごとに1枚もらえ、毎月初めに3枚まで補充されます。",
+    "restore": "復活する（{cost}枚）",
+    "dismiss": "今はしない",
+    "close": "閉じる",
+    "restored": "{streak}日連続を復活しました 🔥",
+    "failed": "連続記録を復活できませんでした。もう一度お試しください。"
   }
 }

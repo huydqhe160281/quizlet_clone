@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { StreakBadge } from '@/components/layout/StreakBadge';
+import { StreakRestorePrompt } from '@/components/layout/StreakRestorePrompt';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { useSignOut } from '@/features/auth/hooks/useSignOut';
@@ -45,6 +46,7 @@ export function Navbar() {
         {status === 'loading' ? null : session?.user ? (
           <>
             <StreakBadge />
+            <StreakRestorePrompt />
             {/* Theme and language live on /settings, so the menu stays short as they grow. */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
