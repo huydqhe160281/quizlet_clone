@@ -80,8 +80,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || 'QuizFree', {
       body: payload.body,
+      // No `badge`: Android masks it to a silhouette, so the full-colour icon became a white square.
       icon: '/icon.png',
-      badge: '/icon.png',
       tag: 'study-reminder',
       data: { url: payload.url || '/today' },
     })

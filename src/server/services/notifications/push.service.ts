@@ -20,6 +20,30 @@ export const REMINDER_LOCAL_HOURS = { from: 8, to: 22 } as const;
 const RESEND_GUARD_MS = 20 * 60 * 60 * 1000;
 const SEND_BATCH_SIZE = 20;
 
+/** Hosts of the browsers' push services (Chrome/Edge/Samsung/Opera, Firefox, Safari, legacy Edge). */
+const PUSH_SERVICE_HOSTS = [
+  'fcm.googleapis.com',
+  'push.services.mozilla.com',
+  'push.apple.com',
+  'notify.windows.com',
+];
+
+/**
+ * The cron POSTs to every stored endpoint, so only accept real push services — never an
+ * arbitrary URL a signed-in user submits.
+ */
+export function isAllowedPushEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== 'https:' || url.port !== '' || url.username || url.password) return false;
+  const host = url.hostname.toLowerCase();
+  return PUSH_SERVICE_HOSTS.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
+}
+
 export function getVapidPublicKey(): string | null {
   return env.vapidPublicKey && env.vapidPrivateKey ? env.vapidPublicKey : null;
 }

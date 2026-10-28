@@ -90,7 +90,8 @@ export const env = {
     return process.env.VAPID_PRIVATE_KEY?.trim() || undefined;
   },
   get vapidSubject() {
-    return process.env.VAPID_SUBJECT?.trim() || 'mailto:admin@example.com';
+    // Push services (Apple in particular) want a reachable contact: mailto: or the site URL.
+    return process.env.VAPID_SUBJECT?.trim() || resolveSiteUrl();
   },
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',

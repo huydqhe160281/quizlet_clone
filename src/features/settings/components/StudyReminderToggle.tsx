@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import {
+  PUSH_SUBSCRIPTION_ENDPOINT,
+  removeDevicePushSubscription,
+  sendPushSubscription,
+} from '@/features/settings/lib/push-subscription';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
-
-const ENDPOINT = '/api/v1/user/push-subscription';
 
 type Status =
   | 'loading'
@@ -33,15 +36,6 @@ function isIosBrowserTab() {
     window.matchMedia('(display-mode: standalone)').matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
   return ios && !standalone;
-}
-
-async function sendSubscription(method: 'POST' | 'DELETE', body: unknown) {
-  const response = await fetch(ENDPOINT, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error(`push-subscription ${method} ${response.status}`);
 }
 
 /** Per-device opt-in for the daily study reminder (Web Push via the app's service worker). */
@@ -71,7 +65,7 @@ export function StudyReminderToggle() {
         if (active) setStatus('no-worker');
         return;
       }
-      const response = await fetch(ENDPOINT).catch(() => null);
+      const response = await fetch(PUSH_SUBSCRIPTION_ENDPOINT).catch(() => null);
       const key = response?.ok
         ? ((await response.json()) as { data: { publicKey: string | null } }).data.publicKey
         : null;
@@ -83,7 +77,7 @@ export function StudyReminderToggle() {
       const granted = Notification.permission === 'granted';
       if (existing && granted) {
         // Re-attach to whoever is signed in now (the same browser may switch accounts).
-        void sendSubscription('POST', existing.toJSON()).catch(() => {});
+        void sendPushSubscription('POST', existing.toJSON()).catch(() => {});
       }
       if (!active) return;
       setPublicKey(key);
@@ -103,26 +97,22 @@ export function StudyReminderToggle() {
       if (permission === 'denied') setStatus('denied');
       return;
     }
-    const registration = await getRegistration();
-    if (!registration || !publicKey) throw new Error('push not ready');
+    if (!publicKey) throw new Error('push not ready');
+    // subscribe() rejects until the worker is active (e.g. right after the first visit).
+    const registration = await navigator.serviceWorker.ready;
     const subscription =
       (await registration.pushManager.getSubscription()) ??
       (await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey),
       }));
-    await sendSubscription('POST', subscription.toJSON());
+    await sendPushSubscription('POST', subscription.toJSON());
     setSubscribed(true);
     toast.success(t('settingsPage.study.reminderEnabled'));
   };
 
   const disable = async () => {
-    const registration = await getRegistration();
-    const subscription = await registration?.pushManager.getSubscription();
-    if (subscription) {
-      await sendSubscription('DELETE', { endpoint: subscription.endpoint }).catch(() => {});
-      await subscription.unsubscribe();
-    }
+    await removeDevicePushSubscription();
     setSubscribed(false);
     toast.success(t('settingsPage.study.reminderDisabled'));
   };

@@ -19,6 +19,7 @@ vi.mock('web-push', async (importOriginal) => {
 import { WebPushError } from 'web-push';
 import {
   buildStudyReminder,
+  isAllowedPushEndpoint,
   reminderStreak,
   savePushSubscription,
   sendDailyStudyReminders,
@@ -64,6 +65,27 @@ describe('reminderStreak', () => {
     };
     // 13:00 UTC = 22:00 in Tokyo.
     expect(reminderStreak(stats, cronRun)).toBeNull();
+  });
+});
+
+describe('isAllowedPushEndpoint', () => {
+  it('accepts the browsers push services', () => {
+    expect(isAllowedPushEndpoint('https://fcm.googleapis.com/fcm/send/abc')).toBe(true);
+    expect(isAllowedPushEndpoint('https://updates.push.services.mozilla.com/wpush/v2/x')).toBe(
+      true
+    );
+    expect(isAllowedPushEndpoint('https://web.push.apple.com/QF8')).toBe(true);
+    expect(isAllowedPushEndpoint('https://wns2-par02p.notify.windows.com/w/?token=x')).toBe(true);
+  });
+
+  it('rejects arbitrary or look-alike hosts', () => {
+    expect(isAllowedPushEndpoint('https://attacker.example/hook')).toBe(false);
+    expect(isAllowedPushEndpoint('https://fcm.googleapis.com.attacker.example/x')).toBe(false);
+    expect(isAllowedPushEndpoint('https://evilfcm.googleapis.com.evil/x')).toBe(false);
+    expect(isAllowedPushEndpoint('http://fcm.googleapis.com/fcm/send/abc')).toBe(false);
+    expect(isAllowedPushEndpoint('https://fcm.googleapis.com:8443/x')).toBe(false);
+    expect(isAllowedPushEndpoint('https://user@fcm.googleapis.com/x')).toBe(false);
+    expect(isAllowedPushEndpoint('not a url')).toBe(false);
   });
 });
 

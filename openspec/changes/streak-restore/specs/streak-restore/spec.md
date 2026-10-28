@@ -19,7 +19,8 @@ exceed 5. The balance is synced lazily whenever restore status is read or a rest
 2. Review reward: review activity = `review_history` rows + answered `session_cards` (the heatmap
    metric). Every 400 activity units past `streakRestoreCredited` grants 1 restore up to the cap;
    units that would exceed the cap are forfeited. A null credited count is initialised to the
-   current activity (past reviews are not paid out retroactively).
+   current activity (past reviews are not paid out retroactively). When activity drops below the
+credited count (a deleted set cascades its reviews away), the credited count is lowered to it.
    **Constraint**: MUST
    **Verification**: `streak-restore.service.test.ts`
 

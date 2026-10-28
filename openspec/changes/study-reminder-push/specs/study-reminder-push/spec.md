@@ -14,6 +14,9 @@ An authenticated user SHALL be able to register and remove a Web Push subscripti
 current device via `/api/v1/user/push-subscription` (`GET` public key, `POST` subscribe,
 `DELETE` unsubscribe). Subscriptions are keyed by endpoint; re-subscribing the same endpoint
 under another account moves it to that account. Mutations are same-origin and rate limited.
+Endpoints SHALL be https URLs on a known browser push service host (`fcm.googleapis.com`,
+`*.push.services.mozilla.com`, `*.push.apple.com`, `*.notify.windows.com`), since the cron POSTs
+to them. Signing out removes this device's subscription on the server and in the browser.
 **Constraint**: MUST
 **Verification**: `push-subscription/route.test.ts`, `push.service.test.ts`
 

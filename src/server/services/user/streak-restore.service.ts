@@ -51,7 +51,8 @@ export function syncRestoreBalance(
     restoresMonth = month;
   }
 
-  let credited = stats.streakRestoreCredited ?? activity;
+  // Deleting a set cascades its reviews away; never leave the credited mark above what exists.
+  let credited = Math.min(stats.streakRestoreCredited ?? activity, activity);
   const earned = Math.floor(Math.max(0, activity - credited) / REVIEWS_PER_RESTORE);
   if (earned > 0) {
     balance = Math.min(MAX_STREAK_RESTORES, balance + earned);

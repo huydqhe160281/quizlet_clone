@@ -6,12 +6,13 @@ import { requireUserId } from '@/server/auth/auth-utils';
 import {
   deletePushSubscription,
   getVapidPublicKey,
+  isAllowedPushEndpoint,
   savePushSubscription,
 } from '@/server/services/notifications/push.service';
 
 const NO_STORE = { 'Cache-Control': 'private, no-store' };
 
-const endpointSchema = z.string().url().max(2048).startsWith('https://');
+const endpointSchema = z.string().max(2048).refine(isAllowedPushEndpoint);
 const subscribeSchema = z.object({
   endpoint: endpointSchema,
   keys: z.object({ p256dh: z.string().min(1).max(256), auth: z.string().min(1).max(256) }),

@@ -69,6 +69,21 @@ describe('syncRestoreBalance', () => {
     });
   });
 
+  it('lowers the credited mark when reviews disappear with a deleted set', () => {
+    expect(
+      syncRestoreBalance({ ...base, streakRestoreCredited: 1000 }, '2026-10', 700)
+    ).toMatchObject({
+      streakRestores: 1,
+      streakRestoreCredited: 700,
+    });
+    // The next 400 reviews then earn a restore again.
+    expect(
+      syncRestoreBalance({ ...base, streakRestoreCredited: 700 }, '2026-10', 1100)
+    ).toMatchObject({
+      streakRestores: 2,
+    });
+  });
+
   it('uses the month in the user time zone', () => {
     // 18:00 UTC on Oct 31 is already Nov 1 in Vietnam.
     expect(zonedMonthKey(new Date('2026-10-31T18:00:00.000Z'), VN)).toBe('2026-11');

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const service = vi.hoisted(() => ({
+  isAllowedPushEndpoint: (endpoint: string) => endpoint.startsWith('https://fcm.googleapis.com/'),
   getVapidPublicKey: vi.fn(),
   savePushSubscription: vi.fn(),
   deletePushSubscription: vi.fn(),
@@ -18,7 +19,10 @@ const json = (method: string, body: unknown) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-const valid = { endpoint: 'https://push.example/abc', keys: { p256dh: 'p', auth: 'a' } };
+const valid = {
+  endpoint: 'https://fcm.googleapis.com/fcm/send/abc',
+  keys: { p256dh: 'p', auth: 'a' },
+};
 
 describe('/api/v1/user/push-subscription', () => {
   beforeEach(() => {
@@ -42,7 +46,11 @@ describe('/api/v1/user/push-subscription', () => {
     expect(service.savePushSubscription).toHaveBeenCalledWith('user-1', valid);
   });
 
-  it('POST rejects non-https endpoints and missing keys', async () => {
+  it('POST rejects endpoints outside the push services and missing keys', async () => {
+    expect(
+      (await POST(json('POST', { ...valid, endpoint: 'https://attacker.example/hook' }), ctx))
+        .status
+    ).toBe(400);
     expect(
       (await POST(json('POST', { ...valid, endpoint: 'http://push.example/a' }), ctx)).status
     ).toBe(400);
