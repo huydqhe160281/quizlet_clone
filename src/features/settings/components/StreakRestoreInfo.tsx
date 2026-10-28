@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Flame } from 'lucide-react';
+import { RestoreHearts } from '@/components/streak/RestoreHearts';
 import { fetchStreakRestoreStatus, type StreakRestoreStatus } from '@/lib/streak/streak-client';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
@@ -23,27 +23,32 @@ export function StreakRestoreInfo() {
   if (!status) return null;
 
   return (
-    <div className="flex items-start gap-3">
-      <Flame className="mt-0.5 h-4 w-4 shrink-0 fill-orange-500 text-orange-500" aria-hidden />
-      <div className="space-y-0.5">
-        <p className="font-semibold text-sm">
-          {t('settingsPage.study.restoresLabel', {
+    <div className="space-y-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p className="text-sm font-semibold">{t('settingsPage.study.restoresLabel')}</p>
+        <RestoreHearts
+          balance={status.balance}
+          max={status.maxBalance}
+          label={t('streakRestore.heartsAria', {
             balance: status.balance,
             max: status.maxBalance,
           })}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t('settingsPage.study.restoresHint', {
-            reviews: status.reviewsPerRestore,
-            max: status.maxBalance,
-          })}
-        </p>
-        {status.reviewsToNext !== null && (
-          <p className="text-sm text-muted-foreground">
-            {t('settingsPage.study.restoresProgress', { count: status.reviewsToNext })}
-          </p>
-        )}
+        />
+        <span className="text-sm font-semibold tabular-nums text-muted-foreground" aria-hidden>
+          {status.balance}/{status.maxBalance}
+        </span>
       </div>
+      <p className="text-sm text-muted-foreground">
+        {t('settingsPage.study.restoresHint', {
+          reviews: status.reviewsPerRestore,
+          max: status.maxBalance,
+        })}
+      </p>
+      {status.reviewsToNext !== null && (
+        <p className="text-sm text-muted-foreground">
+          {t('settingsPage.study.restoresProgress', { count: status.reviewsToNext })}
+        </p>
+      )}
     </div>
   );
 }

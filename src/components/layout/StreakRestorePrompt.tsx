@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Flame } from 'lucide-react';
 import { toast } from 'sonner';
+import { RestoreHearts } from '@/components/streak/RestoreHearts';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,6 +23,8 @@ import {
 } from '@/lib/streak/streak-client';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
+const CRACK_MS = 900;
+
 /** Offers to restore a streak broken by 1–3 missed days when the user comes back. */
 export function StreakRestorePrompt() {
   const t = useTranslations();
@@ -30,6 +33,7 @@ export function StreakRestorePrompt() {
   const [status, setStatus] = useState<StreakRestoreStatus | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [cracked, setCracked] = useState(false);
 
   useEffect(() => {
     if (!userId || isStreakRestoreDismissed(userId)) return;
@@ -61,6 +65,10 @@ export function StreakRestorePrompt() {
     setBusy(true);
     try {
       const result = await requestStreakRestore(userId);
+      // Let the spent hearts crack before the dialog goes away.
+      setStatus((prev) => (prev ? { ...prev, balance: result.balance } : prev));
+      setCracked(true);
+      await new Promise((resolve) => setTimeout(resolve, CRACK_MS));
       toast.success(t('streakRestore.restored', { streak: result.currentStreak }));
       setOpen(false);
       setStatus(null);
@@ -88,6 +96,17 @@ export function StreakRestorePrompt() {
             })}
           </DialogDescription>
         </DialogHeader>
+        <RestoreHearts
+          className="justify-center py-1"
+          size={30}
+          balance={status.balance}
+          max={status.maxBalance}
+          pending={offer.affordable && !cracked ? offer.cost : 0}
+          label={t('streakRestore.heartsAria', {
+            balance: status.balance,
+            max: status.maxBalance,
+          })}
+        />
         {offer.studiedToday && offer.affordable && (
           <p className="text-sm text-muted-foreground">
             {t('streakRestore.studiedToday', { next: offer.streak + 1 })}

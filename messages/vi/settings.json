@@ -21,7 +21,7 @@
       "reminderEnabled": "Đã bật nhắc học trên thiết bị này.",
       "reminderDisabled": "Đã tắt nhắc học trên thiết bị này.",
       "reminderFailed": "Không bật được nhắc học. Vui lòng thử lại.",
-      "restoresLabel": "Lượt khôi phục chuỗi: {balance}/{max}",
+      "restoresLabel": "Lượt khôi phục chuỗi",
       "restoresHint": "Lỡ 1–3 ngày, khi vào lại app bạn có thể dùng 1 lượt cho mỗi ngày lỡ để giữ chuỗi. Mỗi {reviews} lượt ôn được thêm 1 lượt (tối đa {max}); đầu mỗi tháng nâng lên 3 nếu đang ít hơn.",
       "restoresProgress": "Còn {count} lượt ôn để nhận thêm 1 lượt."
     },

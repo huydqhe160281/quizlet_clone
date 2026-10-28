@@ -21,7 +21,7 @@
       "reminderEnabled": "Study reminder enabled on this device.",
       "reminderDisabled": "Study reminder turned off on this device.",
       "reminderFailed": "Couldn't enable the reminder. Please try again.",
-      "restoresLabel": "Streak restores: {balance}/{max}",
+      "restoresLabel": "Streak restores",
       "restoresHint": "If you miss 1–3 days, you can spend 1 restore per missed day when you come back to keep your streak. Earn 1 for every {reviews} reviews (up to {max}); topped up to 3 each month if lower.",
       "restoresProgress": "{count} more reviews until your next restore."
     },

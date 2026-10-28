@@ -60,6 +60,18 @@ const config: Config = {
         '2xl': 'calc(var(--radius) + 4px)', // 16px
         '3xl': 'calc(var(--radius) + 4px)', // 16px — max panel
       },
+      keyframes: {
+        // Streak-restore hearts a restore would spend: a soft heartbeat.
+        'heart-pending': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '15%': { transform: 'scale(1.18)' },
+          '30%': { transform: 'scale(0.96)' },
+          '45%': { transform: 'scale(1.1)' },
+        },
+      },
+      animation: {
+        'heart-pending': 'heart-pending 1.4s ease-in-out infinite',
+      },
     },
   },
   plugins: [tailwindcssAnimate],

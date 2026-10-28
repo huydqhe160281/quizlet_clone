@@ -411,6 +411,7 @@
     "dismiss": "Not now",
     "close": "Close",
     "restored": "{streak}-day streak restored 🔥",
-    "failed": "Couldn't restore your streak. Please try again."
+    "failed": "Couldn't restore your streak. Please try again.",
+    "heartsAria": "{balance} of {max} streak restores left"
   }
 }

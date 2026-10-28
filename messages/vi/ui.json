@@ -411,6 +411,7 @@
     "dismiss": "Bỏ qua",
     "close": "Đóng",
     "restored": "Đã khôi phục chuỗi {streak} ngày 🔥",
-    "failed": "Không khôi phục được chuỗi. Vui lòng thử lại."
+    "failed": "Không khôi phục được chuỗi. Vui lòng thử lại.",
+    "heartsAria": "Còn {balance}/{max} lượt khôi phục chuỗi"
   }
 }
