@@ -66,3 +66,45 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// Daily study reminder (see /api/cron/study-reminder). Payload: { title, body, url }.
+type ReminderPayload = { title?: string; body?: string; url?: string };
+
+self.addEventListener('push', (event) => {
+  let payload: ReminderPayload = {};
+  try {
+    payload = (event.data?.json() as ReminderPayload | undefined) ?? {};
+  } catch {
+    payload = { body: event.data?.text() };
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'QuizFree', {
+      body: payload.body,
+      icon: '/icon.png',
+      badge: '/icon.png',
+      tag: 'study-reminder',
+      data: { url: payload.url || '/today' },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(
+    (event.notification.data as { url?: string } | null)?.url || '/today',
+    self.location.origin
+  );
+  if (target.origin !== self.location.origin) return;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const open = windows.find((client) => new URL(client.url).origin === target.origin);
+      if (open) {
+        await open.focus();
+        if ('navigate' in open) await open.navigate(target.href).catch(() => undefined);
+        return;
+      }
+      await self.clients.openWindow(target.href);
+    })()
+  );
+});

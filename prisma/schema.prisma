@@ -55,6 +55,7 @@ model User {
   cardProgress         CardProgress[]
   reviewHistory        ReviewHistory[]
   stats                UserStats?
+  pushSubscriptions    PushSubscription[]
   processedMutations   ProcessedMutation[]
 
   @@index([email])
@@ -301,6 +302,23 @@ model UserStats {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_stats")
+}
+
+/// Web Push subscription of one browser/device, used for the daily study reminder.
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  lastSentAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 model RateLimitBucket {

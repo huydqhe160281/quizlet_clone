@@ -15,5 +15,15 @@
     "syncSynced": "✓ 同期済み",
     "syncFailedSessionComplete": "セッション完了を同期できませんでした。今すぐ同期するか学習を続けてください — 進捗はこの端末に保存されています。",
     "syncDismissFailed": "閉じる"
+  },
+  "studyReminder": {
+    "streak": {
+      "title": "🔥 {count}日連続をキープしよう！",
+      "body": "今日はまだ学習していません。数枚復習して連続記録を守りましょう。"
+    },
+    "default": {
+      "title": "復習の時間です 📚",
+      "body": "今日は5分だけカードを復習しましょう。"
+    }
   }
 }

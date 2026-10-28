@@ -10,7 +10,17 @@
       "title": "Study",
       "description": "Customise the study modes on this device.",
       "soundLabel": "Correct-answer sound",
-      "soundHint": "Play a chime when you answer correctly or swipe a card as “Know it”."
+      "soundHint": "Play a chime when you answer correctly or swipe a card as “Know it”.",
+      "reminderLabel": "Daily study reminder",
+      "reminderHint": "Get a notification around 8 PM if you haven't studied that day. Applies to this device/browser.",
+      "reminderUnsupported": "This browser doesn't support push notifications.",
+      "reminderIosHint": "On iPhone/iPad (iOS 16.4+), tap Share → Add to Home Screen, then open the app from that icon to enable reminders.",
+      "reminderDenied": "Notifications are blocked for this site. Allow them again in your browser settings.",
+      "reminderUnavailable": "Study reminders aren't configured on the server yet.",
+      "reminderNeedsInstall": "Reminders need the production app served over HTTPS.",
+      "reminderEnabled": "Study reminder enabled on this device.",
+      "reminderDisabled": "Study reminder turned off on this device.",
+      "reminderFailed": "Couldn't enable the reminder. Please try again."
     },
     "language": {
       "title": "Language",

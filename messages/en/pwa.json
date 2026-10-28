@@ -15,5 +15,15 @@
     "syncSynced": "✓ Synced",
     "syncFailedSessionComplete": "Session completion could not be synced. Sync now or keep studying — your progress is saved on this device.",
     "syncDismissFailed": "Dismiss"
+  },
+  "studyReminder": {
+    "streak": {
+      "title": "🔥 Keep your {count}-day streak!",
+      "body": "You haven't studied today. Review a few cards to keep it going."
+    },
+    "default": {
+      "title": "Time for a quick review 📚",
+      "body": "Spend 5 minutes on a few cards today."
+    }
   }
 }

@@ -112,7 +112,8 @@ After pulling schema changes, run `pnpm db:migrate` so the nullable `preferredLo
 4. **Supabase Storage**: In Supabase Dashboard → Storage → create a **public** bucket named `flashcard-media` (or match `SUPABASE_MEDIA_BUCKET`). Allow image/audio MIME types.
 5. **Resend** (optional prod): Set `RESEND_API_KEY` for forgot-password emails
 6. **SEO**: set `SITE_URL` to the public domain Google should index (canonical links, `sitemap.xml`, `robots.txt`); without it Production uses `VERCEL_PROJECT_PRODUCTION_URL`. Set `GOOGLE_SITE_VERIFICATION` to verify the domain in Google Search Console with the HTML-tag method. Preview deployments serve a `Disallow: /` robots.txt.
-7. Deploy
+7. **Study reminder (Web Push)**: run `pnpm dlx web-push generate-vapid-keys` once and set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (`mailto:` contact). The daily cron `/api/cron/study-reminder` (13:00 UTC ≈ 20:00 Vietnam, needs `CRON_SECRET`) pushes to users who enabled reminders in Settings and have not studied today. On iPhone, push works only after "Add to Home Screen" (iOS 16.4+).
+8. Deploy
 
 ### Quality gates
 

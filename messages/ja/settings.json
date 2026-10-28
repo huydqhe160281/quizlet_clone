@@ -10,7 +10,17 @@
       "title": "学習",
       "description": "このデバイスでの学習モードの設定。",
       "soundLabel": "正解時のサウンド",
-      "soundHint": "正解したとき、またはカードを「覚えた」にスワイプしたときに音を鳴らします。"
+      "soundHint": "正解したとき、またはカードを「覚えた」にスワイプしたときに音を鳴らします。",
+      "reminderLabel": "毎日の学習リマインダー",
+      "reminderHint": "その日まだ学習していない場合、20時ごろに通知します。この端末・ブラウザに適用されます。",
+      "reminderUnsupported": "このブラウザはプッシュ通知に対応していません。",
+      "reminderIosHint": "iPhone/iPad（iOS 16.4以降）では、共有 → ホーム画面に追加 を選び、そのアイコンからアプリを開いてリマインダーを有効にしてください。",
+      "reminderDenied": "このサイトの通知はブロックされています。ブラウザの設定で許可してください。",
+      "reminderUnavailable": "学習リマインダーはサーバーでまだ設定されていません。",
+      "reminderNeedsInstall": "リマインダーは HTTPS で配信される本番アプリでのみ使えます。",
+      "reminderEnabled": "この端末で学習リマインダーを有効にしました。",
+      "reminderDisabled": "この端末で学習リマインダーをオフにしました。",
+      "reminderFailed": "リマインダーを有効にできませんでした。もう一度お試しください。"
     },
     "language": {
       "title": "言語",

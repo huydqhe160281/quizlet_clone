@@ -15,5 +15,15 @@
     "syncSynced": "✓ Đã đồng bộ",
     "syncFailedSessionComplete": "Không đồng bộ được lần hoàn thành phiên học. Đồng bộ ngay hoặc tiếp tục học — tiến độ đã được lưu trên thiết bị này.",
     "syncDismissFailed": "Bỏ qua"
+  },
+  "studyReminder": {
+    "streak": {
+      "title": "🔥 Giữ chuỗi {count} ngày nhé!",
+      "body": "Hôm nay bạn chưa học. Ôn vài thẻ để không mất chuỗi."
+    },
+    "default": {
+      "title": "Đến giờ ôn bài rồi 📚",
+      "body": "Dành 5 phút ôn vài thẻ hôm nay nhé."
+    }
   }
 }

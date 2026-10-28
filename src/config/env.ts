@@ -82,6 +82,16 @@ export const env = {
   get cronSecret() {
     return process.env.CRON_SECRET ?? '';
   },
+  /** Web Push (daily study reminder). Generate with `pnpm dlx web-push generate-vapid-keys`. */
+  get vapidPublicKey() {
+    return process.env.VAPID_PUBLIC_KEY?.trim() || undefined;
+  },
+  get vapidPrivateKey() {
+    return process.env.VAPID_PRIVATE_KEY?.trim() || undefined;
+  },
+  get vapidSubject() {
+    return process.env.VAPID_SUBJECT?.trim() || 'mailto:admin@example.com';
+  },
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',

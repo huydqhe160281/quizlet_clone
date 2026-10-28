@@ -10,7 +10,17 @@
       "title": "Học tập",
       "description": "Tùy chỉnh trải nghiệm trong các chế độ học trên thiết bị này.",
       "soundLabel": "Âm thanh khi trả lời đúng",
-      "soundHint": "Phát âm báo khi bạn trả lời đúng hoặc gạt thẻ “Đã thuộc”."
+      "soundHint": "Phát âm báo khi bạn trả lời đúng hoặc gạt thẻ “Đã thuộc”.",
+      "reminderLabel": "Nhắc học hằng ngày",
+      "reminderHint": "Gửi thông báo khoảng 20:00 nếu hôm đó bạn chưa học. Áp dụng cho thiết bị/trình duyệt này.",
+      "reminderUnsupported": "Trình duyệt này không hỗ trợ thông báo đẩy.",
+      "reminderIosHint": "Trên iPhone/iPad (iOS 16.4+), hãy chọn Chia sẻ → Thêm vào MH chính rồi mở app từ biểu tượng đó để bật nhắc học.",
+      "reminderDenied": "Bạn đã chặn thông báo cho trang này. Hãy cho phép lại trong cài đặt trình duyệt.",
+      "reminderUnavailable": "Tính năng nhắc học chưa được cấu hình trên máy chủ.",
+      "reminderNeedsInstall": "Nhắc học cần ứng dụng được tải bằng HTTPS ở bản chính thức.",
+      "reminderEnabled": "Đã bật nhắc học trên thiết bị này.",
+      "reminderDisabled": "Đã tắt nhắc học trên thiết bị này.",
+      "reminderFailed": "Không bật được nhắc học. Vui lòng thử lại."
     },
     "language": {
       "title": "Ngôn ngữ",
