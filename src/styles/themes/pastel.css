@@ -77,11 +77,13 @@
   backdrop-filter: none;
   box-shadow: var(--clay), var(--soft-raised);
 }
-.pastel [data-slot='card']:hover {
-  box-shadow:
-    var(--clay),
-    12px 12px 26px hsl(var(--soft-shade) / 0.6),
-    -10px -10px 22px hsl(var(--soft-light) / 0.95);
+@media (hover: hover) and (pointer: fine) {
+  .pastel [data-slot='card']:hover {
+    box-shadow:
+      var(--clay),
+      12px 12px 26px hsl(var(--soft-shade) / 0.6),
+      -10px -10px 22px hsl(var(--soft-light) / 0.95);
+  }
 }
 .pastel .glass-nav {
   border-color: hsl(var(--soft-light) / 0.6);
@@ -118,11 +120,15 @@
   /* drop per-feature tints (e.g. the violet AI trigger) for the flat soft look */
   background-image: none;
 }
-.pastel [data-slot='button']:not([data-variant='ghost']):not([data-variant='link']):hover {
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .pastel [data-slot='button']:not([data-variant='ghost']):not([data-variant='link']):hover {
+    transform: translateY(-1px);
+  }
 }
-.pastel [data-slot='button'][data-variant='ghost']:hover {
-  box-shadow: var(--soft-raised-sm);
+@media (hover: hover) and (pointer: fine) {
+  .pastel [data-slot='button'][data-variant='ghost']:hover {
+    box-shadow: var(--soft-raised-sm);
+  }
 }
 .pastel [data-slot='button']:not([data-variant='link']):active {
   transform: translateY(1px) scale(0.98);
@@ -140,12 +146,14 @@
 }
 
 /* Interactive glass tiles (study-mode launcher, nav tiles) lift on hover */
-.pastel a.glass-panel:hover,
-.pastel button.glass-panel:not(:disabled):hover {
-  box-shadow:
-    var(--clay),
-    12px 12px 26px hsl(var(--soft-shade) / 0.6),
-    -10px -10px 22px hsl(var(--soft-light) / 0.95);
+@media (hover: hover) and (pointer: fine) {
+  .pastel a.glass-panel:hover,
+  .pastel button.glass-panel:not(:disabled):hover {
+    box-shadow:
+      var(--clay),
+      12px 12px 26px hsl(var(--soft-shade) / 0.6),
+      -10px -10px 22px hsl(var(--soft-light) / 0.95);
+  }
 }
 
 /* ---- Study surfaces ----------------------------------------------------- */
@@ -188,11 +196,13 @@
     box-shadow 0.2s ease,
     background-color 0.2s ease;
 }
-.pastel [data-slot='answer-option']:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow:
-    6px 6px 14px hsl(var(--soft-shade) / 0.55),
-    -6px -6px 14px hsl(var(--soft-light) / 0.95);
+@media (hover: hover) and (pointer: fine) {
+  .pastel [data-slot='answer-option']:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow:
+      6px 6px 14px hsl(var(--soft-shade) / 0.55),
+      -6px -6px 14px hsl(var(--soft-light) / 0.95);
+  }
 }
 .pastel [data-slot='answer-option']:not(:disabled):active,
 .pastel [data-slot='answer-option']:disabled {
@@ -207,8 +217,10 @@
   backdrop-filter: none;
   box-shadow: var(--soft-inset);
 }
-.pastel [data-slot='input']:hover {
-  border-color: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .pastel [data-slot='input']:hover {
+    border-color: transparent;
+  }
 }
 .pastel [data-slot='input']:focus,
 .pastel [data-slot='input']:focus-visible {

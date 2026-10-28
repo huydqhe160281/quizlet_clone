@@ -3,6 +3,8 @@ import tailwindcssAnimate from 'tailwindcss-animate';
 import { DARK_THEME_IDS } from './src/lib/theme/themes';
 
 const config: Config = {
+  // Touch devices keep :hover after a tap, so the last-tapped answer/button looked selected.
+  future: { hoverOnlyWhenSupported: true },
   // `dark:` applies under every dark-scheme theme in the registry, not just `.dark`.
   darkMode: ['variant', `&:is(${DARK_THEME_IDS.map((id) => `.${id} *`).join(', ')})`],
   content: [
