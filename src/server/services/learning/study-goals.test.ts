@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api-error';
 import { GOAL_DEFAULT, GOAL_MAX, GOAL_MIN } from '@/server/services/learning/constants';
 import {
+  adoptDetectedTimezone,
   computeGoalProgress,
   getGoalProgress,
   nextUtcDay,
@@ -14,6 +15,8 @@ import { startOfUtcDay } from '@/server/services/user/stats.service';
 const ensureUserStatsMock = vi.hoisted(() => vi.fn());
 const reviewCountMock = vi.hoisted(() => vi.fn());
 const userStatsUpdateMock = vi.hoisted(() => vi.fn());
+const userStatsUpdateManyMock = vi.hoisted(() => vi.fn());
+const userStatsFindUniqueMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/server/services/user/stats.service', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/server/services/user/stats.service')>();
@@ -30,6 +33,8 @@ vi.mock('@/server/db', () => ({
     },
     userStats: {
       update: (...args: unknown[]) => userStatsUpdateMock(...args),
+      updateMany: (...args: unknown[]) => userStatsUpdateManyMock(...args),
+      findUnique: (...args: unknown[]) => userStatsFindUniqueMock(...args),
     },
   },
 }));
@@ -225,5 +230,30 @@ describe('study goals', () => {
       reviewedAt: { gte: Date; lt: Date };
     };
     expect(where.reviewedAt.gte.toISOString()).toBe('2026-07-28T00:00:00.000Z');
+  });
+
+  it('Scenario: Detected timezone only replaces the UTC default', async () => {
+    userStatsUpdateManyMock.mockResolvedValue({ count: 1 });
+    userStatsFindUniqueMock.mockResolvedValue({ preferredTimezone: 'Asia/Ho_Chi_Minh' });
+    await expect(adoptDetectedTimezone('user-1', 'Asia/Ho_Chi_Minh')).resolves.toEqual({
+      preferredTimezone: 'Asia/Ho_Chi_Minh',
+    });
+    expect(userStatsUpdateManyMock).toHaveBeenCalledWith({
+      where: { userId: 'user-1', preferredTimezone: 'UTC' },
+      data: { preferredTimezone: 'Asia/Ho_Chi_Minh' },
+    });
+  });
+
+  it('Scenario: Detected timezone keeps a user-chosen zone', async () => {
+    userStatsUpdateManyMock.mockResolvedValue({ count: 0 });
+    userStatsFindUniqueMock.mockResolvedValue({ preferredTimezone: 'Asia/Tokyo' });
+    await expect(adoptDetectedTimezone('user-1', 'Asia/Ho_Chi_Minh')).resolves.toEqual({
+      preferredTimezone: 'Asia/Tokyo',
+    });
+  });
+
+  it('Scenario: Detected timezone must be valid', async () => {
+    await expect(adoptDetectedTimezone('user-1', 'Not/A_Zone')).rejects.toBeInstanceOf(ApiError);
+    expect(userStatsUpdateManyMock).not.toHaveBeenCalled();
   });
 });

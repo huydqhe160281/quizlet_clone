@@ -51,7 +51,7 @@ The system SHALL provide an authenticated `/today` page that:
 - Allows editing `preferredTimezone` (curated allowlist ⊆ validated IANA set) alongside the daily card goal
 - Passes `recommendation.cardIds` into `createStudySessionOnce` / session create for the primary `set-session` CTA
 - Indicates the focused card count whenever `cardIds` is present
-- Notes in copy that streak may remain UTC while goals/insights use preferred timezone
+- Notes in copy that streak, goals and insights all count days in the preferred timezone
 
 **Constraint**: MUST  
 **Verification**: Component tests for empty/error/loading; locale key presence check for Today keys in all three locales; component tests; locale parity

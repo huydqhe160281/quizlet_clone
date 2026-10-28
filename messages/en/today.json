@@ -29,7 +29,7 @@
     "loadFailed": "Could not load today’s plan.",
     "starting": "Starting…",
     "timezoneLabel": "Timezone",
-    "streakUtcNote": "Streak may still use UTC days; goals and insights use your timezone.",
+    "streakTimezoneNote": "Streak, goals and insights all count days in this timezone.",
     "startSetSessionFocus": "Study {count} focus cards (Learn)"
   }
 }

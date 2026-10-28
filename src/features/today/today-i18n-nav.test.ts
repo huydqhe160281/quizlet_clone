@@ -23,7 +23,7 @@ describe('Today i18n & nav', () => {
     const en = loadTodayKeys('en');
     expect(en.has('todayPage.timezoneLabel')).toBe(true);
     expect(en.has('todayPage.startSetSessionFocus')).toBe(true);
-    expect(en.has('todayPage.streakUtcNote')).toBe(true);
+    expect(en.has('todayPage.streakTimezoneNote')).toBe(true);
   });
 
   it('Scenario: Today visible in nav', () => {

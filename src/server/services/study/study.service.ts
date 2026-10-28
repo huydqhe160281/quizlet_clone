@@ -112,7 +112,12 @@ function resolveSessionCards<T extends { id: string }>(
 
 async function recordStreakForStudy(userId: string) {
   const { stats, changed } = await recordDailyStudyActivity(userId);
-  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+  const currentStreak = getEffectiveStreak(
+    stats.currentStreak,
+    stats.lastStudiedDate,
+    new Date(),
+    stats.preferredTimezone
+  );
   return {
     currentStreak,
     longestStreak: stats.longestStreak,

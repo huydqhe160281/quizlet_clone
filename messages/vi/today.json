@@ -29,7 +29,7 @@
     "loadFailed": "Không tải được kế hoạch hôm nay.",
     "starting": "Đang bắt đầu…",
     "timezoneLabel": "Múi giờ",
-    "streakUtcNote": "Chuỗi ngày có thể vẫn theo UTC; mục tiêu và insights dùng múi giờ của bạn.",
+    "streakTimezoneNote": "Chuỗi ngày, mục tiêu và insights đều tính ngày theo múi giờ này.",
     "startSetSessionFocus": "Học {count} thẻ trọng tâm (Learn)"
   }
 }

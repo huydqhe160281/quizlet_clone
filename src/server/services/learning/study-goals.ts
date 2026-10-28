@@ -122,6 +122,24 @@ export async function updateStudyGoals(userId: string, patch: StudyGoalsPatch) {
   };
 }
 
+/**
+ * Adopt the browser-detected time zone only while the stored one is still the default,
+ * so a zone the user picked on /today is never overwritten. Returns the stored zone.
+ */
+export async function adoptDetectedTimezone(userId: string, detected: unknown) {
+  const timeZone = validatePreferredTimezone(detected);
+  await ensureUserStats(userId);
+  await prisma.userStats.updateMany({
+    where: { userId, preferredTimezone: DEFAULT_PREFERRED_TIMEZONE },
+    data: { preferredTimezone: timeZone },
+  });
+  const stats = await prisma.userStats.findUnique({
+    where: { userId },
+    select: { preferredTimezone: true },
+  });
+  return { preferredTimezone: stats?.preferredTimezone ?? DEFAULT_PREFERRED_TIMEZONE };
+}
+
 /** @deprecated Prefer updateStudyGoals — kept for narrow callers. */
 export async function updateDailyGoalCards(userId: string, dailyGoalCards: number) {
   return updateStudyGoals(userId, { dailyGoalCards });

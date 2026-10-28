@@ -4,6 +4,7 @@ import {
   nextZonedDay,
   resolveTimeZoneForMath,
   startOfZonedDay,
+  zonedCalendarDay,
   zonedLookbackWindow,
 } from '@/server/services/learning/zoned-day';
 import { DEFAULT_PREFERRED_TIMEZONE } from '@/server/services/learning/constants';
@@ -65,5 +66,13 @@ describe('zoned day helpers', () => {
     const { since, until } = zonedLookbackWindow(now, 'Asia/Tokyo', 7);
     const review = new Date('2026-07-27T15:10:00.000Z'); // 00:10 Tokyo Jul 28
     expect(review >= since && review < until).toBe(true);
+  });
+
+  it('zonedCalendarDay: encodes the local date as UTC midnight', () => {
+    const instant = new Date('2026-10-27T23:00:00.000Z'); // 06:00 Oct 28 in Vietnam
+    expect(zonedCalendarDay(instant, 'Asia/Ho_Chi_Minh').toISOString()).toBe(
+      '2026-10-28T00:00:00.000Z'
+    );
+    expect(zonedCalendarDay(instant, 'UTC').toISOString()).toBe('2026-10-27T00:00:00.000Z');
   });
 });

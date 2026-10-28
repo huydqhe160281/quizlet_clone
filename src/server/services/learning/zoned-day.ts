@@ -130,3 +130,9 @@ export function zonedLookbackWindow(
   }
   return { since: cursor, until };
 }
+
+/** Local calendar date in `timeZone`, encoded as UTC midnight of that date (a date-only key). */
+export function zonedCalendarDay(date: Date, timeZone: string): Date {
+  const { year, month, day } = getZonedYmd(date, resolveTimeZoneForMath(timeZone));
+  return new Date(Date.UTC(year, month - 1, day));
+}

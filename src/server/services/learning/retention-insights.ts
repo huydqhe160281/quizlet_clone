@@ -53,7 +53,12 @@ export async function getRetentionInsights(
   const goodOrEasy = reviews.filter((r) => r.grade === Grade.GOOD || r.grade === Grade.EASY).length;
 
   const stats = await ensureUserStats(userId);
-  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate, now);
+  const currentStreak = getEffectiveStreak(
+    stats.currentStreak,
+    stats.lastStudiedDate,
+    now,
+    stats.preferredTimezone
+  );
 
   return {
     reviewsLast7Days,

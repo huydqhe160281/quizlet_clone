@@ -8,6 +8,7 @@ import {
   isStreakCacheFresh,
   readStreakCache,
   STREAK_UPDATED_EVENT,
+  syncDetectedTimeZone,
   type StreakSnapshot,
   type StreakUpdatedDetail,
   writeStreakCache,
@@ -44,6 +45,11 @@ export function StreakBadge({ className }: { className?: string }) {
         .then(applyStreak)
         .catch(() => {});
     }
+
+    // The streak day depends on the user's time zone, so refetch once it is adopted.
+    void syncDetectedTimeZone(userId)
+      .then((synced) => (synced ? fetchStreakSnapshot(userId).then(applyStreak) : undefined))
+      .catch(() => {});
 
     const onStreakUpdated = (event: Event) => {
       const detail = (event as CustomEvent<StreakUpdatedDetail>).detail;

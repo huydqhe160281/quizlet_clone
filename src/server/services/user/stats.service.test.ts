@@ -66,6 +66,24 @@ describe('stats streak calculation', () => {
   it('getEffectiveStreak: keeps streak on yesterday study', () => {
     expect(getEffectiveStreak(3, yesterday, today)).toBe(3);
   });
+
+  it('counts a new day at local midnight, not UTC midnight (Vietnam, UTC+7)', () => {
+    const lastStudied = new Date('2026-10-27T00:00:00.000Z'); // studied 27/10 evening, VN
+    const sixAmVn = new Date('2026-10-27T23:00:00.000Z'); // 06:00 on 28/10 in Vietnam
+    expect(calculateStreakAfterReview(2, 2, lastStudied, sixAmVn, 'Asia/Ho_Chi_Minh')).toEqual({
+      currentStreak: 3,
+      longestStreak: 3,
+    });
+    // Same instant is still 27/10 in UTC, so a UTC user keeps the streak unchanged.
+    expect(calculateStreakAfterReview(2, 2, lastStudied, sixAmVn).currentStreak).toBe(2);
+  });
+
+  it('getEffectiveStreak: breaks after a missed local day', () => {
+    const lastStudied = new Date('2026-10-28T00:00:00.000Z');
+    const tz = 'Asia/Ho_Chi_Minh';
+    expect(getEffectiveStreak(3, lastStudied, new Date('2026-10-29T16:59:00.000Z'), tz)).toBe(3);
+    expect(getEffectiveStreak(3, lastStudied, new Date('2026-10-29T17:00:00.000Z'), tz)).toBe(0);
+  });
 });
 
 describe('dashboard stats service', () => {

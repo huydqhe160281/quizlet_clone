@@ -138,7 +138,7 @@ export function TodayPageClient() {
             <p className="mt-1 text-xs text-muted-foreground">
               {t('todayPage.timezoneLabel')}: {goal.preferredTimezone}
             </p>
-            <p className="text-xs text-muted-foreground">{t('todayPage.streakUtcNote')}</p>
+            <p className="text-xs text-muted-foreground">{t('todayPage.streakTimezoneNote')}</p>
           </div>
           <Button
             type="button"

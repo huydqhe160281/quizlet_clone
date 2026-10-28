@@ -15,7 +15,8 @@ export const STREAK_UPDATED_EVENT = 'study-streak-updated';
 
 const storageKey = (userId: string) => `quizlet-clone-streak:${userId}`;
 
-const utcDateKey = (date = new Date()) => date.toISOString().slice(0, 10);
+// Local calendar date (YYYY-MM-DD), matching the server's per-time-zone streak day.
+const localDateKey = (date = new Date()) => date.toLocaleDateString('en-CA');
 
 export function readStreakCache(userId: string): StreakCacheEntry | null {
   if (typeof window === 'undefined') {
@@ -38,7 +39,7 @@ export function writeStreakCache(userId: string, snapshot: StreakSnapshot): void
     return;
   }
 
-  const entry: StreakCacheEntry = { ...snapshot, date: utcDateKey() };
+  const entry: StreakCacheEntry = { ...snapshot, date: localDateKey() };
   localStorage.setItem(storageKey(userId), JSON.stringify(entry));
 }
 
@@ -46,7 +47,7 @@ export function isStreakCacheFresh(
   userId: string,
   cache: StreakCacheEntry | null
 ): cache is StreakCacheEntry {
-  return cache !== null && cache.date === utcDateKey();
+  return cache !== null && cache.date === localDateKey();
 }
 
 export function notifyStreakUpdated(detail: StreakUpdatedDetail): void {
@@ -68,4 +69,50 @@ export async function fetchStreakSnapshot(userId: string): Promise<StreakSnapsho
   const { data } = (await response.json()) as { data: StreakSnapshot };
   writeStreakCache(userId, data);
   return data;
+}
+
+const timeZoneSyncKey = (userId: string) => `quizlet-clone-tz-sync:${userId}`;
+
+function detectTimeZone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Send the browser time zone once per user/zone. The server only applies it while the
+ * stored zone is still the UTC default. Resolves true when a sync request was made.
+ */
+export async function syncDetectedTimeZone(userId: string): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  const timeZone = detectTimeZone();
+  if (!timeZone || timeZone === 'UTC' || timeZone === 'Etc/UTC') {
+    return false;
+  }
+  try {
+    if (localStorage.getItem(timeZoneSyncKey(userId)) === timeZone) {
+      return false;
+    }
+  } catch {
+    // Storage blocked: still sync; the server makes repeats harmless.
+  }
+
+  const response = await fetch('/api/v1/user/timezone', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ timeZone }),
+  });
+  if (!response.ok) {
+    return false;
+  }
+  try {
+    localStorage.setItem(timeZoneSyncKey(userId), timeZone);
+  } catch {
+    // ignore
+  }
+  return true;
 }

@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { prisma } from '@/server/db';
+import { zonedCalendarDay } from '@/server/services/learning/zoned-day';
 
 export const startOfUtcDay = (date: Date) =>
   new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
@@ -10,16 +11,21 @@ const dayDiff = (a: Date, b: Date) => {
   return Math.floor((startOfUtcDay(a).getTime() - startOfUtcDay(b).getTime()) / msPerDay);
 };
 
-/** Streak visible to user: 0 if more than 1 calendar day since last study. */
+/**
+ * Streak visible to user: 0 if more than 1 calendar day since last study.
+ * Days are calendar dates in the user's preferred time zone; `lastStudiedDate`
+ * stores that date as UTC midnight.
+ */
 export function getEffectiveStreak(
   currentStreak: number,
   lastStudiedDate: Date | null,
-  now = new Date()
+  now = new Date(),
+  timeZone = 'UTC'
 ): number {
   if (!lastStudiedDate || currentStreak <= 0) {
     return 0;
   }
-  const gap = dayDiff(startOfUtcDay(now), lastStudiedDate);
+  const gap = dayDiff(zonedCalendarDay(now, timeZone), lastStudiedDate);
   if (gap <= 1) {
     return currentStreak;
   }
@@ -30,9 +36,10 @@ function computeNextStreak(
   currentStreak: number,
   longestStreak: number,
   lastStudiedDate: Date | null,
-  studiedAt: Date
+  studiedAt: Date,
+  timeZone: string
 ) {
-  const today = startOfUtcDay(studiedAt);
+  const today = zonedCalendarDay(studiedAt, timeZone);
 
   if (lastStudiedDate && dayDiff(today, lastStudiedDate) === 0) {
     return {
@@ -73,14 +80,15 @@ export async function ensureUserStats(userId: string) {
   }
 }
 
-/** Record study activity once per UTC day (session start, review, etc.). */
+/** Record study activity once per day in the user's time zone (session start, review, etc.). */
 export async function recordDailyStudyActivity(userId: string, studiedAt = new Date()) {
   const stats = await ensureUserStats(userId);
   const next = computeNextStreak(
     stats.currentStreak,
     stats.longestStreak,
     stats.lastStudiedDate,
-    studiedAt
+    studiedAt,
+    stats.preferredTimezone
   );
 
   if (!next.changed) {
@@ -105,7 +113,8 @@ export async function updateStreak(userId: string, studiedAt = new Date()) {
     stats.currentStreak,
     stats.longestStreak,
     stats.lastStudiedDate,
-    studiedAt
+    studiedAt,
+    stats.preferredTimezone
   );
 
   return prisma.userStats.update({
@@ -121,7 +130,12 @@ export async function updateStreak(userId: string, studiedAt = new Date()) {
 
 export async function getStreakSnapshot(userId: string) {
   const stats = await ensureUserStats(userId);
-  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+  const currentStreak = getEffectiveStreak(
+    stats.currentStreak,
+    stats.lastStudiedDate,
+    new Date(),
+    stats.preferredTimezone
+  );
 
   if (currentStreak === 0 && stats.currentStreak > 0) {
     await prisma.userStats.update({
@@ -149,7 +163,12 @@ export async function recordReviewStats(userId: string, isCorrect: boolean) {
 
 export async function getStats(userId: string) {
   const stats = await ensureUserStats(userId);
-  const currentStreak = getEffectiveStreak(stats.currentStreak, stats.lastStudiedDate);
+  const currentStreak = getEffectiveStreak(
+    stats.currentStreak,
+    stats.lastStudiedDate,
+    new Date(),
+    stats.preferredTimezone
+  );
   const [totalSets, totalCards, dueCount] = await Promise.all([
     prisma.flashcardSet.count({ where: { userId } }),
     prisma.flashcard.count({ where: { set: { userId } } }),
@@ -292,9 +311,16 @@ export function calculateStreakAfterReview(
   currentStreak: number,
   longestStreak: number,
   lastStudiedDate: Date | null,
-  studiedAt: Date
+  studiedAt: Date,
+  timeZone = 'UTC'
 ) {
-  const next = computeNextStreak(currentStreak, longestStreak, lastStudiedDate, studiedAt);
+  const next = computeNextStreak(
+    currentStreak,
+    longestStreak,
+    lastStudiedDate,
+    studiedAt,
+    timeZone
+  );
   return {
     currentStreak: next.currentStreak,
     longestStreak: next.longestStreak,
