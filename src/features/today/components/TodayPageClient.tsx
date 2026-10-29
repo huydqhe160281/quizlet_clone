@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useQueryClient } from '@tanstack/react-query';
 import { createStudySessionOnce } from '@/features/study/lib/create-session-once';
+import { STUDY_LIMIT_REACHED, studyStartError } from '@/features/study/lib/study-limit';
+import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
 import { useTodayPlan, useUpdateStudyGoals } from '@/features/today/hooks/useTodayPlan';
 import { todayKeys } from '@/features/today/query-keys';
 import type { QueueReason, Recommendation } from '@/features/today/types';
@@ -91,7 +93,7 @@ export function TodayPageClient() {
         void queryClient.invalidateQueries({ queryKey: todayKeys.plan() });
         router.push(`/sets/${rec.setId}/learn?sessionId=${result.data.id}`);
       } catch (err) {
-        setStartError(err instanceof Error ? err.message : t('todayPage.loadFailed'));
+        setStartError(studyStartError(err, t('todayPage.loadFailed')));
       } finally {
         setStarting(false);
       }
@@ -227,7 +229,11 @@ export function TodayPageClient() {
         >
           {starting ? t('todayPage.starting') : ctaLabel(t, recommendation)}
         </Button>
-        {startError ? <p className="text-sm text-destructive">{startError}</p> : null}
+        {startError === STUDY_LIMIT_REACHED ? (
+          <StudyLimitNotice />
+        ) : startError ? (
+          <p className="text-sm text-destructive">{startError}</p>
+        ) : null}
       </section>
 
       <section className="space-y-3">

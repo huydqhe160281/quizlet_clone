@@ -3,6 +3,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { enqueueMutation } from '@/features/study-offline/queue';
+import {
+  STUDY_LIMIT_REACHED,
+  StudyLimitError,
+  isStudyLimitError,
+} from '@/features/study/lib/study-limit';
+import { readErrorPayload } from '@/lib/i18n/api-error-message';
 
 export function useDueCards() {
   return useQuery({
@@ -10,6 +16,8 @@ export function useDueCards() {
     queryFn: async () => {
       const response = await fetch('/api/v1/study/due-cards');
       if (!response.ok) {
+        const payload = await readErrorPayload(response);
+        if (payload?.error === STUDY_LIMIT_REACHED) throw new StudyLimitError();
         throw new Error('Failed to load due cards');
       }
       return (await response.json()) as {
@@ -23,6 +31,8 @@ export function useDueCards() {
         count: number;
       };
     },
+    // The limit only lifts after verifying; retrying just delays the notice.
+    retry: (failureCount, error) => !isStudyLimitError(error) && failureCount < 3,
   });
 }
 

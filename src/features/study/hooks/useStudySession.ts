@@ -19,6 +19,7 @@ import {
   type StampedPendingAnswer,
 } from '@/features/study/store';
 import { beaconSessionAnswers } from '@/features/study/lib/answer-beacon';
+import { studyStartError } from '@/features/study/lib/study-limit';
 import { getCachedSet, upsertCachedSet } from '@/features/study-offline/cache';
 import {
   enqueueMutation,
@@ -235,7 +236,7 @@ export function useStudySession(setId: string, mode: StudyModeValue) {
           }
         } catch (error) {
           if (active) {
-            store.setError(error instanceof Error ? error.message : 'Failed to start session');
+            store.setError(studyStartError(error, 'Failed to start session'));
             store.setLoading(false);
           }
           return;

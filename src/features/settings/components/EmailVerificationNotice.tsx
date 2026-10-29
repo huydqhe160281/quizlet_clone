@@ -8,6 +8,7 @@ import { useResendVerification } from '@/features/auth/hooks/useResendVerificati
 import { AI_GENERATE_UNVERIFIED_DAILY_LIMIT } from '@/lib/auth/verification-policy';
 import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { UNVERIFIED_STUDY_LIMIT } from '@/features/study/lib/study-limit';
 
 /** Shown under the email row while a password account has not confirmed its address. */
 export function EmailVerificationNotice({ email }: { email: string }) {
@@ -32,7 +33,10 @@ export function EmailVerificationNotice({ email }: { email: string }) {
         />
         <div className="min-w-0 flex-1 space-y-3">
           <p className="text-sm">
-            {t('settingsPage.verify.description', { limit: AI_GENERATE_UNVERIFIED_DAILY_LIMIT })}
+            {t('settingsPage.verify.description', {
+              limit: AI_GENERATE_UNVERIFIED_DAILY_LIMIT,
+              studyLimit: UNVERIFIED_STUDY_LIMIT,
+            })}
           </p>
           <Button
             size="sm"

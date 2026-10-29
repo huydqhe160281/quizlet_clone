@@ -75,10 +75,11 @@ after dismissing the app-wide banner.
 
 ### Requirement: Limits for Unverified Accounts
 
-Unverified accounts SHALL be able to sign in and study, with two limits enforced on the server:
+Unverified accounts SHALL be able to sign in and study, with three limits enforced on the server:
 
 - Publishing: creating, importing or switching a set to `PUBLIC` SHALL fail with `403 EMAIL_NOT_VERIFIED` (`assertCanPublish`). Sets that are already public may stay public and be edited. The create/edit and import forms disable the Public option and link to Settings.
 - AI set generation: at most `AI_GENERATE_UNVERIFIED_DAILY_LIMIT` (3) generations per 24 hours, on top of the hourly limit; the next request fails with `429 AI_QUOTA_UNVERIFIED` and the modal asks the user to verify. A generation that fails (or is refused) gives its slot back, so the allowance counts sets actually created. The assistant chat is not affected.
+- Study: once the account's lifetime reviews (the activity heatmap count: `ReviewHistory` rows plus answered `SessionCard` rows, old and new cards alike) reach `UNVERIFIED_STUDY_LIMIT` (200), starting a new study session (`POST /api/v1/study/sessions`) or opening the spaced-review queue (`GET /api/v1/study/due-cards`) SHALL fail with `403 STUDY_LIMIT_REACHED` (`assertCanStartStudy`). Only starting is gated: resuming an incomplete session, answers inside a session or review already started, and offline replays SHALL still be accepted, so a session that crosses the limit is finished. The completion screen, the start forms and `/today` then show a notice with a resend button; `/api/v1/auth/me` returns `studyLimit: { used, limit, reached }` and the app banner shows the reviews left. Deleting a set removes its reviews and so lowers the count.
 
 #### Scenario: Unverified user tries to publish
 
@@ -91,6 +92,12 @@ Unverified accounts SHALL be able to sign in and study, with two limits enforced
 - **GIVEN** an unverified account that generated 3 sets with AI in the last 24 hours
 - **WHEN** it requests another generation
 - **THEN** the API returns 429 `AI_QUOTA_UNVERIFIED`
+
+#### Scenario: Unverified user reaches the study limit mid-session
+
+- **GIVEN** an unverified password account with 190 reviews that starts a 50-card session
+- **WHEN** its 10th answer brings the count to 200
+- **THEN** it can answer the remaining cards, the completion screen asks it to verify the email, and its next attempt to start a session or the spaced-review queue returns 403 `STUDY_LIMIT_REACHED`
 
 ### Requirement: Change Password
 

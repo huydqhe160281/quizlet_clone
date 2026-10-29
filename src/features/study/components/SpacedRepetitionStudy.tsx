@@ -28,6 +28,8 @@ import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvanc
 import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import { generateLearnOptions } from '@/features/study/lib/test-generator';
 import { shuffleArray } from '@/features/study/lib/round-engine';
+import { isStudyLimitError } from '@/features/study/lib/study-limit';
+import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
 import { isCorrectGrade } from '@/features/study/lib/sm2';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { isImeComposing } from '@/lib/utils/keyboard';
@@ -263,7 +265,11 @@ export function SpacedRepetitionStudy() {
     );
   }
 
-  if (error) {
+  // A refetch that fails mid-review (e.g. the limit was crossed) must not end the review.
+  if (error && !started) {
+    if (isStudyLimitError(error)) {
+      return <StudyLimitNotice />;
+    }
     return <p className="text-sm text-destructive">{t('studyUi.spacedLoadFailed')}</p>;
   }
 

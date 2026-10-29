@@ -2,6 +2,7 @@ import { Grade, Prisma, type StudyMode } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { calculateSm2, gradeToSm2, isCorrectGrade } from '@/features/study/lib/sm2';
 import { prisma } from '@/server/db';
+import { assertCanStartStudy } from '@/server/auth/email-verified';
 import {
   getEffectiveStreak,
   recordDailyStudyActivity,
@@ -249,6 +250,9 @@ export async function createSession(
       streak,
     };
   }
+
+  // Only a new session is gated: resuming one started before the limit is allowed.
+  await assertCanStartStudy(userId);
 
   // Respect randomize setting — default true for backward compat when no settings
   const shouldShuffle = settings ? settings.randomize : true;

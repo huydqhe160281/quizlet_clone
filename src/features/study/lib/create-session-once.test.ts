@@ -3,11 +3,24 @@ import {
   clearCreateSessionCache,
   createStudySessionOnce,
 } from '@/features/study/lib/create-session-once';
+import { StudyLimitError } from '@/features/study/lib/study-limit';
 
 describe('createStudySessionOnce', () => {
   afterEach(() => {
     clearCreateSessionCache();
     vi.unstubAllGlobals();
+  });
+
+  it('throws StudyLimitError when the unverified review limit is reached', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: false,
+        json: async () => ({ error: 'STUDY_LIMIT_REACHED', message: 'Verify your email' }),
+      }))
+    );
+
+    await expect(createStudySessionOnce('set-1', 'LEARN')).rejects.toBeInstanceOf(StudyLimitError);
   });
 
   it('shares one POST across concurrent callers', async () => {

@@ -39,7 +39,7 @@
       "signOutDescription": "Đăng xuất khỏi thiết bị này."
     },
     "verify": {
-      "description": "Hãy mở liên kết trong email xác nhận để xác minh địa chỉ này. Khi chưa xác minh, bạn chưa thể công khai bộ thẻ và chỉ được tạo bằng AI {limit} lần mỗi ngày. Không thấy email? Kiểm tra mục Spam hoặc gửi lại bên dưới (liên kết có hiệu lực 24 giờ).",
+      "description": "Hãy mở liên kết trong email xác nhận để xác minh địa chỉ này. Khi chưa xác minh, bạn chưa thể công khai bộ thẻ và chỉ được tạo bằng AI {limit} lần mỗi ngày và học tối đa {studyLimit} lượt ôn. Không thấy email? Kiểm tra mục Spam hoặc gửi lại bên dưới (liên kết có hiệu lực 24 giờ).",
       "resend": "Gửi lại email xác nhận",
       "sending": "Đang gửi...",
       "sent": "Đã gửi",

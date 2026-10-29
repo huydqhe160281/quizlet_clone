@@ -1,4 +1,5 @@
 import type { StudySessionSettings } from '@/features/study/schemas/study.schema';
+import { STUDY_LIMIT_REACHED, StudyLimitError } from '@/features/study/lib/study-limit';
 import type { StreakUpdatedDetail } from '@/lib/streak/streak-client';
 
 type SessionCardResponse = {
@@ -80,7 +81,8 @@ export async function createStudySessionOnce(
     });
 
     if (!response.ok) {
-      const payload = (await response.json()) as { message?: string };
+      const payload = (await response.json()) as { error?: string; message?: string };
+      if (payload.error === STUDY_LIMIT_REACHED) throw new StudyLimitError();
       throw new Error(payload.message ?? 'Failed to start session');
     }
 

@@ -18,6 +18,8 @@ import {
 import type { StudyModeValue, StudySessionSettings } from '@/features/study/schemas/study.schema';
 import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
 import { createStudySessionOnce } from '@/features/study/lib/create-session-once';
+import { STUDY_LIMIT_REACHED, studyStartError } from '@/features/study/lib/study-limit';
+import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { notifyStreakUpdated } from '@/lib/streak/streak-client';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -97,7 +99,7 @@ export function StudySettingsForm({
       const modeParam = mode.toLowerCase();
       router.push(`/sets/${setId}/${modeParam}?sessionId=${payload.data.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('study.settings.startFailed'));
+      setError(studyStartError(err, t('study.settings.startFailed')));
     } finally {
       setLoading(false);
     }
@@ -255,7 +257,11 @@ export function StudySettingsForm({
         </div>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error === STUDY_LIMIT_REACHED ? (
+        <StudyLimitNotice />
+      ) : (
+        error && <p className="text-sm text-destructive">{error}</p>
+      )}
 
       <Button
         id="start-study-btn"

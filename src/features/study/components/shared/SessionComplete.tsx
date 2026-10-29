@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
+import { useStudyLimitReached } from '@/features/auth/hooks/useStudyLimitReached';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
 import { praiseKey } from '@/features/study/lib/session-praise';
@@ -35,6 +37,7 @@ export function SessionComplete({
   const praisePercent = answered > 0 ? (correctCount / answered) * 100 : 0;
   // Picked once so the message does not change on re-render.
   const [praiseSeed] = useState(() => Math.random());
+  const studyLimitReached = useStudyLimitReached();
 
   return (
     <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-xl border-border/50 text-center shadow-lg">
@@ -65,6 +68,7 @@ export function SessionComplete({
             </p>
           </div>
         )}
+        {studyLimitReached && <StudyLimitNotice />}
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button asChild className="rounded-xl font-bold">
             <Link href={`/sets/${setId}`}>{t('study.backToSet')}</Link>

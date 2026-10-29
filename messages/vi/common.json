@@ -169,6 +169,7 @@
     "INVALID_PASSWORD": "Mật khẩu hiện tại không đúng.",
     "PASSWORD_NOT_SET": "Tài khoản này không dùng mật khẩu để đăng nhập.",
     "EMAIL_NOT_VERIFIED": "Hãy xác minh email trước khi công khai bộ thẻ.",
-    "AI_QUOTA_UNVERIFIED": "Tài khoản chưa xác minh email chỉ được tạo bằng AI {limit} lần mỗi ngày. Xác minh email trong Cài đặt để tiếp tục."
+    "AI_QUOTA_UNVERIFIED": "Tài khoản chưa xác minh email chỉ được tạo bằng AI {limit} lần mỗi ngày. Xác minh email trong Cài đặt để tiếp tục.",
+    "STUDY_LIMIT_REACHED": "Bạn đã dùng hết lượt ôn của tài khoản chưa xác nhận. Hãy xác nhận email để học tiếp."
   }
 }

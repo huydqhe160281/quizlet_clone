@@ -42,6 +42,13 @@ vi.mock('@/server/db', () => ({
   prisma: prismaMock,
 }));
 
+const { assertCanStartStudyMock } = vi.hoisted(() => ({
+  assertCanStartStudyMock: vi.fn(),
+}));
+vi.mock('@/server/auth/email-verified', () => ({
+  assertCanStartStudy: assertCanStartStudyMock,
+}));
+
 vi.mock('@/server/services/user/stats.service', () => ({
   getEffectiveStreak: vi.fn((currentStreak: number) => currentStreak),
   recordDailyStudyActivity: vi.fn().mockResolvedValue({
@@ -66,6 +73,7 @@ import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.
 describe('study.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    assertCanStartStudyMock.mockResolvedValue(undefined);
     prismaMock.studySession.findFirst.mockResolvedValue(null);
     prismaMock.studySession.findMany.mockResolvedValue([]);
     prismaMock.processedMutation.findMany.mockResolvedValue([]);
@@ -133,6 +141,31 @@ describe('study.service', () => {
 
     expect(session.id).toBe('session-existing');
     expect(prismaMock.studySession.create).not.toHaveBeenCalled();
+  });
+
+  it('lets an unverified account past the limit resume but not start a session', async () => {
+    prismaMock.flashcardSet.findUnique.mockResolvedValue({
+      id: 'set-1',
+      userId: 'user-a',
+      visibility: 'PRIVATE',
+      cards: [{ id: 'card-1', sortOrder: 0, type: null }],
+    });
+    assertCanStartStudyMock.mockRejectedValue(
+      Object.assign(new Error('limit'), { code: 'STUDY_LIMIT_REACHED', status: 403 })
+    );
+
+    prismaMock.studySession.findMany.mockResolvedValue([
+      { id: 'session-open', settings: null, sessionCards: [{ cardId: 'card-1' }] },
+    ]);
+    const { session } = await createSession('user-a', 'set-1', 'LEARN');
+    expect(session.id).toBe('session-open');
+
+    prismaMock.studySession.findMany.mockResolvedValue([]);
+    await expect(createSession('user-a', 'set-1', 'LEARN')).rejects.toMatchObject({
+      code: 'STUDY_LIMIT_REACHED',
+    });
+    expect(prismaMock.studySession.create).not.toHaveBeenCalled();
+    expect(recordDailyStudyActivity).toHaveBeenCalledTimes(1);
   });
 
   it('creates a new session when settings differ from incomplete one', async () => {

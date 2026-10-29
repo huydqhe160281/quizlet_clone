@@ -6,8 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 import { SpacedRepetitionStudy } from './SpacedRepetitionStudy';
 import { renderWithLocale } from '@/test/render-with-locale';
+import { StudyLimitError } from '@/features/study/lib/study-limit';
 
 const submitReviewMock = vi.hoisted(() => vi.fn());
+const dueCardsError = vi.hoisted(() => ({ value: null as unknown }));
 
 vi.mock('@/features/study/hooks/useSpacedRepetition', () => ({
   useDueCards: () => ({
@@ -21,7 +23,7 @@ vi.mock('@/features/study/hooks/useSpacedRepetition', () => ({
       })),
     },
     isLoading: false,
-    error: null,
+    error: dueCardsError.value,
     refetch: vi.fn(),
   }),
   useSubmitReview: () => submitReviewMock,
@@ -136,5 +138,18 @@ describe('SpacedRepetitionStudy grading', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('SpacedRepetitionStudy study limit', () => {
+  afterEach(() => {
+    cleanup();
+    dueCardsError.value = null;
+  });
+
+  it('asks to confirm the email when the review queue is gated', () => {
+    dueCardsError.value = new StudyLimitError();
+    renderWithLocale(<SpacedRepetitionStudy />, { locale: 'en' });
+    expect(screen.getByText('Confirm your email to keep studying')).toBeInTheDocument();
   });
 });

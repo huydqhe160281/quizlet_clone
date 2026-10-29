@@ -1,5 +1,6 @@
 import { ApiError } from '@/lib/api-error';
 import { prisma } from '@/server/db';
+import { countReviewActivity } from '@/server/services/study/review-activity';
 import { zonedCalendarDay } from '@/server/services/learning/zoned-day';
 import { dayDiff, ensureUserStats } from '@/server/services/user/stats.service';
 
@@ -95,15 +96,6 @@ export function computeRestoreOffer(stats: RestoreStats, now: Date): RestoreOffe
     affordable: stats.streakRestores >= missedDays,
     studiedToday: lost.studiedToday,
   };
-}
-
-/** Heatmap metric: spaced reviews + answered session cards. */
-async function countReviewActivity(userId: string): Promise<number> {
-  const [reviews, answers] = await Promise.all([
-    prisma.reviewHistory.count({ where: { userId } }),
-    prisma.sessionCard.count({ where: { answeredAt: { not: null }, session: { userId } } }),
-  ]);
-  return reviews + answers;
 }
 
 async function loadSyncedStats(userId: string, now: Date) {

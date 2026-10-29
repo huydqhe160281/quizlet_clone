@@ -3,6 +3,12 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, screen } from '@testing-library/react';
+
+const { studyLimitReached } = vi.hoisted(() => ({ studyLimitReached: { value: false } }));
+vi.mock('@/features/auth/hooks/useStudyLimitReached', () => ({
+  useStudyLimitReached: () => studyLimitReached.value,
+}));
+
 import { SessionComplete } from './SessionComplete';
 import { renderWithLocale } from '@/test/render-with-locale';
 
@@ -60,5 +66,28 @@ describe('SessionComplete praise', () => {
     );
     // 5 / 8 = 63% → the 50–74% band.
     expect(screen.getByText('Past the halfway mark — keep it up!')).toBeInTheDocument();
+  });
+});
+
+describe('SessionComplete study limit', () => {
+  afterEach(() => {
+    cleanup();
+    studyLimitReached.value = false;
+  });
+
+  it('asks an unverified account at the review limit to confirm its email', () => {
+    studyLimitReached.value = true;
+    renderWithLocale(<SessionComplete mode="LEARN" correctCount={5} total={5} setId="s" />, {
+      locale: 'en',
+    });
+    expect(screen.getByText('Confirm your email to keep studying')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Resend email' })).toBeInTheDocument();
+  });
+
+  it('shows no notice below the limit', () => {
+    renderWithLocale(<SessionComplete mode="LEARN" correctCount={5} total={5} setId="s" />, {
+      locale: 'en',
+    });
+    expect(screen.queryByText('Confirm your email to keep studying')).not.toBeInTheDocument();
   });
 });

@@ -5,11 +5,14 @@ import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 import { authKeys } from '@/features/auth/query-keys';
 import { prepareOfflineDataForSignOut } from '@/features/study-offline/flush-before-signout';
+import type { StudyLimitStatus } from '@/features/study/lib/study-limit';
 
 export type AccountStatus = {
   id: string;
   email?: string | null;
   needsEmailVerification: boolean;
+  /** Review budget while unverified; null once verified. */
+  studyLimit?: StudyLimitStatus | null;
 };
 
 export class AccountStatusError extends Error {

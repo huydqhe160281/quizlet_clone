@@ -39,7 +39,7 @@
       "signOutDescription": "Sign out of this device."
     },
     "verify": {
-      "description": "Open the link in the confirmation email to verify this address. Until then you cannot make sets public and can generate with AI {limit} times a day. Can't find it? Check your spam folder or resend it below (links are valid for 24 hours).",
+      "description": "Open the link in the confirmation email to verify this address. Until then you cannot make sets public and can generate with AI {limit} times a day and study up to {studyLimit} reviews. Can't find it? Check your spam folder or resend it below (links are valid for 24 hours).",
       "resend": "Resend confirmation email",
       "sending": "Sending...",
       "sent": "Sent",

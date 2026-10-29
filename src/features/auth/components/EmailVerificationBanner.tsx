@@ -30,6 +30,8 @@ export function EmailVerificationBanner() {
 
   if (!account?.needsEmailVerification || dismissed) return null;
 
+  const studyLimit = account.studyLimit;
+
   const dismiss = () => {
     try {
       window.sessionStorage.setItem(DISMISS_KEY, '1');
@@ -45,7 +47,14 @@ export function EmailVerificationBanner() {
       className="flex items-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs leading-snug sm:gap-3 sm:px-4 sm:py-2 sm:text-sm"
     >
       <MailWarning className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />
-      <span className="min-w-0 flex-1">{t('auth.verifyBannerText')}</span>
+      <span className="min-w-0 flex-1">
+        {studyLimit
+          ? t('auth.verifyBannerStudyLimit', {
+              remaining: Math.max(0, studyLimit.limit - studyLimit.used),
+              limit: studyLimit.limit,
+            })
+          : t('auth.verifyBannerText')}
+      </span>
       <Button
         size="sm"
         variant="outline"
