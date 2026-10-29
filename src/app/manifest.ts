@@ -12,18 +12,9 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: siteConfig.themeColor,
     lang: siteConfig.language,
     icons: [
-      {
-        src: siteConfig.ogImagePath,
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: siteConfig.ogImagePath,
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
+      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: siteConfig.logoPath, sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }

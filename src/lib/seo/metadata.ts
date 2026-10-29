@@ -22,16 +22,14 @@ const buildOpenGraph = (
   images: [
     {
       url: siteConfig.ogImagePath,
-      width: 512,
-      height: 512,
-      alt: siteConfig.name,
+      ...siteConfig.ogImageSize,
+      alt: siteConfig.title,
     },
   ],
 });
 
-// `summary`: the share image is the square app icon, which `summary_large_image` would crop.
 const buildTwitter = (title: string, description: string): NonNullable<Metadata['twitter']> => ({
-  card: 'summary',
+  card: 'summary_large_image',
   title,
   description,
   images: [siteConfig.ogImagePath],
@@ -132,7 +130,7 @@ export const buildRootJsonLd = () => {
         url: siteUrl,
         logo: {
           '@type': 'ImageObject',
-          url: `${siteUrl}${siteConfig.ogImagePath}`,
+          url: `${siteUrl}${siteConfig.logoPath}`,
         },
       },
       {

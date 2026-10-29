@@ -4,8 +4,8 @@
   },
   "greeting": "Xin chào {name}",
   "seo": {
-    "title": "QuizFree — Học tập & ôn thi miễn phí",
-    "description": "QuizFree — nền tảng học tập và ôn thi trắc nghiệm miễn phí. Tạo bộ thẻ, ôn tập spaced repetition, thư viện công khai và nhiều chế độ học.",
+    "title": "QuizFree — Học flashcard & ôn thi miễn phí",
+    "description": "Tạo bộ thẻ trong vài giây, ôn đúng lúc sắp quên nhờ lặp lại ngắt quãng và luyện thi với 5 chế độ học. Hoàn toàn miễn phí.",
     "libraryTitle": "Thư viện công khai",
     "libraryDescription": "Khám phá và sao chép các bộ thẻ ghi nhớ công khai từ cộng đồng QuizFree. Học tập và ôn thi miễn phí.",
     "searchTitle": "Tìm kiếm bộ thẻ",

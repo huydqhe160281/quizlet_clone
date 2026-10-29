@@ -4,8 +4,8 @@
   },
   "greeting": "Hello {name}",
   "seo": {
-    "title": "QuizFree — Free study & exam practice",
-    "description": "QuizFree — free quiz and flashcard platform. Create sets, spaced repetition, public library, and multiple study modes.",
+    "title": "QuizFree — Free flashcards & exam practice",
+    "description": "Build flashcard sets in seconds, review right before you forget with spaced repetition, and practice with 5 study modes. Completely free.",
     "libraryTitle": "Public library",
     "libraryDescription": "Discover and duplicate public flashcard sets from the QuizFree community. Free study and exam practice.",
     "searchTitle": "Search flashcard sets",

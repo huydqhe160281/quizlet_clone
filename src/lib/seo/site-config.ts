@@ -1,9 +1,9 @@
 export const siteConfig = {
   name: 'QuizFree',
-  title: 'QuizFree — Học tập & ôn thi miễn phí',
+  title: 'QuizFree — Học flashcard & ôn thi miễn phí',
   titleTemplate: '%s | QuizFree',
   description:
-    'QuizFree — nền tảng học tập và ôn thi trắc nghiệm miễn phí. Tạo bộ thẻ, ôn tập spaced repetition, thư viện công khai và nhiều chế độ học.',
+    'Tạo bộ thẻ trong vài giây, ôn đúng lúc sắp quên nhờ lặp lại ngắt quãng và luyện thi với 5 chế độ học. Hoàn toàn miễn phí.',
   keywords: [
     'QuizFree',
     'học tập',
@@ -17,8 +17,13 @@ export const siteConfig = {
   ],
   locale: 'vi_VN',
   language: 'vi',
-  themeColor: '#2563eb',
-  ogImagePath: '/icon.png',
+  // Matches the light-theme `--primary` (hsl(255 85% 55%)) and the icon tile.
+  themeColor: '#5B2BEE',
+  /** Rendered by `src/app/opengraph-image.tsx` (1200×630). */
+  ogImagePath: '/opengraph-image',
+  ogImageSize: { width: 1200, height: 630 },
+  /** Square PNG logo for JSON-LD, push notifications and the PWA manifest. */
+  logoPath: '/icons/icon-512.png',
 } as const;
 
 export const noIndexAuthPaths = [

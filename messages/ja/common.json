@@ -4,8 +4,8 @@
   },
   "greeting": "こんにちは {name}",
   "seo": {
-    "title": "QuizFree — 無料の学習・試験対策",
-    "description": "QuizFree — 無料のクイズ・フラッシュカード学習プラットフォーム。セット作成、間隔反復、公開ライブラリ、複数の学習モード。",
+    "title": "QuizFree — 無料のフラッシュカード学習・試験対策",
+    "description": "数秒でカードセットを作成。忘れる直前に復習できる間隔反復と5つの学習モードで試験対策。完全無料。",
     "libraryTitle": "公開ライブラリ",
     "libraryDescription": "QuizFree コミュニティの公開フラッシュカードセットを見つけて複製。無料で学習・試験対策。",
     "searchTitle": "セットを検索",
