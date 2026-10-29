@@ -7,6 +7,7 @@ const prismaMock = vi.hoisted(() => ({
     findMany: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
   },
   flashcard: {
     findMany: vi.fn(),
@@ -29,6 +30,7 @@ vi.mock('next/cache', () => ({
       fn(),
 }));
 
+import { revalidateTag } from 'next/cache';
 import {
   createSet,
   deleteSet,
@@ -519,6 +521,7 @@ describe('set.service', () => {
         setIds: ['part-1', 'part-2'],
         title: 'Vocab (1, 2/5)',
         removeDuplicates: true,
+        deleteSources: false,
       });
 
       expect(result.duplicatesSkipped).toBe(1);
@@ -541,6 +544,29 @@ describe('set.service', () => {
       expect(prismaMock.flashcardSet.delete).not.toHaveBeenCalled();
     });
 
+    it('deletes the source sets in the same transaction when asked', async () => {
+      prismaMock.flashcardSet.findMany.mockResolvedValue([
+        { ...partOne, visibility: 'PUBLIC' },
+        { ...partTwo, visibility: 'PRIVATE' },
+      ]);
+      prismaMock.flashcardSet.deleteMany.mockReturnValue('delete-op');
+      prismaMock.$transaction.mockImplementation(async (ops: unknown[]) => Promise.all(ops));
+
+      const result = await mergeSets('user-a', {
+        setIds: ['part-1', 'part-2'],
+        title: 'Vocab (1, 2/5)',
+        removeDuplicates: true,
+        deleteSources: true,
+      });
+
+      expect(result.set.id).toBe('merged');
+      expect(prismaMock.flashcardSet.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['part-1', 'part-2'] }, userId: 'user-a' },
+      });
+      expect(prismaMock.$transaction).toHaveBeenCalledWith([expect.anything(), 'delete-op']);
+      expect(revalidateTag).toHaveBeenCalledWith('public-set-part-1');
+    });
+
     it('keeps duplicates when removeDuplicates is off', async () => {
       prismaMock.flashcardSet.findMany.mockResolvedValue([partOne, partTwo]);
 
@@ -549,6 +575,7 @@ describe('set.service', () => {
         title: 'All',
         description: 'Week 1',
         removeDuplicates: false,
+        deleteSources: false,
       });
 
       expect(result.duplicatesSkipped).toBe(0);
@@ -564,6 +591,7 @@ describe('set.service', () => {
         setIds: ['part-1', 'part-2'],
         title: 'Mixed',
         removeDuplicates: true,
+        deleteSources: false,
       });
 
       expect(prismaMock.flashcardSet.create.mock.calls[0]?.[0].data.language).toBeNull();
@@ -571,7 +599,12 @@ describe('set.service', () => {
 
     it('rejects fewer than two distinct sets', async () => {
       await expect(
-        mergeSets('user-a', { setIds: ['part-1', 'part-1'], title: 'x', removeDuplicates: true })
+        mergeSets('user-a', {
+          setIds: ['part-1', 'part-1'],
+          title: 'x',
+          removeDuplicates: true,
+          deleteSources: false,
+        })
       ).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
       expect(prismaMock.flashcardSet.findMany).not.toHaveBeenCalled();
     });
@@ -580,7 +613,12 @@ describe('set.service', () => {
       prismaMock.flashcardSet.findMany.mockResolvedValue([partOne]);
 
       await expect(
-        mergeSets('user-a', { setIds: ['part-1', 'gone'], title: 'x', removeDuplicates: true })
+        mergeSets('user-a', {
+          setIds: ['part-1', 'gone'],
+          title: 'x',
+          removeDuplicates: true,
+          deleteSources: false,
+        })
       ).rejects.toMatchObject({ code: 'NOT_FOUND', status: 404 });
       expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
     });
@@ -592,7 +630,12 @@ describe('set.service', () => {
       ]);
 
       await expect(
-        mergeSets('user-a', { setIds: ['part-1', 'part-2'], title: 'x', removeDuplicates: true })
+        mergeSets('user-a', {
+          setIds: ['part-1', 'part-2'],
+          title: 'x',
+          removeDuplicates: true,
+          deleteSources: false,
+        })
       ).rejects.toMatchObject({ code: 'FORBIDDEN', status: 403 });
       expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
     });
@@ -604,7 +647,12 @@ describe('set.service', () => {
       ]);
 
       await expect(
-        mergeSets('user-a', { setIds: ['part-1', 'part-2'], title: 'x', removeDuplicates: true })
+        mergeSets('user-a', {
+          setIds: ['part-1', 'part-2'],
+          title: 'x',
+          removeDuplicates: true,
+          deleteSources: false,
+        })
       ).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
     });
 
@@ -616,7 +664,12 @@ describe('set.service', () => {
       ]);
 
       await expect(
-        mergeSets('user-a', { setIds: ['part-1', 'part-2'], title: 'x', removeDuplicates: true })
+        mergeSets('user-a', {
+          setIds: ['part-1', 'part-2'],
+          title: 'x',
+          removeDuplicates: true,
+          deleteSources: false,
+        })
       ).rejects.toMatchObject({ code: 'CARD_LIMIT_EXCEEDED', status: 400 });
       expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
     });

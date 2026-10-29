@@ -835,6 +835,7 @@ export function GravityMode({ setId }: GravityModeProps) {
       <SessionComplete
         mode="GRAVITY"
         correctCount={study.correctCount}
+        reviewedCount={study.reviewedCount}
         total={study.cards.length}
         setId={setId}
       />

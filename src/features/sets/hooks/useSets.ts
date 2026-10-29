@@ -161,7 +161,16 @@ export function useSetMutations() {
         meta: { duplicatesSkipped: number };
       };
     },
-    onSuccess: invalidateSets,
+    onSuccess: (_result, input) => {
+      invalidateSets();
+      if (input.deleteSources) {
+        // Back navigation must not show a deleted source set from the cache.
+        for (const setId of input.setIds) {
+          queryClient.removeQueries({ queryKey: setKeys.detail(setId) });
+          queryClient.removeQueries({ queryKey: setKeys.cards(setId) });
+        }
+      }
+    },
   });
 
   const createCard = useMutation({

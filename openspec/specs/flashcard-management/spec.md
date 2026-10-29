@@ -54,16 +54,17 @@ The system SHALL allow any authenticated user to duplicate any set (public or th
 
 ### Requirement: Merge Sets
 
-The system SHALL allow an authenticated user to merge two or more of their own sets into one new set, e.g. to review or test several parts of a split set together. Merging copies cards; it never changes or deletes the source sets.
+The system SHALL allow an authenticated user to merge two or more of their own sets into one new set, e.g. to review or test several parts of a split set together. Merging copies cards; the source sets are deleted only when the caller asks for it (`deleteSources`).
 **Constraint**: MUST
 **Verification**: Unit tests `src/server/services/sets/set.service.test.ts` (`mergeSets`), `src/features/sets/schemas/__tests__/merge.schema.test.ts`, `src/features/sets/components/MergeSetsDialog.test.tsx`, `src/features/sets/lib/merge-title.test.ts`
 
-- API: POST `/api/v1/sets/merge` with `{ setIds: string[] (2–20), title (1–200 chars), description? (≤1000), removeDuplicates = true }` → 201 `{ data: set, meta: { duplicatesSkipped } }`. Rate-limited like other mutating routes.
+- API: POST `/api/v1/sets/merge` with `{ setIds: string[] (2–20), title (1–200 chars), description? (≤1000), removeDuplicates = true, deleteSources = false }` → 201 `{ data: set, meta: { duplicatesSkipped } }`. Rate-limited like other mutating routes.
 - The new set is `PRIVATE`, owned by the caller, has no cover image, and keeps the shared `language` only when every source has the same one (otherwise `null`).
 - Cards are copied (front, back, example, image, audio, type) in the order of `setIds`, each set's cards in their `sortOrder`; the copies are renumbered from 0. Repeated ids count once.
 - Copies start with no `CardProgress` / `ReviewHistory` (fresh SM-2), like duplicate and split; the sources keep theirs.
+- With `deleteSources`, the source sets (with their cards and study progress) are deleted in the same transaction that creates the new set; otherwise they are never changed.
 - With `removeDuplicates`, a card whose front and back equal an earlier card's (trimmed, case-insensitive, NFC) is skipped and counted in `duplicatesSkipped`.
-- Entry points: My Sets "Merge sets" toggles a selection mode (tap cards in merge order, then continue), and the set detail page's "Merge with…" opens the same dialog with that set preselected. The dialog lists the user's sets with checkboxes (pick order shown), a suggested title, an optional description and the duplicate toggle; on success it toasts and opens the new set.
+- Entry points: My Sets "Merge sets" toggles a selection mode (tap cards in merge order, then continue), and the set detail page's "Merge with…" opens the same dialog with that set preselected. The dialog lists the user's sets with checkboxes (pick order shown), a suggested title, an optional description, the duplicate toggle and a "delete source sets after merging" toggle (checked by default); on success it toasts and opens the new set.
 - Suggested title: parts of the same split (`Vocab (1/5)`, `Vocab (3/5)`) become `Vocab (1, 3/5)`; other titles are joined with `+`, truncated to 200 chars.
 
 #### Scenario: Merge parts of a split set
@@ -82,6 +83,11 @@ The system SHALL allow an authenticated user to merge two or more of their own s
 
 - **WHEN** the same sets are merged with `removeDuplicates = false`
 - **THEN** both cards are copied and `duplicatesSkipped = 0`
+
+#### Scenario: Delete sources after merging
+
+- **WHEN** the owner merges X and Y with `deleteSources = true`
+- **THEN** the new set is created and X and Y are deleted in the same transaction; if creating the new set fails, X and Y remain
 
 #### Scenario: Another user's set
 

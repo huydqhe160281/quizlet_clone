@@ -4,7 +4,7 @@ export const studyModeSchema = z.enum(['FLASHCARD', 'LEARN', 'WRITE', 'TEST', 'D
 
 // ── Study session settings (round engine config) ──────────────────────────────
 export const studySessionSettingsSchema = z.object({
-  randomize: z.boolean().default(false),
+  randomize: z.boolean().default(true),
   cardsPerRound: z.number().int().min(1).max(50).default(10),
   requeueWrong: z.boolean().default(true),
   /** MC-only presentation flag — LEARN mode only */
@@ -16,7 +16,7 @@ export const studySessionSettingsSchema = z.object({
 export type StudySessionSettings = z.infer<typeof studySessionSettingsSchema>;
 
 export const STUDY_SESSION_SETTINGS_DEFAULTS: StudySessionSettings = {
-  randomize: false,
+  randomize: true,
   cardsPerRound: 10,
   requeueWrong: true,
   presentation: 'multiple_choice',

@@ -27,6 +27,7 @@ import { useDueCards, useSubmitReview } from '@/features/study/hooks/useSpacedRe
 import { useAnswerAutoAdvance } from '@/features/study/hooks/useAnswerAutoAdvance';
 import { playAnswerFeedback } from '@/features/study/lib/answer-feedback';
 import { generateLearnOptions } from '@/features/study/lib/test-generator';
+import { shuffleArray } from '@/features/study/lib/round-engine';
 import { isCorrectGrade } from '@/features/study/lib/sm2';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { isImeComposing } from '@/lib/utils/keyboard';
@@ -51,7 +52,7 @@ export function SpacedRepetitionStudy() {
   const [settings, setSettings] = useState<SpacedRepetitionSettings>({
     style: 'multiple_choice',
     cardsPerRound: 10,
-    randomize: false,
+    randomize: true,
     requeueWrong: true,
   });
 
@@ -62,6 +63,7 @@ export function SpacedRepetitionStudy() {
   const [remediationQueue, setRemediationQueue] = useState<string[]>([]);
 
   const [correctCount, setCorrectCount] = useState(0);
+  const [answeredCount, setAnsweredCount] = useState(0);
   const [correctInRound, setCorrectInRound] = useState(0);
   const [roundIndex, setRoundIndex] = useState(0);
   const [showRoundSummary, setShowRoundSummary] = useState(false);
@@ -99,7 +101,7 @@ export function SpacedRepetitionStudy() {
     if (totalCards === 0) return;
     let initialDeck = cards.map((c) => c.cardId);
     if (settings.randomize) {
-      initialDeck = [...initialDeck].sort(() => Math.random() - 0.5);
+      initialDeck = shuffleArray(initialDeck);
     }
     setDeckIds(initialDeck);
     const limit = Math.min(settings.cardsPerRound, initialDeck.length);
@@ -108,6 +110,7 @@ export function SpacedRepetitionStudy() {
     setCurrentIndex(0);
     setRemediationQueue([]);
     setCorrectCount(0);
+    setAnsweredCount(0);
     setCorrectInRound(0);
     setRoundIndex(0);
     setStarted(true);
@@ -130,6 +133,7 @@ export function SpacedRepetitionStudy() {
     resetFlip();
 
     const isCorrect = isCorrectGrade(grade);
+    setAnsweredCount((c) => c + 1);
     if (isCorrect) {
       setCorrectCount((c) => c + 1);
       setCorrectInRound((c) => c + 1);
@@ -155,6 +159,7 @@ export function SpacedRepetitionStudy() {
     const isCorrect = option === currentCard.back;
 
     playAnswerFeedback(isCorrect);
+    setAnsweredCount((c) => c + 1);
     if (isCorrect) {
       setFeedback(t('studyUi.spacedCorrect'));
       setFeedbackOk(true);
@@ -182,6 +187,7 @@ export function SpacedRepetitionStudy() {
     const isCorrect = fuzzyMatch(typedAnswer, currentCard.back);
 
     playAnswerFeedback(isCorrect);
+    setAnsweredCount((c) => c + 1);
     if (isCorrect) {
       setFeedback(t('studyUi.spacedCorrect'));
       setFeedbackOk(true);
@@ -394,6 +400,7 @@ export function SpacedRepetitionStudy() {
       <SessionComplete
         mode="SM-2"
         correctCount={correctCount}
+        reviewedCount={answeredCount}
         total={deckIds.length}
         setId={currentCard?.setId ?? ''}
       />

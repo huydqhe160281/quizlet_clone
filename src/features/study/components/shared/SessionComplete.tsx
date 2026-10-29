@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
+import { praiseKey } from '@/features/study/lib/session-praise';
 import { STUDY_MODE_SHORT_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
@@ -12,6 +14,7 @@ type SessionCompleteProps = {
   mode: string;
   correctCount: number;
   total: number;
+  /** Graded answers, counting requeued cards each time they were answered. */
   reviewedCount?: number;
   setId: string;
 };
@@ -26,6 +29,12 @@ export function SessionComplete({
   const t = useTranslations();
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
   const modeKey = STUDY_MODE_SHORT_LABEL_KEY[mode as StudyModeValue];
+  // Requeued cards are answered again until right, so correct/total ends at 100% after
+  // any mistake. Correct over all graded answers rewards getting cards right first time.
+  const answered = reviewedCount ?? total;
+  const praisePercent = answered > 0 ? (correctCount / answered) * 100 : 0;
+  // Picked once so the message does not change on re-render.
+  const [praiseSeed] = useState(() => Math.random());
 
   return (
     <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-xl border-border/50 text-center shadow-lg">
@@ -35,6 +44,9 @@ export function SessionComplete({
         </div>
         <CardTitle className="text-2xl font-extrabold">{t('study.sessionComplete')}</CardTitle>
         <CardDescription>{modeKey ? t(modeKey) : mode}</CardDescription>
+        <p className="text-base font-semibold text-primary">
+          {t(praiseKey(praisePercent, praiseSeed))}
+        </p>
       </CardHeader>
       <CardContent className="space-y-6">
         {mode === 'FLASHCARD' ? (

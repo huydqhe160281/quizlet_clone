@@ -114,6 +114,8 @@ describe('SpacedRepetitionStudy grading', () => {
       // Never-resolving review mutation simulates slow network.
       submitReviewMock.mockImplementation(() => new Promise(() => undefined));
       renderWithLocale(<SpacedRepetitionStudy />, { locale: 'en' });
+      // Shuffling is on by default; this test relies on the a, b, c order.
+      fireEvent.click(screen.getByRole('checkbox', { name: 'Shuffle card order' }));
       fireEvent.click(screen.getByRole('button', { name: 'Start review' }));
 
       // Answer all 3 cards in Round 1: first wrong, next two right.

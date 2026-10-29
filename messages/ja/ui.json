@@ -134,6 +134,8 @@
     "mergeDescriptionLabel": "説明（任意）",
     "mergeRemoveDuplicates": "重複カードを除外",
     "mergeRemoveDuplicatesHint": "表と裏が同じカード（大文字・小文字を区別しない）は 1 枚だけ残します。",
+    "mergeDeleteSources": "結合後に元のセットを削除",
+    "mergeDeleteSourcesHint": "選択したセットとその学習進捗は削除されます。新しいセットは進捗ゼロから始まります。",
     "mergeConfirm": "結合する",
     "merging": "結合中…",
     "mergeFailed": "セットを結合できませんでした。もう一度お試しください。",

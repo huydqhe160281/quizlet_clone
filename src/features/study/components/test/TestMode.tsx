@@ -156,6 +156,7 @@ export function TestMode({ setId }: TestModeProps) {
       <SessionComplete
         mode="TEST"
         correctCount={study.correctCount}
+        reviewedCount={study.reviewedCount}
         total={study.cards.length}
         setId={setId}
       />

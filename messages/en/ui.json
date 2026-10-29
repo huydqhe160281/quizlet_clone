@@ -134,6 +134,8 @@
     "mergeDescriptionLabel": "Description (optional)",
     "mergeRemoveDuplicates": "Remove duplicate cards",
     "mergeRemoveDuplicatesHint": "Cards with the same front and back (ignoring case) are kept only once.",
+    "mergeDeleteSources": "Delete the original sets after merging",
+    "mergeDeleteSourcesHint": "The selected sets and their study progress are deleted; the new set starts with fresh progress.",
     "mergeConfirm": "Merge sets",
     "merging": "Merging…",
     "mergeFailed": "Could not merge the sets. Please try again.",

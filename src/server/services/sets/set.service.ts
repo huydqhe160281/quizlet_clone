@@ -298,8 +298,9 @@ function mergeDuplicateKey(card: { front: string; back: string }): string {
 
 /**
  * Copies the cards of several owned sets into one new private set, in the order the
- * sets were given. Source sets and their study progress are left untouched; the copies
- * start with fresh SM-2 progress like duplicate/split.
+ * sets were given. The copies start with fresh SM-2 progress like duplicate/split. Source
+ * sets are left untouched unless `deleteSources` is set, in which case they are deleted in
+ * the same transaction that creates the merged set.
  */
 export async function mergeSets(userId: string, input: MergeSetsInput) {
   const setIds = [...new Set(input.setIds)];
@@ -348,7 +349,7 @@ export async function mergeSets(userId: string, input: MergeSetsInput) {
   }
 
   const languages = new Set(ordered.map((source) => source.language));
-  const set = await prisma.flashcardSet.create({
+  const createMerged = prisma.flashcardSet.create({
     data: {
       title: input.title,
       description: input.description || null,
@@ -371,7 +372,18 @@ export async function mergeSets(userId: string, input: MergeSetsInput) {
     },
     include: setInclude,
   });
+  const [set] = input.deleteSources
+    ? await prisma.$transaction([
+        createMerged,
+        prisma.flashcardSet.deleteMany({ where: { id: { in: setIds }, userId } }),
+      ])
+    : [await createMerged];
 
   invalidateSetCache(userId, set.visibility);
+  if (input.deleteSources) {
+    ordered.forEach((source) =>
+      invalidateSetCache(userId, source.visibility, { setId: source.id })
+    );
+  }
   return { set, duplicatesSkipped };
 }

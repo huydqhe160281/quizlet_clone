@@ -134,6 +134,8 @@
     "mergeDescriptionLabel": "Mô tả (không bắt buộc)",
     "mergeRemoveDuplicates": "Bỏ thẻ trùng",
     "mergeRemoveDuplicatesHint": "Thẻ có cùng mặt trước và mặt sau (không phân biệt hoa thường) chỉ giữ lại một lần.",
+    "mergeDeleteSources": "Xoá các bộ gốc sau khi gộp",
+    "mergeDeleteSourcesHint": "Các bộ đã chọn và tiến độ học của chúng sẽ bị xoá; bộ mới bắt đầu học lại từ đầu.",
     "mergeConfirm": "Gộp bộ thẻ",
     "merging": "Đang gộp…",
     "mergeFailed": "Không thể gộp bộ thẻ. Vui lòng thử lại.",

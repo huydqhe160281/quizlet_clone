@@ -42,6 +42,8 @@ export const mergeSetsSchema = z.object({
   title: z.string().trim().min(1).max(SET_TITLE_MAX),
   description: z.string().trim().max(SET_DESCRIPTION_MAX).optional(),
   removeDuplicates: z.boolean().default(true),
+  /** Delete the source sets (and their study progress) once the merged set exists. */
+  deleteSources: z.boolean().default(false),
 });
 
 export type CreateSetInput = z.infer<typeof createSetSchema>;

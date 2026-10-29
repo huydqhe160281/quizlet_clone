@@ -194,6 +194,7 @@ export function LearnMode({ setId }: LearnModeProps) {
       <SessionComplete
         mode="LEARN"
         correctCount={study.correctCount}
+        reviewedCount={study.reviewedCount}
         total={study.cards.length}
         setId={setId}
       />

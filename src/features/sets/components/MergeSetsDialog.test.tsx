@@ -116,6 +116,7 @@ describe('MergeSetsDialog', () => {
         title: 'Vocab (1, 3/5)',
         description: undefined,
         removeDuplicates: false,
+        deleteSources: true,
       },
       expect.any(Object)
     );
@@ -127,6 +128,30 @@ describe('MergeSetsDialog', () => {
     expect(toastSuccess).toHaveBeenCalledWith('Merged set created; skipped duplicate cards: 2.');
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(pushMock).toHaveBeenCalledWith('/sets/merged');
+  });
+
+  it('can keep the source sets when the delete option is unchecked', () => {
+    renderWithLocale(
+      <MergeSetsDialog
+        open
+        onOpenChange={vi.fn()}
+        initialSelection={[{ id: 's3', title: 'Vocab (3/5)', cardCount: 8 }]}
+      />,
+      { locale: 'en' }
+    );
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Vocab (1/5)' }));
+    const deleteToggle = screen.getByRole('checkbox', {
+      name: 'Delete the original sets after merging',
+    });
+    expect(deleteToggle).toBeChecked();
+    fireEvent.click(deleteToggle);
+    fireEvent.click(screen.getByRole('button', { name: 'Merge sets' }));
+
+    expect(mutateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ deleteSources: false }),
+      expect.any(Object)
+    );
   });
 
   it('explains the card limit error from the API', () => {

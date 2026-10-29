@@ -201,7 +201,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
     return (
       <SessionComplete
         mode="FLASHCARD"
-        correctCount={0}
+        correctCount={study.correctCount}
         reviewedCount={study.reviewedCount}
         total={study.cards.length}
         setId={setId}

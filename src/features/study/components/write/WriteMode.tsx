@@ -136,6 +136,7 @@ export function WriteMode({ setId }: WriteModeProps) {
       <SessionComplete
         mode="WRITE"
         correctCount={study.correctCount}
+        reviewedCount={study.reviewedCount}
         total={study.cards.length}
         setId={setId}
       />

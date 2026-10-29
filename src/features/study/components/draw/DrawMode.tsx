@@ -129,6 +129,7 @@ export function DrawMode({ setId }: DrawModeProps) {
       <SessionComplete
         mode="DRAW"
         correctCount={study.correctCount}
+        reviewedCount={study.reviewedCount}
         total={study.cards.length}
         setId={setId}
       />

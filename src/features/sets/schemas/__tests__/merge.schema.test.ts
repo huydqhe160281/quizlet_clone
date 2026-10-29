@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { MAX_MERGE_SETS, mergeSetsSchema } from '../set.schema';
 
 describe('mergeSetsSchema', () => {
-  it('accepts two or more set ids and defaults removeDuplicates to true', () => {
+  it('accepts two or more set ids and defaults removeDuplicates to true and deleteSources to false', () => {
     const result = mergeSetsSchema.safeParse({ setIds: ['a', 'b'], title: '  Vocab  ' });
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.title).toBe('Vocab');
       expect(result.data.removeDuplicates).toBe(true);
+      expect(result.data.deleteSources).toBe(false);
     }
   });
 

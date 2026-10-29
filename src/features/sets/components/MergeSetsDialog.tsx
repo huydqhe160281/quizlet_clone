@@ -65,6 +65,7 @@ function MergeSetsForm({ mergeSets, onClose, initialSelection }: MergeSetsFormPr
   const [titleEdited, setTitleEdited] = useState(false);
   const [description, setDescription] = useState('');
   const [removeDuplicates, setRemoveDuplicates] = useState(true);
+  const [deleteSources, setDeleteSources] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const suggestedTitle = suggestMergedTitle(selection.map((set) => set.title));
@@ -113,6 +114,7 @@ function MergeSetsForm({ mergeSets, onClose, initialSelection }: MergeSetsFormPr
         title: effectiveTitle.trim(),
         description: description.trim() || undefined,
         removeDuplicates,
+        deleteSources,
       },
       {
         onSuccess: (result) => {
@@ -246,6 +248,19 @@ function MergeSetsForm({ mergeSets, onClose, initialSelection }: MergeSetsFormPr
               {t('setsPage.mergeRemoveDuplicates')}
             </Label>
             <p className="text-muted-foreground">{t('setsPage.mergeRemoveDuplicatesHint')}</p>
+          </div>
+        </div>
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="merge-delete-sources"
+            checked={deleteSources}
+            onCheckedChange={(checked) => setDeleteSources(checked === true)}
+          />
+          <div className="text-sm">
+            <Label htmlFor="merge-delete-sources" className="cursor-pointer">
+              {t('setsPage.mergeDeleteSources')}
+            </Label>
+            <p className="text-muted-foreground">{t('setsPage.mergeDeleteSourcesHint')}</p>
           </div>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
