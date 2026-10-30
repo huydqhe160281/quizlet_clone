@@ -10,6 +10,7 @@ import { QueryProvider } from '@/components/providers/query-provider';
 import { LoadingOverlayProvider } from '@/components/providers/loading-overlay-provider';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { RootJsonLd } from '@/components/shared/RootJsonLd';
+import { ThemeColorSync } from '@/components/shared/ThemeColorSync';
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
@@ -77,6 +78,7 @@ export default async function RootLayout({
           storageKey={THEME_STORAGE_KEY}
           disableTransitionOnChange
         >
+          <ThemeColorSync />
           <QueryProvider>
             <AuthSessionProvider>
               <LocaleProvider locale={locale} catalog={catalog}>

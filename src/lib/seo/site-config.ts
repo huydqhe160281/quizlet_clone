@@ -17,8 +17,9 @@ export const siteConfig = {
   ],
   locale: 'vi_VN',
   language: 'vi',
-  // Matches the light-theme `--primary` (hsl(255 85% 55%)) and the icon tile.
-  themeColor: '#5B2BEE',
+  // Neutral launch colour for the PWA bars; once the page loads, ThemeColorSync sets
+  // `<meta name="theme-color">` to the active theme's background.
+  themeColor: '#ffffff',
   /** Rendered by `src/app/opengraph-image.tsx` (1200×630). */
   ogImagePath: '/opengraph-image',
   ogImageSize: { width: 1200, height: 630 },
