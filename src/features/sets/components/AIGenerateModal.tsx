@@ -383,7 +383,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
               <Button
                 type="button"
                 onClick={handleSubmit}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg shadow-primary/25 hover:from-violet-500 hover:to-indigo-500"
+                className="w-full shadow-lg shadow-primary/25"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 {t('aiGenerate.submit')}
@@ -458,7 +458,7 @@ export function GenerateWithAIButton({
       variant="outline"
       onClick={onClick}
       className={cn(
-        'border-primary/30 bg-gradient-to-r from-violet-500/10 to-indigo-500/10 shadow-sm hover:border-primary/50 hover:from-violet-500/20 hover:to-indigo-500/20',
+        'border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5 shadow-sm hover:border-primary/50 hover:from-primary/20 hover:to-primary/10',
         className
       )}
     >

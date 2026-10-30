@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
@@ -6,22 +6,23 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Offline | QuizFree</title>
     <style>
+      /* Default ("system") palette = the app's light/dark tokens; the script below
+         swaps in the saved theme's palette. */
       :root {
         color-scheme: light dark;
-        --fg: #0a0a0a;
-        --muted: #525252;
-        --bg0: #fafafa;
-        --bg1: #f4f4f5;
-        --primary: #7c3aed;
-        --primary-fg: #fff;
+        --fg: #09090b;
+        --muted: #71717a;
+        --bg: #fcfcfd;
+        --primary: #5b2bee;
+        --primary-fg: #ffffff;
       }
       @media (prefers-color-scheme: dark) {
         :root {
           --fg: #fafafa;
-          --muted: #a3a3a3;
-          --bg0: #0a0a0a;
-          --bg1: #171717;
-          --primary: #8b5cf6;
+          --muted: #a1a1aa;
+          --bg: #09090b;
+          --primary: #7e55f6;
+          --primary-fg: #ffffff;
         }
       }
       * {
@@ -30,9 +31,15 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
         color: var(--fg);
-        background: linear-gradient(to bottom, var(--bg0), var(--bg1));
+        background: var(--bg);
       }
       main {
         margin: 0 auto;
@@ -82,6 +89,39 @@
         filter: brightness(1.05);
       }
     </style>
+    <script>
+      // Match the theme picked in the app (next-themes key in src/lib/theme/themes.ts).
+      // Hex values mirror the --background/--foreground/--muted-foreground/--primary
+      // tokens of globals.css and src/styles/themes/*.css.
+      (function () {
+        var PALETTES = {
+          light: ['#fcfcfd', '#09090b', '#71717a', '#5b2bee', '#ffffff'],
+          dark: ['#09090b', '#fafafa', '#a1a1aa', '#7e55f6', '#ffffff'],
+          pastel: ['#fbf7f4', '#3e2d28', '#78655e', '#cc5733', '#ffffff'],
+          paper: ['#faf8f0', '#172640', '#596478', '#238636', '#ffffff'],
+          'paper-dark': ['#10141e', '#f2eee3', '#bdb6a8', '#59c572', '#0d121c'],
+        };
+        var theme = null;
+        try {
+          theme = localStorage.getItem('flashcards-theme');
+        } catch (e) {}
+        if (!PALETTES[theme]) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        var p = PALETTES[theme];
+        var root = document.documentElement.style;
+        root.setProperty('--bg', p[0]);
+        root.setProperty('--fg', p[1]);
+        root.setProperty('--muted', p[2]);
+        root.setProperty('--primary', p[3]);
+        root.setProperty('--primary-fg', p[4]);
+        root.setProperty('color-scheme', theme.indexOf('dark') === -1 ? 'light' : 'dark');
+        var meta = document.createElement('meta');
+        meta.name = 'theme-color';
+        meta.content = p[0];
+        document.head.appendChild(meta);
+      })();
+    </script>
   </head>
   <body>
     <main>
@@ -111,8 +151,7 @@
               'Hãy mở QuizFree khi có mạng ít nhất một lần để cài shell offline.',
             reload: 'Thử lại',
             studyNeedsNetwork: 'Học và đồng bộ cần kết nối mạng trong phiên bản này.',
-            installIosHint:
-              'Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree.',
+            installIosHint: 'Trên iPhone/iPad: Chia sẻ → Thêm vào Màn hình chính để cài QuizFree.',
           },
           en: {
             offlineTitle: "You're offline",
@@ -122,8 +161,7 @@
               'Visit QuizFree online at least once so the offline shell can be installed.',
             reload: 'Try again',
             studyNeedsNetwork: 'Learning and sync require connectivity in this version.',
-            installIosHint:
-              'On iPhone/iPad: Share → Add to Home Screen to install QuizFree.',
+            installIosHint: 'On iPhone/iPad: Share → Add to Home Screen to install QuizFree.',
           },
           ja: {
             offlineTitle: 'オフラインです',

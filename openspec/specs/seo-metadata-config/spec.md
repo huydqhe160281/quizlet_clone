@@ -200,7 +200,8 @@ The system SHALL continue serving `manifest.webmanifest` via `src/app/manifest.t
 
 - **GIVEN** manifest handler runs
 - **WHEN** `/manifest.webmanifest` is requested
-- **THEN** JSON includes `name`, `short_name` (QuizFree), `description`, `start_url: '/'`, `display: 'standalone'`, `lang: 'vi'`, `theme_color`, `background_color`
+- **THEN** JSON includes `name`, `short_name` (QuizFree), `description`, `start_url: '/'`, `display: 'standalone'`, `lang: 'vi'`, `background_color`
+- **AND** it has **no** `theme_color` (it would fix the installed app's Android navigation bar to one colour across all themes); `<meta name="theme-color">` follows the active theme's background via `ThemeColorSync`
 - **AND** `icons` reference `/icons/icon-192.png` (192×192, `any`), `/icons/icon-512.png` (512×512, `any`) and `/icons/maskable-512.png` (512×512, `maskable`)
 
 #### Scenario: No duplicate static manifest
@@ -213,7 +214,7 @@ The system SHALL continue serving `manifest.webmanifest` via `src/app/manifest.t
 
 - **GIVEN** the manifest handler runs after Phase 1
 - **WHEN** `/manifest.webmanifest` is requested
-- **THEN** JSON still includes `name`, `short_name`, `start_url`, `display: 'standalone'`, theme/background colors, and icons suitable for install
+- **THEN** JSON still includes `name`, `short_name`, `start_url`, `display: 'standalone'`, `background_color`, and icons suitable for install
 
 ---
 

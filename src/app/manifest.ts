@@ -9,7 +9,9 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: siteConfig.themeColor,
+    // No `theme_color`: Chrome paints an installed app's Android navigation bar with it
+    // and a page can't change it afterwards, so any fixed colour clashes with some theme.
+    // Without it the bar follows the system light/dark; ThemeColorSync handles the status bar.
     lang: siteConfig.language,
     icons: [
       { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
