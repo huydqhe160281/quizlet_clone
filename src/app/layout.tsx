@@ -21,6 +21,7 @@ import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 import { loadCatalog } from '@/lib/i18n/catalog';
 import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
 import { THEME_IDS, THEME_STORAGE_KEY } from '@/lib/theme/themes';
+import { SYSTEM_THEME_COLORS, THEME_COLOR_BOOT_SCRIPT } from '@/lib/theme/theme-color';
 import { PwaProvider } from '@/features/pwa/PwaProvider';
 import { StudyOfflineSyncProvider } from '@/features/study-offline/StudyOfflineSyncProvider';
 
@@ -54,7 +55,7 @@ export async function generateMetadata() {
 
 // `cover` makes env(safe-area-inset-*) report the notch / home-bar insets the
 // fixed mobile bars pad for; without it they are always 0.
-export const viewport: Viewport = { viewportFit: 'cover' };
+export const viewport: Viewport = { viewportFit: 'cover', themeColor: SYSTEM_THEME_COLORS };
 
 export default async function RootLayout({
   children,
@@ -66,6 +67,10 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={beVietnamPro.variable} suppressHydrationWarning>
+      <head>
+        {/* Status-bar colour for an explicitly chosen theme before hydration; see theme-color.ts */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_COLOR_BOOT_SCRIPT }} />
+      </head>
       <body
         className={`${inter.variable} min-h-screen font-sans antialiased bg-gradient-to-b from-background to-muted/20 dark:from-background dark:to-background`}
       >
