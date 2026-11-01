@@ -18,6 +18,7 @@ vi.mock('sonner', () => ({
 }));
 
 import { AIGenerateModal } from './AIGenerateModal';
+import { useAiGenerateJobStore } from '@/features/sets/ai-generate-job-store';
 
 const mockFetch = vi.fn();
 const viCatalog = loadCatalog('vi');
@@ -35,6 +36,7 @@ describe('AIGenerateModal', () => {
     vi.stubGlobal('fetch', mockFetch);
     pushMock.mockClear();
     mockFetch.mockReset();
+    useAiGenerateJobStore.setState({ job: null, watched: false });
   });
 
   afterEach(() => {
@@ -363,6 +365,29 @@ describe('AIGenerateModal', () => {
       expect.stringContaining('DELETE'),
       expect.anything()
     );
+  });
+
+  it('Scenario: Close while generating keeps the job running', async () => {
+    mockFetch.mockImplementation(() => new Promise(() => {}));
+
+    const onOpenChange = vi.fn();
+    renderWithLocale(<AIGenerateModal open onOpenChange={onOpenChange} />);
+    fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
+      target: { value: 'Background generation test prompt' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Tạo bộ thẻ/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Chạy ngầm' }));
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(useAiGenerateJobStore.getState().job?.status).toBe('running');
+  });
+
+  it('Scenario: Reopening during generation shows progress, not a new form', () => {
+    useAiGenerateJobStore.setState({ job: { id: 99, status: 'running' } });
+    renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
+
+    expect(screen.getByText(/Đang phân tích/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Nội dung / chủ đề')).not.toBeInTheDocument();
   });
 
   it('Scenario: Modal uses glass-panel styling', () => {

@@ -1,9 +1,10 @@
 import {
-  resolveOllamaApiKey,
-  resolveOllamaBaseUrl,
-  resolveOllamaLargeModel,
-  resolveOllamaModel,
-} from '@/config/ollama-env';
+  DEFAULT_MOTAPI_CHAT_MODELS,
+  DEFAULT_MOTAPI_SET_MODELS,
+  parseModelList,
+  resolveMotapiApiKey,
+  resolveMotapiBaseUrl,
+} from '@/config/motapi-env';
 
 const required = (key: string): string => {
   const value = process.env[key];
@@ -97,18 +98,21 @@ export const env = {
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   mediaBucket: process.env.SUPABASE_MEDIA_BUCKET ?? 'flashcard-media',
-  // Getters: resolved (and, in production, validated) only when an AI feature runs.
-  // Resolving at import time made a missing OLLAMA_* var crash every request,
-  // because the middleware and auth config import this module.
-  get ollamaBaseUrl(): string {
-    return resolveOllamaBaseUrl(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_BASE_URL);
+  // MotAPI (OpenAI-compatible). Getters: resolved only when an AI feature runs, so a
+  // missing MOTAPI_KEY fails that feature instead of every request (the middleware and
+  // auth config import this module).
+  get motapiApiKey(): string {
+    return resolveMotapiApiKey(process.env.MOTAPI_KEY);
   },
-  get ollamaModel(): string {
-    return resolveOllamaModel(process.env.NODE_ENV ?? 'development', process.env.OLLAMA_MODEL);
+  get motapiBaseUrl(): string {
+    return resolveMotapiBaseUrl(process.env.MOTAPI_BASE_URL);
   },
-  ollamaLargeModel: resolveOllamaLargeModel(process.env.OLLAMA_MODEL_LARGE),
-  ollamaApiKey: resolveOllamaApiKey(process.env.OLLAMA_API_KEY),
-  // Z.ai fallback (OpenAI-compatible, https://api.z.ai/api/paas/v4)
-  zaiApiKey: process.env.ZAI_API_KEY?.trim() || undefined,
-  zaiModel: process.env.ZAI_MODEL?.trim() || 'glm-4.5-flash',
+  /** Ordered model ids for AI set generation (structured JSON). */
+  get motapiSetModels(): string[] {
+    return parseModelList(process.env.MOTAPI_SET_MODELS, DEFAULT_MOTAPI_SET_MODELS);
+  },
+  /** Ordered model ids for the guide chat (short streamed answers). */
+  get motapiChatModels(): string[] {
+    return parseModelList(process.env.MOTAPI_CHAT_MODELS, DEFAULT_MOTAPI_CHAT_MODELS);
+  },
 };

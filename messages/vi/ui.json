@@ -293,7 +293,13 @@
     "previewMeta": "{count} thẻ · Bản nháp riêng tư",
     "discarding": "Đang xóa...",
     "discard": "Discard",
-    "confirm": "Confirm & xem bộ thẻ"
+    "confirm": "Confirm & xem bộ thẻ",
+    "backgroundHint": "Bạn có thể đóng cửa sổ này và tiếp tục dùng ứng dụng — chúng tôi sẽ báo khi bộ thẻ sẵn sàng.",
+    "runInBackground": "Chạy ngầm",
+    "readyTitle": "Bộ thẻ AI đã sẵn sàng",
+    "readyDescription": "{title} · {count} thẻ",
+    "readyOpen": "Mở bộ thẻ",
+    "failedTitle": "Tạo bộ thẻ bằng AI thất bại"
   },
   "studyUi": {
     "exitStudy": "Thoát học",

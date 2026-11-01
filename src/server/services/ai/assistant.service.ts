@@ -1,15 +1,10 @@
-import {
-  streamText,
-  type ModelMessage,
-  type LanguageModel,
-  type TextStreamPart,
-  type ToolSet,
-} from 'ai';
+import { streamText, type ModelMessage, type TextStreamPart, type ToolSet } from 'ai';
+import { env } from '@/config/env';
 import { buildSystemPrompt } from '@/features/guide/lib/assistant.prompt';
 import { loadGuideConfig } from '@/features/guide/lib/load-guide-config';
 import type { GuideUserContext } from '@/features/guide/schemas/guide-config.schema';
-import { getOllamaChatModel } from '@/server/ai/ollama';
-import { getZaiChatModel } from '@/server/ai/zai';
+import { getMotapiChatModel } from '@/server/ai/motapi';
+import { withModelSwitch, type ModelSwitchOptions } from '@/server/ai/model-switch';
 
 export type AssistantChatInput = {
   messages: ModelMessage[];
@@ -22,17 +17,13 @@ type StreamPart = TextStreamPart<ToolSet>;
 
 export type AssistantChatStream = { toTextStreamResponse(): Response };
 
-/**
- * Ordered list of chat models to try. First available one wins.
- * A provider counts as working once it produces its first text chunk; failures before
- * that (404 model-not-found, ECONNREFUSED) fall through to the next provider.
- */
-function buildChatModelList(): Array<[label: string, model: LanguageModel | undefined]> {
-  return [
-    ['ollama', getOllamaChatModel()],
-    ['zai', getZaiChatModel()],
-  ];
-}
+/** Time to first chunk per model (the real system prompt makes kimi take ~10s), and the overall
+ * switching budget, leaving room to stream the answer within the route's 60s maxDuration. */
+export const ASSISTANT_SWITCH_OPTIONS: ModelSwitchOptions = {
+  label: 'assistant',
+  attemptTimeoutMs: 20_000,
+  totalBudgetMs: 45_000,
+};
 
 async function readUntilFirstText(iterator: AsyncIterator<StreamPart>): Promise<string> {
   for (;;) {
@@ -90,38 +81,31 @@ export async function streamAssistantChat(input: AssistantChatInput): Promise<As
     locale,
   });
 
-  const models = buildChatModelList();
-  let lastError: unknown;
-
-  for (const [label, model] of models) {
-    if (!model) {
-      console.log(`[chat fallback] skipping "${label}" — no model configured`);
-      continue;
-    }
-
-    const stream = streamText({
-      model,
-      temperature: 0,
-      system,
-      messages: input.messages,
-      abortSignal: input.signal,
-    });
-
-    try {
-      console.log(`[chat fallback] trying "${label}"`);
+  // A model counts as working once it produces its first text chunk; an error, timeout or
+  // empty answer before that switches to the next model (3 calls at most, no retries).
+  return withModelSwitch(
+    env.motapiChatModels,
+    async (modelId, attemptSignal) => {
+      const stream = streamText({
+        model: getMotapiChatModel(modelId),
+        temperature: 0,
+        system,
+        messages: input.messages,
+        maxRetries: 0,
+        // The attempt signal covers the wait for the first chunk (and caller aborts until
+        // then); the caller signal keeps cancelling the stream after it.
+        abortSignal: input.signal ? AbortSignal.any([attemptSignal, input.signal]) : attemptSignal,
+      });
       const iterator = stream.fullStream[Symbol.asyncIterator]();
       // Wait only for the first text chunk (not the whole answer) so the reply streams.
       const first = await readUntilFirstText(iterator);
-      console.log(`[chat fallback] "${label}" responded ✓`);
+      if (!first) {
+        throw new Error('Empty response');
+      }
       return { toTextStreamResponse: () => textStreamResponse(first, iterator) };
-    } catch (err) {
-      lastError = err;
-      console.warn(`[chat fallback] "${label}" failed:`, err instanceof Error ? err.message : err);
-      // Continue to next provider
-    }
-  }
-
-  throw lastError ?? new Error('No chat AI provider available');
+    },
+    { ...ASSISTANT_SWITCH_OPTIONS, signal: input.signal }
+  );
 }
 
 export function toCoreMessages(

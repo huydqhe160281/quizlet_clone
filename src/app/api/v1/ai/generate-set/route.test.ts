@@ -50,7 +50,7 @@ describe('POST /api/v1/ai/generate-set', () => {
   });
 
   it('Scenario: Route exports maxDuration', () => {
-    expect(maxDuration).toBeGreaterThanOrEqual(120);
+    expect(maxDuration).toBeGreaterThanOrEqual(300);
   });
 
   it('Scenario: Unauthenticated request', async () => {

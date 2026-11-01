@@ -2,7 +2,7 @@
 
 ## Purpose
 
-AI guide chat widget (Vietnamese) that helps users navigate the Flashcards website using auto-generated site knowledge (`guide-config.json`) and Ollama streaming. MVP scope: text guidance, deep links, in-memory session state, guest + authenticated context.
+AI guide chat widget (Vietnamese) that helps users navigate the Flashcards website using auto-generated site knowledge (`guide-config.json`) and MotAPI streaming. MVP scope: text guidance, deep links, in-memory session state, guest + authenticated context.
 
 ## Non-Goals (MVP)
 
@@ -63,7 +63,7 @@ The system SHALL validate `guide-config.json` against a Zod schema covering `ver
 
 ### Requirement: Assistant Chat API
 
-The system SHALL expose `POST /api/v1/assistant/chat` that accepts a message history and returns a streaming text response using Ollama via AI SDK `streamText` with `temperature: 0`.
+The system SHALL expose `POST /api/v1/assistant/chat` that accepts a message history and returns a streaming text response using MotAPI via AI SDK `streamText` with `temperature: 0` and `maxRetries: 0`. Models come from the ordered `MOTAPI_CHAT_MODELS` list (defaults in `src/config/motapi-env.ts`); a model that errors, times out or ends without text before its first chunk SHALL be replaced by the next one, at most 3 calls in total and never the same model twice.
 **Constraint**: MUST
 **Verification**: Unit test `assistant.service.test.ts`; integration test `assistant.chat.route.test.ts`
 
@@ -103,9 +103,15 @@ The system SHALL expose `POST /api/v1/assistant/chat` that accepts a message his
 - **WHEN** POST `/api/v1/assistant/chat`
 - **THEN** API returns 429 `{ error: "RATE_LIMITED" }`
 
-#### Scenario: Ollama stream failure
+#### Scenario: Model switch before the first chunk
 
-- **GIVEN** `streamText` throws or returns an empty stream
+- **GIVEN** the first chat model fails or returns an empty answer
+- **WHEN** POST `/api/v1/assistant/chat`
+- **THEN** the next model in the list is called and its answer streams to the client
+
+#### Scenario: All models fail
+
+- **GIVEN** 3 models in a row throw or return an empty stream
 - **WHEN** POST `/api/v1/assistant/chat`
 - **THEN** API returns 503 `{ error: "ASSISTANT_UNAVAILABLE" }` with a Vietnamese error message in the stream or JSON body
 
@@ -113,7 +119,7 @@ The system SHALL expose `POST /api/v1/assistant/chat` that accepts a message his
 
 - **GIVEN** the client aborts the fetch while streaming
 - **WHEN** the abort signal fires
-- **THEN** the server cancels the Ollama stream without throwing an unhandled error
+- **THEN** the server cancels the model stream without throwing an unhandled error
 
 ---
 

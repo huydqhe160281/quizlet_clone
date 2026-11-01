@@ -156,22 +156,22 @@ describe('env AI settings', () => {
     process.env = originalEnv;
   });
 
-  it('importing env does not throw in production when OLLAMA_* is missing', async () => {
+  it('importing env does not throw in production when MOTAPI_KEY is missing', async () => {
     process.env = {
       ...originalEnv,
       NODE_ENV: 'production',
       AUTH_URL: 'https://app.example.com',
       NEXTAUTH_SECRET: 'secret',
     };
-    delete process.env.OLLAMA_BASE_URL;
-    delete process.env.OLLAMA_MODEL;
+    delete process.env.MOTAPI_KEY;
+    delete process.env.MOTAPI_SET_MODELS;
     vi.resetModules();
 
     const { env } = await import('./env');
 
     expect(env.authUrl).toBe('https://app.example.com');
     // Only the AI feature itself fails, when it reads the setting.
-    expect(() => env.ollamaModel).toThrow('OLLAMA_MODEL');
-    expect(() => env.ollamaBaseUrl).toThrow('OLLAMA_BASE_URL');
+    expect(() => env.motapiApiKey).toThrow('MOTAPI_KEY');
+    expect(env.motapiSetModels.length).toBeGreaterThan(0);
   });
 });

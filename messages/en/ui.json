@@ -293,7 +293,13 @@
     "previewMeta": "{count} cards · Private draft",
     "discarding": "Deleting...",
     "discard": "Discard",
-    "confirm": "Confirm & view set"
+    "confirm": "Confirm & view set",
+    "backgroundHint": "You can close this window and keep using the app — we'll let you know when the set is ready.",
+    "runInBackground": "Continue in background",
+    "readyTitle": "Your AI set is ready",
+    "readyDescription": "{title} · {count} cards",
+    "readyOpen": "Open set",
+    "failedTitle": "AI set generation failed"
   },
   "studyUi": {
     "exitStudy": "Exit study",

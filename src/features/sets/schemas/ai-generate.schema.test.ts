@@ -4,7 +4,13 @@ import {
   buildAiFlashcardOutputSchema,
   trimAiFlashcardOutput,
 } from '@/features/sets/schemas/ai-generate.schema';
-import { resolveOllamaBaseUrl, resolveOllamaModel } from '@/config/ollama-env';
+import {
+  DEFAULT_MOTAPI_SET_MODELS,
+  MOTAPI_DEFAULT_BASE_URL,
+  parseModelList,
+  resolveMotapiApiKey,
+  resolveMotapiBaseUrl,
+} from '@/config/motapi-env';
 
 describe('ai-generate.schema', () => {
   it('Scenario: Invalid card count above max', () => {
@@ -85,19 +91,32 @@ describe('ai-generate.schema', () => {
   });
 });
 
-describe('ollama-env', () => {
-  it('Scenario: Production missing Ollama URL', () => {
-    expect(() => resolveOllamaBaseUrl('production', undefined)).toThrow(
-      'Missing required environment variable: OLLAMA_BASE_URL'
+describe('motapi-env', () => {
+  it('Scenario: Missing MotAPI key', () => {
+    expect(() => resolveMotapiApiKey(undefined)).toThrow(
+      'Missing required environment variable: MOTAPI_KEY'
     );
-    expect(() => resolveOllamaModel('production', undefined)).toThrow(
-      'Missing required environment variable: OLLAMA_MODEL'
+    expect(() => resolveMotapiApiKey('  ')).toThrow('MOTAPI_KEY');
+    expect(resolveMotapiApiKey(' key ')).toBe('key');
+  });
+
+  it('defaults the base URL and strips a trailing slash', () => {
+    expect(resolveMotapiBaseUrl(undefined)).toBe(MOTAPI_DEFAULT_BASE_URL);
+    expect(resolveMotapiBaseUrl('https://proxy.example.com/v1/')).toBe(
+      'https://proxy.example.com/v1'
     );
   });
 
-  it('uses dev defaults in non-production', () => {
-    expect(resolveOllamaBaseUrl('development')).toBe('http://localhost:11434/api');
-    expect(resolveOllamaModel('development')).toBe('llama3');
+  it('parses an ordered, de-duplicated model list from env', () => {
+    expect(parseModelList(' a, b ,,a,c ', DEFAULT_MOTAPI_SET_MODELS)).toEqual(['a', 'b', 'c']);
+    expect(parseModelList('', DEFAULT_MOTAPI_SET_MODELS)).toBe(DEFAULT_MOTAPI_SET_MODELS);
+    expect(parseModelList(undefined, ['x'])).toEqual(['x']);
+  });
+
+  it('never defaults to a model known to be broken or wasteful', () => {
+    for (const bad of ['claude-sonnet-4-6', 'grok-4.6', 'claude-sonnet-5', 'hy3', 'hy4-preview']) {
+      expect(DEFAULT_MOTAPI_SET_MODELS).not.toContain(bad);
+    }
   });
 });
 

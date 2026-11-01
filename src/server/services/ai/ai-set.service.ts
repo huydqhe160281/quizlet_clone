@@ -7,9 +7,9 @@ import {
   trimAiFlashcardOutput,
 } from '@/features/sets/schemas/ai-generate.schema';
 import { ApiError } from '@/lib/api-error';
-import { getOllamaGenerateOptions, getOllamaModel, getOllamaLargeModel } from '@/server/ai/ollama';
-import { getZaiModel } from '@/server/ai/zai';
-import { withModelFallback, type ModelFallbackOptions } from '@/server/ai/with-fallback';
+import { env } from '@/config/env';
+import { getMotapiJsonModel } from '@/server/ai/motapi';
+import { withModelSwitch, type ModelSwitchOptions } from '@/server/ai/model-switch';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
@@ -31,55 +31,58 @@ Respond with JSON only using this shape:
   "cards": [{ "front": "string", "back": "string", "example": "string (optional)" }]
 }`;
 
-/** Per-attempt cap and overall budget, under the generate-set route's 120s maxDuration. */
-export const AI_SET_FALLBACK_OPTIONS: ModelFallbackOptions = {
-  maxAttempts: 2,
-  attemptTimeoutMs: 45_000,
-  totalBudgetMs: 100_000,
+/** Per-attempt cap and overall budget, under the generate-set route's maxDuration. */
+export const AI_SET_SWITCH_OPTIONS: ModelSwitchOptions = {
+  label: 'ai-set',
+  // 200 cards take deepseek-v4-flash ~80s; the slower fallbacks need more.
+  attemptTimeoutMs: 120_000,
+  totalBudgetMs: 280_000,
 };
+
+/** Output token cap: room for the requested cards, bounded for the "no limit" case. */
+export function maxOutputTokensFor(cardCount?: number): number {
+  return Math.min((cardCount ?? 120) * 120 + 600, 16_000);
+}
 
 export async function generateAiSet(userId: string, input: AiGenerateInput) {
   const outputSchema = buildAiFlashcardOutputSchema(input.cardCount);
   const prompt = `${buildSystemPrompt(input.cardCount)}\n\nUser input:\n${input.prompt}`;
-  const generateOptions = getOllamaGenerateOptions(input.cardCount);
 
   let generated;
   try {
-    // Fallback cascade: Ollama primary → Ollama large → Z.ai
-    // Each provider is retried up to 2 times before moving to the next. The cascade owns
-    // retries (maxRetries: 0, otherwise each attempt retries 3x internally) and finishes
-    // inside the route's 120s maxDuration.
-    const result = await withModelFallback(
-      [
-        ['ollama-primary', getOllamaModel(input.cardCount)],
-        ['ollama-large', getOllamaLargeModel(input.cardCount)],
-        ['zai', getZaiModel()],
-      ],
-      (model, abortSignal) =>
-        generateText({
-          model,
-          ...generateOptions,
+    // One call per model, at most 3 models: unparsable or empty output counts as a
+    // failure and switches model. maxRetries: 0 — the SDK must not retry on its own.
+    generated = await withModelSwitch(
+      env.motapiSetModels,
+      async (modelId, abortSignal) => {
+        const result = await generateText({
+          model: getMotapiJsonModel(modelId),
+          temperature: 0,
+          maxOutputTokens: maxOutputTokensFor(input.cardCount),
           output: Output.json(),
           prompt,
           maxRetries: 0,
           abortSignal,
-        }),
-      AI_SET_FALLBACK_OPTIONS
+        });
+        const parsed = outputSchema.safeParse(
+          trimAiFlashcardOutput(result.output, input.cardCount)
+        );
+        if (!parsed.success) {
+          throw new Error(`Unexpected output shape: ${parsed.error.issues[0]?.message ?? ''}`);
+        }
+        const normalized = normalizeAiFlashcardOutput(parsed.data);
+        if (!normalized) {
+          throw new Error('AI returned no usable cards');
+        }
+        return normalized;
+      },
+      AI_SET_SWITCH_OPTIONS
     );
-
-    const parsed = outputSchema.safeParse(trimAiFlashcardOutput(result.output, input.cardCount));
-    if (!parsed.success) {
-      throw parsed.error;
-    }
-    const normalized = normalizeAiFlashcardOutput(parsed.data);
-    if (!normalized) {
-      throw new Error('AI returned no usable cards');
-    }
-    generated = normalized;
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('[generateAiSet] All AI providers failed:', error);
-    }
+    console.error(
+      '[generateAiSet] all models failed:',
+      error instanceof Error ? error.message : error
+    );
     throw new ApiError('AI_GENERATION_FAILED', 'Failed to generate flashcards from AI', 502);
   }
 

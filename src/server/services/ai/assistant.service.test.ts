@@ -22,12 +22,12 @@ vi.mock('@/features/guide/lib/load-guide-config', () => ({
   loadGuideConfig: loadGuideConfigMock,
 }));
 
-vi.mock('@/server/ai/ollama', () => ({
-  getOllamaChatModel: vi.fn(() => 'mock-ollama-model'),
+vi.mock('@/config/env', () => ({
+  env: { motapiChatModels: ['chat-a', 'chat-b', 'chat-c', 'chat-d'] },
 }));
 
-vi.mock('@/server/ai/zai', () => ({
-  getZaiChatModel: vi.fn(() => 'mock-zai-model'),
+vi.mock('@/server/ai/motapi', () => ({
+  getMotapiChatModel: vi.fn((modelId: string) => `mock:${modelId}`),
 }));
 
 vi.mock('@/lib/i18n/getRequestLocale', () => ({
@@ -54,6 +54,8 @@ function failingStream(message: string) {
 describe('assistant.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     streamTextMock.mockReturnValue(makeMockStream());
   });
 
@@ -67,20 +69,20 @@ describe('assistant.service', () => {
     );
   });
 
-  it('forwards abortSignal to streamText', async () => {
+  it('aborts the stream when the caller signal aborts', async () => {
     const controller = new AbortController();
     await streamAssistantChat({
       messages: [{ role: 'user', content: 'hello' }],
       signal: controller.signal,
     });
 
-    expect(streamTextMock).toHaveBeenCalledWith(
-      expect.objectContaining({ abortSignal: controller.signal })
-    );
+    const { abortSignal } = streamTextMock.mock.calls[0]![0] as { abortSignal: AbortSignal };
+    expect(abortSignal.aborted).toBe(false);
+    controller.abort();
+    expect(abortSignal.aborted).toBe(true);
   });
 
-  it('falls back to Z.ai when Ollama fails', async () => {
-    // First call (ollama) throws, second call (zai) succeeds
+  it('switches to the next model when the first one fails', async () => {
     streamTextMock
       .mockReturnValueOnce(failingStream('Not Found'))
       .mockReturnValueOnce(makeMockStream());
@@ -89,16 +91,30 @@ describe('assistant.service', () => {
       messages: [{ role: 'user', content: 'hello' }],
     });
 
-    expect(streamTextMock).toHaveBeenCalledTimes(2);
+    expect(streamTextMock.mock.calls.map((call) => call[0].model)).toEqual([
+      'mock:chat-a',
+      'mock:chat-b',
+    ]);
+    expect(streamTextMock).toHaveBeenCalledWith(expect.objectContaining({ maxRetries: 0 }));
     expect(result).toBeDefined();
   });
 
-  it('throws when all providers fail', async () => {
+  it('treats an empty answer as a failure and switches model', async () => {
+    streamTextMock
+      .mockReturnValueOnce(makeMockStream([{ type: 'start' }, { type: 'finish' }]))
+      .mockReturnValueOnce(makeMockStream());
+
+    await streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] });
+    expect(streamTextMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws after 3 models fail', async () => {
     streamTextMock.mockImplementation(() => failingStream('All failed'));
 
     await expect(
       streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toThrow('All failed');
+    expect(streamTextMock).toHaveBeenCalledTimes(3);
   });
 
   it('streams text as it arrives instead of waiting for the whole answer', async () => {

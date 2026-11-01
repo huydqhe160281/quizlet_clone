@@ -5,7 +5,8 @@ import { requireUserId } from '@/server/auth/auth-utils';
 import { hasVerifiedEmail } from '@/server/auth/email-verified';
 import { generateAiSet } from '@/server/services/ai/ai-set.service';
 
-export const maxDuration = 120;
+// Up to 3 model calls for large sets; the client waits in the background (job store).
+export const maxDuration = 300;
 
 export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();

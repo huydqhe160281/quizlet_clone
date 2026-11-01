@@ -21,8 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
-import { apiErrorMessage } from '@/lib/i18n/api-error-message';
-import { AI_GENERATE_UNVERIFIED_DAILY_LIMIT } from '@/lib/auth/verification-policy';
+import { useAiGenerateJobStore } from '@/features/sets/ai-generate-job-store';
+import { aiGenerateErrorMessage } from '@/features/sets/lib/ai-generate-error-message';
 
 const DEFAULT_CARD_COUNT = 15;
 
@@ -37,21 +37,6 @@ const GUIDED_LANGUAGE_LABEL: Record<GuidedLanguage, string> = {
   'vi-en': 'Vietnamese -> English',
 };
 
-type GeneratedCard = {
-  id: string;
-  front: string;
-  back: string;
-  example: string | null;
-  sortOrder: number;
-};
-
-type GeneratedSet = {
-  id: string;
-  title: string;
-  description: string | null;
-  visibility: string;
-};
-
 type ModalStep = 'form' | 'loading' | 'preview';
 
 type AIGenerateModalProps = {
@@ -62,7 +47,15 @@ type AIGenerateModalProps = {
 export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   const t = useTranslations();
   const router = useRouter();
-  const [step, setStep] = useState<ModalStep>('form');
+  const job = useAiGenerateJobStore((state) => state.job);
+  const startJob = useAiGenerateJobStore((state) => state.start);
+  const clearJob = useAiGenerateJobStore((state) => state.clear);
+  const setWatched = useAiGenerateJobStore((state) => state.setWatched);
+  // The request lives in the app-wide job store, so it survives this modal closing.
+  const step: ModalStep =
+    job?.status === 'running' ? 'loading' : job?.status === 'succeeded' ? 'preview' : 'form';
+  const generatedSet = job?.status === 'succeeded' ? job.set : null;
+  const generatedCards = job?.status === 'succeeded' ? job.cards : [];
   const [mode, setMode] = useState<GenerateMode>('freeform');
   const [prompt, setPrompt] = useState('');
   const [guidedLanguage, setGuidedLanguage] = useState<GuidedLanguage>('ja-vi');
@@ -73,8 +66,6 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   const [isFreeformUnlimited, setIsFreeformUnlimited] = useState(false);
   const [promptError, setPromptError] = useState<string | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
-  const [generatedSet, setGeneratedSet] = useState<GeneratedSet | null>(null);
-  const [generatedCards, setGeneratedCards] = useState<GeneratedCard[]>([]);
   const [isDiscarding, setIsDiscarding] = useState(false);
 
   const loadingMessages = useMemo(
@@ -87,7 +78,6 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   );
 
   const resetForm = useCallback(() => {
-    setStep('form');
     setMode('freeform');
     setPrompt('');
     setGuidedLanguage('ja-vi');
@@ -97,10 +87,20 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
     setCardCount(DEFAULT_CARD_COUNT);
     setIsFreeformUnlimited(false);
     setPromptError(null);
-    setGeneratedSet(null);
-    setGeneratedCards([]);
     setLoadingMessageIndex(0);
   }, []);
+
+  // While open, this modal shows the job's result; when closed, AiGenerateJobNotifier does.
+  useEffect(() => {
+    setWatched(open);
+    return () => setWatched(false);
+  }, [open, setWatched]);
+
+  useEffect(() => {
+    if (!open || job?.status !== 'failed') return;
+    toast.error(aiGenerateErrorMessage(t, job.error));
+    clearJob();
+  }, [open, job, t, clearJob]);
 
   useEffect(() => {
     if (!open) {
@@ -116,7 +116,8 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   }, [open, step, loadingMessages.length]);
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen && step === 'preview' && generatedSet) {
+    // Closing keeps a running job (it finishes in the background) and a shown preview.
+    if (!nextOpen && step !== 'form') {
       onOpenChange(false);
       return;
     }
@@ -192,45 +193,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
     }
 
     setPromptError(null);
-    setStep('loading');
-
-    try {
-      const response = await fetch('/api/v1/ai/generate-set', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: resolvedPrompt, cardCount: resolvedCardCount }),
-      });
-
-      const payload = (await response.json()) as {
-        data?: { set: GeneratedSet; cards: GeneratedCard[] };
-        error?: string;
-        message?: string;
-        details?: { limit?: number };
-      };
-
-      if (!response.ok) {
-        setStep('form');
-        const message =
-          payload.error === 'AI_QUOTA_UNVERIFIED'
-            ? t('apiErrors.AI_QUOTA_UNVERIFIED', {
-                limit: payload.details?.limit ?? AI_GENERATE_UNVERIFIED_DAILY_LIMIT,
-              })
-            : response.status === 429
-              ? t('aiGenerate.errorRateLimit')
-              : apiErrorMessage(t, payload, 'aiGenerate.errorGenerateFailed');
-        toast.error(message);
-        return;
-      }
-
-      if (payload.data) {
-        setGeneratedSet(payload.data.set);
-        setGeneratedCards(payload.data.cards);
-        setStep('preview');
-      }
-    } catch {
-      setStep('form');
-      toast.error(t('aiGenerate.errorNetwork'));
-    }
+    startJob({ prompt: resolvedPrompt, cardCount: resolvedCardCount });
   };
 
   const handleConfirm = () => {
@@ -238,6 +201,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
       return;
     }
     router.push(`/sets/${generatedSet.id}`);
+    clearJob();
     resetForm();
     onOpenChange(false);
   };
@@ -253,6 +217,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
         toast.error(t('aiGenerate.errorDiscard'));
         return;
       }
+      clearJob();
       resetForm();
       onOpenChange(false);
     } catch {
@@ -398,6 +363,12 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
             <p className="text-sm text-muted-foreground" aria-live="polite">
               {loadingMessages[loadingMessageIndex]}
             </p>
+            <p className="max-w-xs text-center text-xs text-muted-foreground">
+              {t('aiGenerate.backgroundHint')}
+            </p>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              {t('aiGenerate.runInBackground')}
+            </Button>
           </div>
         )}
 

@@ -75,6 +75,30 @@ During API call (5–30s), the modal SHALL show a loading UI with rotating statu
 - **WHEN** awaiting response
 - **THEN** submit button disabled and loading messages animate
 
+### Requirement: Background generation
+
+The generation request SHALL live in an app-wide client job store, not in the modal, so the user can close the modal (Dialog close or a "Continue in background" button in the loading state) and keep using the app while it runs. Only one job SHALL run at a time; reopening the modal during a job SHALL show its progress instead of a new form. A reload or tab close drops the request, so the app SHALL ask for confirmation (`beforeunload`) while a job runs.
+**Constraint**: MUST
+**Verification**: `AIGenerateModal.test.tsx`, `AiGenerateJobNotifier.test.tsx`.
+
+#### Scenario: Close while generating keeps the job running
+
+- **GIVEN** generation request in flight
+- **WHEN** the user clicks "Continue in background" or closes the dialog
+- **THEN** the modal closes and the request keeps running
+
+#### Scenario: Set ready while the modal is closed
+
+- **GIVEN** a job finishes while the modal is closed, on any `(app)` page
+- **WHEN** the response arrives
+- **THEN** a persistent toast (same style as the PWA update prompt) says the set is ready, with the set title, card count and an "Open set" action that navigates to `/sets/{id}`
+
+#### Scenario: Generation fails while the modal is closed
+
+- **GIVEN** a job fails (429, `AI_QUOTA_UNVERIFIED`, 502, network) while the modal is closed
+- **WHEN** the response arrives
+- **THEN** a persistent error toast shows the same message the modal would have shown
+
 ### Requirement: Read-only preview state
 
 On success, the modal SHALL display a read-only preview of title, description, and card list (front/back/example). Users edit content on the set detail page after Confirm.
@@ -101,7 +125,7 @@ The modal SHALL display a user-visible error (toast or inline) for API failures:
 
 #### Scenario: Upstream AI failure shown
 
-- **GIVEN** API returns 502 due to Ollama timeout or invalid output
+- **GIVEN** API returns 502 because every model tried timed out or returned invalid output
 - **WHEN** response received
 - **THEN** modal shows an error message and allows retry without navigation
 

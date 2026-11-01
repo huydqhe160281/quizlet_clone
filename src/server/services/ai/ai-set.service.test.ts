@@ -23,28 +23,12 @@ vi.mock('ai', () => ({
   },
 }));
 
-vi.mock('@/server/ai/ollama', () => ({
-  getOllamaModel: vi.fn(() => 'mock-model'),
-  getOllamaLargeModel: vi.fn(() => undefined),
-  getOllamaGenerateOptions: vi.fn(() => ({ temperature: 0 })),
+vi.mock('@/config/env', () => ({
+  env: { motapiSetModels: ['model-a', 'model-b', 'model-c', 'model-d'] },
 }));
 
-vi.mock('@/server/ai/zai', () => ({
-  getZaiModel: vi.fn(() => undefined),
-}));
-
-// Stub withModelFallback so it simply calls fn with the first defined model.
-vi.mock('@/server/ai/with-fallback', () => ({
-  withModelFallback: vi.fn(
-    async (
-      models: Array<[string, unknown]>,
-      fn: (m: unknown, signal: AbortSignal) => Promise<unknown>
-    ) => {
-      const first = models.find(([, m]) => m !== undefined);
-      if (!first) throw new Error('No model available');
-      return fn(first[1], new AbortController().signal);
-    }
-  ),
+vi.mock('@/server/ai/motapi', () => ({
+  getMotapiJsonModel: vi.fn((modelId: string) => `mock:${modelId}`),
 }));
 
 import { revalidateTag } from 'next/cache';
@@ -70,6 +54,9 @@ const mockGenerated = {
 describe('ai-set.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     generateTextMock.mockResolvedValue({ output: mockGenerated });
     prismaMock.flashcardSet.create.mockResolvedValue({
       id: 'set-ai-1',
@@ -102,11 +89,50 @@ describe('ai-set.service', () => {
     );
   });
 
-  it('lets the fallback cascade own retries and timeouts', async () => {
+  it('disables SDK retries and passes the attempt signal', async () => {
     await generateAiSet('user-a', validInput);
     expect(generateTextMock).toHaveBeenCalledWith(
-      expect.objectContaining({ maxRetries: 0, abortSignal: expect.any(AbortSignal) })
+      expect.objectContaining({
+        model: 'mock:model-a',
+        maxRetries: 0,
+        abortSignal: expect.any(AbortSignal),
+      })
     );
+  });
+
+  it('switches to the next model when output is unparsable', async () => {
+    generateTextMock
+      .mockResolvedValueOnce({ output: { title: 'x', cards: 'not an array' } })
+      .mockResolvedValueOnce({ output: mockGenerated });
+
+    await expect(generateAiSet('user-a', validInput)).resolves.toMatchObject({ id: 'set-ai-1' });
+    expect(generateTextMock.mock.calls.map((call) => call[0].model)).toEqual([
+      'mock:model-a',
+      'mock:model-b',
+    ]);
+  });
+
+  it('switches model when every card is empty', async () => {
+    generateTextMock
+      .mockResolvedValueOnce({
+        output: { title: 't', description: 'd', cards: [{ front: ' ', back: '' }] },
+      })
+      .mockResolvedValueOnce({ output: mockGenerated });
+
+    await generateAiSet('user-a', validInput);
+    expect(generateTextMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('gives up after 3 models and never calls the 4th', async () => {
+    generateTextMock.mockRejectedValue(new Error('500'));
+    await expect(generateAiSet('user-a', validInput)).rejects.toMatchObject({
+      code: 'AI_GENERATION_FAILED',
+    });
+    expect(generateTextMock.mock.calls.map((call) => call[0].model)).toEqual([
+      'mock:model-a',
+      'mock:model-b',
+      'mock:model-c',
+    ]);
   });
 
   it('Scenario: LLM returns valid structure', async () => {
@@ -135,7 +161,7 @@ describe('ai-set.service', () => {
     expect(prismaMock.flashcardSet.create).not.toHaveBeenCalled();
   });
 
-  it('Scenario: Ollama connection refused', async () => {
+  it('Scenario: MotAPI connection refused', async () => {
     generateTextMock.mockRejectedValue(new Error('ECONNREFUSED'));
     await expect(generateAiSet('user-a', validInput)).rejects.toMatchObject({
       code: 'AI_GENERATION_FAILED',

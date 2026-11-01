@@ -126,7 +126,7 @@ describe('assistant chat route', () => {
 
   it('returns 503 when streamAssistantChat throws', async () => {
     streamAssistantChatMock.mockImplementation(() => {
-      throw new Error('Ollama unavailable');
+      throw new Error('MotAPI unavailable');
     });
     const req = new Request('http://localhost/api/v1/assistant/chat', {
       method: 'POST',

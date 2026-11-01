@@ -30,40 +30,26 @@ Open [http://localhost:3000](http://localhost:3000).
 | `SUPABASE_URL` / keys                       | Media upload via presigned URLs                                    |
 | `SUPABASE_MEDIA_BUCKET`                     | Storage bucket name (default: `flashcard-media`)                   |
 | `RESEND_API_KEY`                            | Password reset emails (optional in dev)                            |
-| `OLLAMA_BASE_URL`                           | Ollama API URL (required in production)                            |
-| `OLLAMA_MODEL`                              | Ollama model name (required in production)                         |
-| `OLLAMA_MODEL_LARGE`                        | Optional larger model for high-card requests                       |
-| `ZAI_API_KEY`                               | Z.ai API key (fallback if Ollama fails)                            |
-| `ZAI_MODEL`                                 | Z.ai model name (default: `glm-5.2`)                               |
+| `MOTAPI_KEY`                                | MotAPI key for AI set generation and the guide chat (required)     |
+| `MOTAPI_SET_MODELS` / `MOTAPI_CHAT_MODELS`  | Optional ordered model lists (comma-separated)                     |
 | `NEXT_PUBLIC_PWA_DEV`                       | Set to `1` to enable Serwist SW during `next dev` (off by default) |
 
-### AI Set Generation (Ollama)
+### AI Set Generation (MotAPI)
 
-For the **Generate with AI** feature, configure Ollama:
+**Generate with AI** and the guide chat call [MotAPI](https://motapis.com) (OpenAI-compatible) through the Vercel AI SDK:
 
 ```bash
-# Local development (defaults apply if unset)
-OLLAMA_BASE_URL=http://localhost:11434/api
-OLLAMA_MODEL=llama3
-# Optional fallback when requesting >50 cards
-# OLLAMA_MODEL_LARGE=gpt-oss:120b
-
-# Ollama Cloud example:
-# OLLAMA_BASE_URL=https://ollama.com/api
-# OLLAMA_MODEL=gpt-oss:20b
-# OLLAMA_MODEL_LARGE=gpt-oss:120b
-# OLLAMA_API_KEY=your-key
-
-# Z.ai fallback (kicked in after Ollama fails 2× per tier)
-# ZAI_API_KEY=your-key-from-z.ai/manage-apikey/apikey-list
-# ZAI_MODEL=glm-5.2    # default when not set
+MOTAPI_KEY=your-key
+# Optional overrides (defaults in src/config/motapi-env.ts):
+# MOTAPI_SET_MODELS=deepseek-v4-flash,kimi-k3.1-pro,claude-sonnet-5-5
+# MOTAPI_CHAT_MODELS=kimi-k3.1-pro,deepseek-v4-flash,minimax-m3
 ```
 
-In **production**, both variables are required. Point `OLLAMA_BASE_URL` at your Ollama Cloud or self-hosted endpoint reachable from Vercel.
+Each request calls one model at a time; any error (HTTP error, timeout, empty or unparsable output) switches to the next model in the list, at most 3 calls in total, with no retries. Generation runs in the background: the user can close the modal and is told by an app-wide toast when the set is ready.
 
 ### AI Guide Assistant (Chat Box)
 
-The floating guide chat uses the same Ollama configuration. Site knowledge is generated at build time:
+The floating guide chat uses the same MotAPI key with its own model list. Site knowledge is generated at build time:
 
 ```bash
 npm run generate:guide        # Regenerate src/generated/guide-config.json

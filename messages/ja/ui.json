@@ -293,7 +293,13 @@
     "previewMeta": "{count} 枚 · 非公開の下書き",
     "discarding": "削除中...",
     "discard": "破棄",
-    "confirm": "確定してセットを見る"
+    "confirm": "確定してセットを見る",
+    "backgroundHint": "このウィンドウを閉じてもアプリを使い続けられます。セットが完成したらお知らせします。",
+    "runInBackground": "バックグラウンドで続行",
+    "readyTitle": "AIセットが完成しました",
+    "readyDescription": "{title} · {count}枚",
+    "readyOpen": "セットを開く",
+    "failedTitle": "AIによるセット作成に失敗しました"
   },
   "studyUi": {
     "exitStudy": "学習を終了",

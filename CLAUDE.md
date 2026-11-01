@@ -66,7 +66,7 @@ Custom thin i18n in `src/lib/i18n/` — no URL locale prefix. Locale resolution:
 
 ### AI features
 
-AI set generation and the floating guide chat use Ollama via the Vercel AI SDK (`src/server/ai/ollama.ts`), falling back to Z.ai (`with-fallback.ts`) after repeated failures. `OLLAMA_BASE_URL` / `OLLAMA_MODEL` are required in production. The guide assistant's site knowledge is `src/generated/guide-config.json`, built from `docs/guide/` (FAQ + flows) by `scripts/generate-guide-config.mjs` — regenerate and commit it after editing those docs.
+AI set generation and the floating guide chat use MotAPI (OpenAI-compatible, `https://motapis.com/v1`) via the Vercel AI SDK's `@ai-sdk/openai` provider (`src/server/ai/motapi.ts`). `MOTAPI_KEY` is required; per-use-case ordered model lists come from `MOTAPI_SET_MODELS` / `MOTAPI_CHAT_MODELS` (defaults in `src/config/motapi-env.ts`). `withModelSwitch` (`src/server/ai/model-switch.ts`) calls one model at a time and switches to the next on any error, timeout, empty or unparsable output — at most 3 calls, never a retry of the same model, and SDK `maxRetries: 0`. Set generation runs in an app-wide client job store (`src/features/sets/ai-generate-job-store.ts`), so the modal can close mid-request; `AiGenerateJobNotifier` (mounted in the `(app)` layout) toasts the result when the modal is closed. The server route stays synchronous within its `maxDuration`. The guide assistant's site knowledge is `src/generated/guide-config.json`, built from `docs/guide/` (FAQ + flows) by `scripts/generate-guide-config.mjs` — regenerate and commit it after editing those docs.
 
 ## Testing conventions
 
