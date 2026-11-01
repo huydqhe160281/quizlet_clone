@@ -562,7 +562,7 @@ describe('study.service', () => {
       mcDirection: 'front_to_back' as const,
     };
 
-    const session = await createSession('user-a', 'set-1', 'LEARN', settings);
+    await createSession('user-a', 'set-1', 'LEARN', settings);
 
     expect(prismaMock.studySession.create).toHaveBeenCalledWith(
       expect.objectContaining({

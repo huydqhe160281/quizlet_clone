@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { initRoundEngine, recordAnswer, buildNextRound, isRunComplete } from './round-engine';
+import { initRoundEngine, recordAnswer, isRunComplete } from './round-engine';
 
 const CARDS = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'];
 

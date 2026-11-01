@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // ── test_forgot_password_dev_reset_url ────────────────────────────────────────
 describe('forgot-password devResetUrl logic', () => {
@@ -40,7 +40,6 @@ describe('forgot-password devResetUrl logic', () => {
   });
 
   it('does NOT include devResetUrl for non-existent user even in dev', () => {
-    const env = { resendApiKey: '', nodeEnv: 'development' };
     const userExists = false; // Enumeration-safe: user not found
 
     let devResetUrl: string | undefined;

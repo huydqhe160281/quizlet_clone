@@ -46,9 +46,16 @@ const config = [
     rules: {
       ...reactPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
+      // Downgrade the recommended a11y errors to warnings, keeping each rule's options and the
+      // rules the preset turns off (e.g. the deprecated label-has-for) off.
       ...Object.fromEntries(
-        Object.entries(jsxA11yPlugin.configs.recommended.rules).map(([rule]) => [rule, 'warn'])
+        Object.entries(jsxA11yPlugin.configs.recommended.rules).map(([rule, value]) => {
+          const [level, ...options] = Array.isArray(value) ? value : [value];
+          return [rule, level === 'off' || level === 0 ? 'off' : ['warn', ...options]];
+        })
       ),
+      // `role` on a React component is a prop (e.g. GuideChatMessage), not an ARIA role.
+      'jsx-a11y/aria-role': ['warn', { ignoreNonDOM: true }],
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react/jsx-no-target-blank': 'off',
@@ -60,7 +67,11 @@ const config = [
     files: ['**/*.{ts,tsx}'],
     rules: {
       ...tsPlugin.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': 'warn',
+      // A leading underscore marks a value as intentionally unused (omitted rest keys, mock args).
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
       '@typescript-eslint/no-unused-expressions': 'warn',
       '@typescript-eslint/no-require-imports': 'off',
     },

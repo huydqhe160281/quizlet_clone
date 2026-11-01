@@ -89,6 +89,7 @@ export function GuideChatPanel({ onClose }: { onClose: () => void }) {
           ref={inputRef}
           name="message"
           placeholder={t('guideUi.placeholder')}
+          aria-label={t('guideUi.placeholder')}
           className="flex-1 rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
           maxLength={500}
           disabled={isLoading}

@@ -38,6 +38,8 @@ export default async function OpengraphImage() {
     >
       <div style={{ display: 'flex', flexDirection: 'column', width: 680 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          {/* next/og renders plain <img>; next/image does not work inside ImageResponse. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={iconSrc}
             width={72}
