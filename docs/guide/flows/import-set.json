@@ -1,0 +1,10 @@
+{
+  "id": "import-set",
+  "title": "Nhập bộ thẻ từ CSV/JSON",
+  "steps": [
+    "Vào My Sets (/sets) → Import",
+    "Chọn file CSV UTF-8 (cột front, back, example) hoặc JSON, tối đa 2000 thẻ / 2MB",
+    "Kiểm tra bảng xem trước",
+    "Xác nhận để tạo bộ thẻ"
+  ]
+}

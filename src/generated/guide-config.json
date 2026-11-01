@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-28T02:40:34.071Z",
+  "generatedAt": "2026-11-01T15:09:03.993Z",
   "site": {
     "name": "QuizFree",
     "locale": "runtime"
@@ -171,6 +171,28 @@
   ],
   "flows": [
     {
+      "id": "ai-generate",
+      "title": "Tạo bộ thẻ bằng AI",
+      "steps": [
+        "Vào My Sets (/sets)",
+        "Bấm \"Tạo bằng AI\"",
+        "Chọn tab Prompt tự do (chủ đề hoặc đoạn văn) hoặc Theo form (cặp ngôn ngữ, nội dung, chủ đề)",
+        "Chọn số thẻ hoặc Không giới hạn, bấm \"Tạo bộ thẻ\"",
+        "Chờ trong hộp thoại, hoặc bấm \"Chạy ngầm\" để tiếp tục dùng app",
+        "Khi có thông báo \"Bộ thẻ AI đã sẵn sàng\", bấm \"Mở bộ thẻ\""
+      ]
+    },
+    {
+      "id": "import-set",
+      "title": "Nhập bộ thẻ từ CSV/JSON",
+      "steps": [
+        "Vào My Sets (/sets) → Import",
+        "Chọn file CSV UTF-8 (cột front, back, example) hoặc JSON, tối đa 2000 thẻ / 2MB",
+        "Kiểm tra bảng xem trước",
+        "Xác nhận để tạo bộ thẻ"
+      ]
+    },
+    {
       "id": "first-set",
       "title": "Tạo bộ thẻ đầu tiên",
       "steps": [
@@ -190,7 +212,7 @@
     },
     {
       "q": "Làm sao để tạo bộ thẻ đầu tiên?",
-      "a": "Vào My Sets (/sets), bấm tạo bộ thẻ mới (/sets/new) hoặc dùng AI Generate nếu có."
+      "a": "Vào My Sets (/sets) → Tạo bộ thẻ mới (/sets/new), nhập tên và thêm thẻ (mặt trước/mặt sau), rồi Lưu. Cách nhanh hơn: bấm \"Tạo bằng AI\" ở My Sets, hoặc dùng Import từ file CSV/JSON."
     },
     {
       "q": "Các chế độ học khác nhau thế nào?",
@@ -207,6 +229,66 @@
     {
       "q": "Làm sao để nhận thông báo nhắc học?",
       "a": "Vào Cài đặt → Học tập và bật Nhắc học hằng ngày trên từng thiết bị. Khoảng 20:00, nếu hôm đó bạn chưa học, app sẽ gửi thông báo. Trên iPhone cần Thêm vào Màn hình chính (iOS 16.4+) rồi mở app từ biểu tượng đó."
+    },
+    {
+      "q": "Làm sao tạo bộ thẻ bằng AI?",
+      "a": "Vào My Sets (/sets) → bấm \"Tạo bằng AI\". Chọn tab \"Prompt tự do\" (nhập chủ đề hoặc dán đoạn văn, chọn 5–50 thẻ hoặc \"Không giới hạn\") hoặc tab \"Theo form\" (chọn cặp ngôn ngữ, nội dung, chủ đề, số thẻ 5–200 tuỳ chọn), rồi bấm \"Tạo bộ thẻ\". Kết quả là một bộ thẻ nháp Riêng tư; xem trước rồi bấm \"Confirm & xem bộ thẻ\" để mở, hoặc \"Discard\" để xoá."
+    },
+    {
+      "q": "Có phải chờ AI tạo xong mới làm việc khác được không?",
+      "a": "Không. Khi AI đang tạo, bấm \"Chạy ngầm\" (hoặc đóng hộp thoại) và tiếp tục dùng app. Khi xong sẽ có thông báo ở góc màn hình kèm nút \"Mở bộ thẻ\"; nếu lỗi cũng có thông báo. Đừng tải lại hay đóng tab trong lúc chờ vì yêu cầu sẽ bị huỷ."
+    },
+    {
+      "q": "Tạo bằng AI có giới hạn không?",
+      "a": "Mỗi tài khoản được tạo tối đa 10 lần mỗi giờ. Tài khoản chưa xác nhận email chỉ được 3 bộ mỗi 24 giờ; lần tạo thất bại không bị tính. Xác nhận email (Cài đặt → Tài khoản hoặc banner phía trên) để bỏ giới hạn này."
+    },
+    {
+      "q": "Làm sao nhập bộ thẻ từ file?",
+      "a": "Vào My Sets (/sets) → Import. Hỗ trợ CSV UTF-8 với cột front, back và example (tuỳ chọn), hoặc JSON. Tối đa 2000 thẻ và 2MB mỗi lần. App hiện bảng xem trước trước khi bạn xác nhận."
+    },
+    {
+      "q": "Bộ thẻ quá dài, có chia nhỏ được không?",
+      "a": "Có. Mở bộ thẻ → \"Chia bộ thẻ\", chọn số thẻ mỗi bộ. App tạo các bộ Riêng tư mới theo đúng thứ tự thẻ; bộ gốc giữ nguyên."
+    },
+    {
+      "q": "Làm sao gộp nhiều bộ thẻ thành một?",
+      "a": "Ở My Sets bấm \"Gộp bộ thẻ\" rồi chọn các bộ, hoặc mở một bộ → \"Gộp với…\". App tạo một bộ Riêng tư mới (mặc định bỏ thẻ trùng mặt trước + mặt sau), các bộ gốc giữ nguyên trừ khi bạn chọn \"Xoá các bộ gốc sau khi gộp\". Tối đa 20 bộ / 5000 thẻ."
+    },
+    {
+      "q": "Làm sao chia sẻ bộ thẻ hoặc dùng bộ thẻ của người khác?",
+      "a": "Đặt Quyền riêng tư của bộ thẻ là Công khai (cần xác nhận email) để nó xuất hiện ở Thư viện (/library) và trong Tìm kiếm. Với bộ thẻ công khai của người khác, bấm \"Sao chép vào bộ thẻ của tôi\" (Duplicate) để có bản riêng chỉnh sửa và học."
+    },
+    {
+      "q": "Trang Hôm nay (/today) dùng để làm gì?",
+      "a": "Trang Hôm nay gợi ý những gì nên học trong ngày: thẻ đến hạn ôn, thẻ hay sai và thẻ mới, mục tiêu số thẻ mỗi ngày, thống kê ghi nhớ và một buổi học đề xuất. Ngày được tính theo múi giờ bạn chọn."
+    },
+    {
+      "q": "Ôn tập ngắt quãng (spaced repetition) hoạt động thế nào?",
+      "a": "Mỗi lần bạn trả lời, app dùng thuật toán SM-2 để tính ngày ôn tiếp theo: nhớ tốt thì khoảng cách dài ra, quên thì ôn lại sớm. Các thẻ đến hạn hiện ở Dashboard và trang Hôm nay."
+    },
+    {
+      "q": "Chế độ Viết chữ (Draw) và Bắn thiên thạch là gì?",
+      "a": "Viết chữ (Draw) luyện viết từng nét chữ Hán/Kanji, chỉ dành cho thẻ loại \"từ mới\" (new word). Bắn thiên thạch (Meteor Defense) là trò chơi: gõ đúng đáp án để bắn thiên thạch trước khi chúng rơi xuống. Cả hai nằm trong danh sách chế độ học của bộ thẻ."
+    },
+    {
+      "q": "Có tuỳ chỉnh buổi học được không?",
+      "a": "Có. Ở trang bộ thẻ bấm \"Tùy chỉnh phiên học\" để chỉnh cách học trước khi bắt đầu. Âm báo đúng/sai bật tắt ở Cài đặt → Học tập."
+    },
+    {
+      "q": "Làm sao đổi giao diện hoặc ngôn ngữ?",
+      "a": "Vào Cài đặt (/settings): mục Giao diện có nhiều theme (sáng, tối, Pastel, Paper & Ink…), mục Ngôn ngữ có Tiếng Việt, English và 日本語. Nội dung thẻ của bạn không bị dịch."
+    },
+    {
+      "q": "Có học được khi không có mạng không?",
+      "a": "Có. Các buổi học mở gần đây (tối đa 5) được lưu trên thiết bị; câu trả lời khi offline được xếp hàng và tự đồng bộ khi có mạng lại. Bạn cũng có thể cài app lên màn hình chính (trên iPhone: Chia sẻ → Thêm vào Màn hình chính)."
+    },
+    {
+      "q": "Tại sao tôi cần xác nhận email?",
+      "a": "Tài khoản chưa xác nhận vẫn học bình thường, nhưng không thể đặt bộ thẻ Công khai và chỉ được tạo 3 bộ bằng AI mỗi 24 giờ. Mở email xác nhận, hoặc gửi lại từ banner phía trên / Cài đặt → Tài khoản. Tài khoản đăng nhập Google được coi là đã xác nhận."
+    },
+    {
+      "q": "Làm sao đổi mật khẩu hoặc lấy lại mật khẩu?",
+      "a": "Đổi mật khẩu ở Cài đặt → Tài khoản (các phiên đăng nhập khác sẽ bị đăng xuất). Quên mật khẩu thì bấm \"Quên mật khẩu?\" ở trang đăng nhập để nhận email đặt lại."
     }
   ],
   "guideTargets": [

@@ -189,7 +189,13 @@ The system SHALL render a floating chat widget at the bottom-right of all pages 
 
 - **GIVEN** chat panel is expanded with empty history
 - **WHEN** user views the input area
-- **THEN** at least 3 Vietnamese quick-prompt chips are visible and submit on click
+- **THEN** 3 quick-prompt chips in the current locale are visible and submit on click, followed by a "…" toggle
+
+#### Scenario: More quick prompts
+
+- **GIVEN** the quick-prompt chips are shown
+- **WHEN** user clicks the "…" toggle (`aria-expanded`, label "Xem thêm câu hỏi gợi ý")
+- **THEN** the full list of suggested questions (AI generation, background generation, import, split/merge, sharing, Today, streak, reminders, offline, theme/language, email verification) appears, and a "Thu gọn" button collapses it again; every question has a matching FAQ entry in `docs/guide/faq.vi.json`
 
 #### Scenario: Keyboard accessibility
 

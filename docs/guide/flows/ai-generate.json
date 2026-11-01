@@ -1,0 +1,12 @@
+{
+  "id": "ai-generate",
+  "title": "Tạo bộ thẻ bằng AI",
+  "steps": [
+    "Vào My Sets (/sets)",
+    "Bấm \"Tạo bằng AI\"",
+    "Chọn tab Prompt tự do (chủ đề hoặc đoạn văn) hoặc Theo form (cặp ngôn ngữ, nội dung, chủ đề)",
+    "Chọn số thẻ hoặc Không giới hạn, bấm \"Tạo bộ thẻ\"",
+    "Chờ trong hộp thoại, hoặc bấm \"Chạy ngầm\" để tiếp tục dùng app",
+    "Khi có thông báo \"Bộ thẻ AI đã sẵn sàng\", bấm \"Mở bộ thẻ\""
+  ]
+}
