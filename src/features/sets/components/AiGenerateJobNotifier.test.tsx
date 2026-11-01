@@ -16,15 +16,20 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('sonner', () => ({ toast: toastMock }));
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AiGenerateJobNotifier } from './AiGenerateJobNotifier';
 
 const enCatalog = loadCatalog('en');
+let queryClient: QueryClient;
 
 function renderNotifier() {
+  queryClient = new QueryClient();
   return render(
-    <LocaleProvider locale="en" catalog={enCatalog}>
-      <AiGenerateJobNotifier />
-    </LocaleProvider>
+    <QueryClientProvider client={queryClient}>
+      <LocaleProvider locale="en" catalog={enCatalog}>
+        <AiGenerateJobNotifier />
+      </LocaleProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -73,6 +78,48 @@ describe('AiGenerateJobNotifier', () => {
     action.onClick();
     expect(pushMock).toHaveBeenCalledWith('/sets/set-9');
     expect(useAiGenerateJobStore.getState().job).toBeNull();
+  });
+
+  it('refreshes the sets list when a set is ready, even with the modal open', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        data: {
+          set: { id: 'set-9', title: 'Travel', description: null, visibility: 'PRIVATE' },
+          cards: [],
+        },
+      }),
+    });
+    renderNotifier();
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    useAiGenerateJobStore.setState({ watched: true });
+
+    await act(async () => {
+      useAiGenerateJobStore.getState().start({ prompt: 'Travel vocabulary please' });
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['sets', 'list'] });
+  });
+
+  it('reports a non-JSON error page as a failed generation, not a network error', async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 504,
+      json: async () => {
+        throw new SyntaxError('Unexpected token <');
+      },
+    });
+    renderNotifier();
+
+    await act(async () => {
+      useAiGenerateJobStore.getState().start({ prompt: 'Travel vocabulary please' });
+    });
+
+    expect(toastMock.error).toHaveBeenCalledWith(
+      'AI set generation failed',
+      expect.objectContaining({ description: 'Could not generate the set. Please try again.' })
+    );
   });
 
   it('Scenario: Generation fails while the modal is closed', async () => {

@@ -116,11 +116,8 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   }, [open, step, loadingMessages.length]);
 
   const handleOpenChange = (nextOpen: boolean) => {
-    // Closing keeps a running job (it finishes in the background) and a shown preview.
-    if (!nextOpen && step !== 'form') {
-      onOpenChange(false);
-      return;
-    }
+    // Closing clears the form only: a running job keeps going in the background and a
+    // shown preview stays in the job store until Confirm or Discard.
     if (!nextOpen) {
       resetForm();
     }
@@ -366,7 +363,7 @@ export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
             <p className="max-w-xs text-center text-xs text-muted-foreground">
               {t('aiGenerate.backgroundHint')}
             </p>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
               {t('aiGenerate.runInBackground')}
             </Button>
           </div>

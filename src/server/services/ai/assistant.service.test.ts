@@ -26,7 +26,10 @@ vi.mock('@/config/env', () => ({
   env: { motapiChatModels: ['chat-a', 'chat-b', 'chat-c', 'chat-d'] },
 }));
 
+const getMotapiProviderMock = vi.hoisted(() => vi.fn(() => 'provider'));
+
 vi.mock('@/server/ai/motapi', () => ({
+  getMotapiProvider: getMotapiProviderMock,
   getMotapiChatModel: vi.fn((modelId: string) => `mock:${modelId}`),
 }));
 
@@ -106,6 +109,16 @@ describe('assistant.service', () => {
 
     await streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] });
     expect(streamTextMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails once, without trying models, when MOTAPI_KEY is missing', async () => {
+    getMotapiProviderMock.mockImplementationOnce(() => {
+      throw new Error('Missing required environment variable: MOTAPI_KEY');
+    });
+    await expect(
+      streamAssistantChat({ messages: [{ role: 'user', content: 'hi' }] })
+    ).rejects.toThrow('MOTAPI_KEY');
+    expect(streamTextMock).not.toHaveBeenCalled();
   });
 
   it('throws after 3 models fail', async () => {

@@ -84,7 +84,9 @@ async function runGenerateRequest(request: AiGenerateRequest): Promise<JobOutcom
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     });
-    const payload = (await response.json()) as GenerateResponse;
+    // A platform error page (e.g. a 504 when the function hits maxDuration) is not JSON;
+    // it is still a failed generation, not a network error.
+    const payload = (await response.json().catch(() => ({}))) as GenerateResponse;
 
     if (!response.ok) {
       if (payload.error === 'AI_QUOTA_UNVERIFIED') {

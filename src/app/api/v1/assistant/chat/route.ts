@@ -15,7 +15,8 @@ import { auth } from '@/server/auth/auth';
 import { streamAssistantChat, toCoreMessages } from '@/server/services/ai/assistant.service';
 import { getGuideUserContext } from '@/server/services/user/user-context.service';
 
-export const maxDuration = 60;
+// Up to 45s to the first chunk (model switching), then room to stream the answer.
+export const maxDuration = 90;
 
 export const POST = withErrorHandler(async (req) => {
   const session = await auth();
@@ -64,6 +65,10 @@ export const POST = withErrorHandler(async (req) => {
 
     return result.toTextStreamResponse();
   } catch (error) {
+    // The client left before the first chunk: nothing failed and nobody is listening.
+    if (req.signal.aborted) {
+      return new Response(null, { status: 499 });
+    }
     console.error('[assistant/chat] stream_failed', {
       code: 'ASSISTANT_UNAVAILABLE',
       locale,

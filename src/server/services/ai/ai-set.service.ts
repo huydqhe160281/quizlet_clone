@@ -8,7 +8,7 @@ import {
 } from '@/features/sets/schemas/ai-generate.schema';
 import { ApiError } from '@/lib/api-error';
 import { env } from '@/config/env';
-import { getMotapiJsonModel } from '@/server/ai/motapi';
+import { getMotapiJsonModel, getMotapiProvider } from '@/server/ai/motapi';
 import { withModelSwitch, type ModelSwitchOptions } from '@/server/ai/model-switch';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
@@ -39,9 +39,13 @@ export const AI_SET_SWITCH_OPTIONS: ModelSwitchOptions = {
   totalBudgetMs: 280_000,
 };
 
-/** Output token cap: room for the requested cards, bounded for the "no limit" case. */
+/**
+ * Output token cap: room for the requested cards, bounded for the "no limit" case. Live tests
+ * measured ~65 (deepseek) to ~100 (kimi) output tokens per card; a cap below that cuts the
+ * JSON off and wastes the attempt. All set models accept 32k.
+ */
 export function maxOutputTokensFor(cardCount?: number): number {
-  return Math.min((cardCount ?? 120) * 120 + 600, 16_000);
+  return Math.min((cardCount ?? 120) * 130 + 800, 32_000);
 }
 
 export async function generateAiSet(userId: string, input: AiGenerateInput) {
@@ -50,13 +54,15 @@ export async function generateAiSet(userId: string, input: AiGenerateInput) {
 
   let generated;
   try {
+    // Resolved once up front: a missing MOTAPI_KEY is a config error, not a model failure.
+    const provider = getMotapiProvider();
     // One call per model, at most 3 models: unparsable or empty output counts as a
     // failure and switches model. maxRetries: 0 — the SDK must not retry on its own.
     generated = await withModelSwitch(
       env.motapiSetModels,
       async (modelId, abortSignal) => {
         const result = await generateText({
-          model: getMotapiJsonModel(modelId),
+          model: getMotapiJsonModel(modelId, provider),
           temperature: 0,
           maxOutputTokens: maxOutputTokensFor(input.cardCount),
           output: Output.json(),

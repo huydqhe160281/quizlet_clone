@@ -3,7 +3,7 @@ import { env } from '@/config/env';
 import { buildSystemPrompt } from '@/features/guide/lib/assistant.prompt';
 import { loadGuideConfig } from '@/features/guide/lib/load-guide-config';
 import type { GuideUserContext } from '@/features/guide/schemas/guide-config.schema';
-import { getMotapiChatModel } from '@/server/ai/motapi';
+import { getMotapiChatModel, getMotapiProvider } from '@/server/ai/motapi';
 import { withModelSwitch, type ModelSwitchOptions } from '@/server/ai/model-switch';
 
 export type AssistantChatInput = {
@@ -18,7 +18,7 @@ type StreamPart = TextStreamPart<ToolSet>;
 export type AssistantChatStream = { toTextStreamResponse(): Response };
 
 /** Time to first chunk per model (the real system prompt makes kimi take ~10s), and the overall
- * switching budget, leaving room to stream the answer within the route's 60s maxDuration. */
+ * switching budget, leaving room to stream the answer within the route's 90s maxDuration. */
 export const ASSISTANT_SWITCH_OPTIONS: ModelSwitchOptions = {
   label: 'assistant',
   attemptTimeoutMs: 20_000,
@@ -83,11 +83,13 @@ export async function streamAssistantChat(input: AssistantChatInput): Promise<As
 
   // A model counts as working once it produces its first text chunk; an error, timeout or
   // empty answer before that switches to the next model (3 calls at most, no retries).
+  // Resolved once up front: a missing MOTAPI_KEY is a config error, not a model failure.
+  const provider = getMotapiProvider();
   return withModelSwitch(
     env.motapiChatModels,
     async (modelId, attemptSignal) => {
       const stream = streamText({
-        model: getMotapiChatModel(modelId),
+        model: getMotapiChatModel(modelId, provider),
         temperature: 0,
         system,
         messages: input.messages,

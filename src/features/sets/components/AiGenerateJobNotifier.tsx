@@ -2,15 +2,17 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAiGenerateJobStore } from '@/features/sets/ai-generate-job-store';
+import { setKeys } from '@/features/sets/query-keys';
 import { aiGenerateErrorMessage } from '@/features/sets/lib/ai-generate-error-message';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 /**
  * Announces a finished AI set generation that the modal is not showing (it was closed while
- * the job ran), with the same persistent toast style as the PWA update prompt. Mounted once
- * in the app layout so it works on any page.
+ * the job ran), with the same persistent toast style as the PWA update prompt, and refreshes
+ * the sets list when a set is ready. Mounted once in the root layout so it works on any page.
  */
 export function AiGenerateJobNotifier() {
   const t = useTranslations();
@@ -19,13 +21,19 @@ export function AiGenerateJobNotifier() {
   tRef.current = t;
   const routerRef = useRef(router);
   routerRef.current = router;
+  const queryClient = useQueryClient();
   const running = useAiGenerateJobStore((state) => state.job?.status === 'running');
 
   useEffect(
     () =>
       useAiGenerateJobStore.subscribe((state, prev) => {
         const job = state.job;
-        if (!job || job === prev.job || job.status === 'running' || state.watched) return;
+        if (!job || job === prev.job || job.status === 'running') return;
+        // The new draft must show up in My Sets whether or not the modal is open.
+        if (job.status === 'succeeded') {
+          void queryClient.invalidateQueries({ queryKey: setKeys.list() });
+        }
+        if (state.watched) return;
         const translate = tRef.current;
         state.clear();
 
@@ -50,7 +58,7 @@ export function AiGenerateJobNotifier() {
           closeButton: true,
         });
       }),
-    []
+    [queryClient]
   );
 
   // A reload or tab close would drop the running request.

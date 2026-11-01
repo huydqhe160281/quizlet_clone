@@ -382,6 +382,25 @@ describe('AIGenerateModal', () => {
     expect(useAiGenerateJobStore.getState().job?.status).toBe('running');
   });
 
+  it('Scenario: Form is fresh after a background job', async () => {
+    mockFetch.mockImplementation(() => new Promise(() => {}));
+
+    const { rerender } = renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Nội dung / chủ đề'), {
+      target: { value: 'Background generation test prompt' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Tạo bộ thẻ/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Chạy ngầm' }));
+
+    useAiGenerateJobStore.setState({ job: null });
+    rerender(
+      <LocaleProvider locale="vi" catalog={viCatalog}>
+        <AIGenerateModal open onOpenChange={vi.fn()} />
+      </LocaleProvider>
+    );
+    expect(screen.getByLabelText('Nội dung / chủ đề')).toHaveValue('');
+  });
+
   it('Scenario: Reopening during generation shows progress, not a new form', () => {
     useAiGenerateJobStore.setState({ job: { id: 99, status: 'running' } });
     renderWithLocale(<AIGenerateModal open onOpenChange={vi.fn()} />);

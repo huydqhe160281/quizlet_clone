@@ -3,7 +3,6 @@ import { Navbar } from '@/components/layout/Navbar';
 import { MobileNav, MobileNavSpacer } from '@/components/layout/MobileNav';
 import { redirect } from 'next/navigation';
 import { EmailVerificationBanner } from '@/features/auth/components/EmailVerificationBanner';
-import { AiGenerateJobNotifier } from '@/features/sets/components/AiGenerateJobNotifier';
 import { auth } from '@/server/auth/auth';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +27,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <MobileNavSpacer />
       </div>
       <MobileNav />
-      <AiGenerateJobNotifier />
     </div>
   );
 }

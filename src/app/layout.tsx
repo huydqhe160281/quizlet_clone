@@ -23,6 +23,7 @@ import { LocaleProvider } from '@/lib/i18n/LocaleProvider';
 import { THEME_IDS, THEME_STORAGE_KEY } from '@/lib/theme/themes';
 import { SYSTEM_THEME_COLORS, THEME_COLOR_BOOT_SCRIPT } from '@/lib/theme/theme-color';
 import { PwaProvider } from '@/features/pwa/PwaProvider';
+import { AiGenerateJobNotifier } from '@/features/sets/components/AiGenerateJobNotifier';
 import { StudyOfflineSyncProvider } from '@/features/study-offline/StudyOfflineSyncProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -88,6 +89,8 @@ export default async function RootLayout({
             <AuthSessionProvider>
               <LocaleProvider locale={locale} catalog={catalog}>
                 <PwaProvider>
+                  {/* Root level: a background AI job can finish on any page, (public) ones included. */}
+                  <AiGenerateJobNotifier />
                   <StudyOfflineSyncProvider>
                     <LoadingOverlayProvider>
                       <ErrorBoundary>

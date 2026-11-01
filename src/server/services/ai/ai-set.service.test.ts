@@ -27,12 +27,15 @@ vi.mock('@/config/env', () => ({
   env: { motapiSetModels: ['model-a', 'model-b', 'model-c', 'model-d'] },
 }));
 
+const getMotapiProviderMock = vi.hoisted(() => vi.fn(() => 'provider'));
+
 vi.mock('@/server/ai/motapi', () => ({
+  getMotapiProvider: getMotapiProviderMock,
   getMotapiJsonModel: vi.fn((modelId: string) => `mock:${modelId}`),
 }));
 
 import { revalidateTag } from 'next/cache';
-import { generateAiSet } from '@/server/services/ai/ai-set.service';
+import { generateAiSet, maxOutputTokensFor } from '@/server/services/ai/ai-set.service';
 
 const validInput = {
   prompt: 'Create 5 Japanese family vocabulary words',
@@ -121,6 +124,22 @@ describe('ai-set.service', () => {
 
     await generateAiSet('user-a', validInput);
     expect(generateTextMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails once, without trying models, when MOTAPI_KEY is missing', async () => {
+    getMotapiProviderMock.mockImplementationOnce(() => {
+      throw new Error('Missing required environment variable: MOTAPI_KEY');
+    });
+    await expect(generateAiSet('user-a', validInput)).rejects.toMatchObject({
+      code: 'AI_GENERATION_FAILED',
+    });
+    expect(generateTextMock).not.toHaveBeenCalled();
+  });
+
+  it('leaves room for ~100 output tokens per card, up to 32k', () => {
+    expect(maxOutputTokensFor(200)).toBeGreaterThanOrEqual(200 * 100);
+    expect(maxOutputTokensFor(5)).toBeLessThan(2_000);
+    expect(maxOutputTokensFor(undefined)).toBeLessThanOrEqual(32_000);
   });
 
   it('gives up after 3 models and never calls the 4th', async () => {

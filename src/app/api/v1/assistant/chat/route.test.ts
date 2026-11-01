@@ -124,6 +124,25 @@ describe('assistant chat route', () => {
     expect(res.status).toBe(429);
   });
 
+  it('does not report a failure when the client already left', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const controller = new AbortController();
+    streamAssistantChatMock.mockImplementation(() => {
+      controller.abort();
+      throw new Error('aborted');
+    });
+    const req = new Request('http://localhost/api/v1/assistant/chat', {
+      method: 'POST',
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'hello' }] }),
+      signal: controller.signal,
+    });
+
+    const res = await POST(req, { params: Promise.resolve({}) });
+    expect(res.status).toBe(499);
+    expect(consoleError).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
   it('returns 503 when streamAssistantChat throws', async () => {
     streamAssistantChatMock.mockImplementation(() => {
       throw new Error('MotAPI unavailable');

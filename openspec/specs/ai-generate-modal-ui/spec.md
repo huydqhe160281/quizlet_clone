@@ -89,7 +89,7 @@ The generation request SHALL live in an app-wide client job store, not in the mo
 
 #### Scenario: Set ready while the modal is closed
 
-- **GIVEN** a job finishes while the modal is closed, on any `(app)` page
+- **GIVEN** a job finishes while the modal is closed, on any page (the notifier is mounted in the root layout, so `/library` and `/shared` count too)
 - **WHEN** the response arrives
 - **THEN** a persistent toast (same style as the PWA update prompt) says the set is ready, with the set title, card count and an "Open set" action that navigates to `/sets/{id}`
 
