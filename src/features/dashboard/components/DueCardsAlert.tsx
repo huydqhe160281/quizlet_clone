@@ -30,7 +30,7 @@ export function DueCardsAlert({ dueCount }: { dueCount: number }) {
       </CardHeader>
       <CardContent>
         <Button asChild size="sm">
-          <Link href="/today">{t('dashboardPage.startReview')}</Link>
+          <Link href="/study">{t('dashboardPage.startReview')}</Link>
         </Button>
       </CardContent>
     </Card>

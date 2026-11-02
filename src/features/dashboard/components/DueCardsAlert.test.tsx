@@ -21,10 +21,10 @@ vi.mock('@/lib/i18n/LocaleProvider', () => ({
 }));
 
 describe('DueCardsAlert', () => {
-  it('Scenario: Due alert links to Today', () => {
+  it('Scenario: Due alert links to spaced review', () => {
     render(<DueCardsAlert dueCount={5} />);
     const link = screen.getByRole('link', { name: 'Start review' });
-    expect(link).toHaveAttribute('href', '/today');
+    expect(link).toHaveAttribute('href', '/study');
   });
 
   it('Scenario: No alert when none due', () => {

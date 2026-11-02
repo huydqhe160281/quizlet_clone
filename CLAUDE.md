@@ -53,7 +53,8 @@ Server reads use `unstable_cache` with tags (e.g. `public-sets`, per-user `sets-
 
 - Study modes: Flashcard, Learn, Write (fuzzy match, `src/lib/utils/fuzzy.ts`), Test (MC/T-F/typing), Draw (CJK stroke practice via hanzi-writer; only for cards with `type = new-word`). Mode logic lives in `src/features/study/lib/` (`round-engine`, `test-generator`, `sm2`), session client state in `src/features/study/store.ts` (Zustand).
 - Spaced repetition is SM-2 (`src/features/study/lib/sm2.ts`), persisted as `CardProgress` + `ReviewHistory` by `src/server/services/study/study.service.ts`.
-- "Today" adaptive coach (`/today`): `src/server/services/learning/` builds a ranked due/weak/new queue, daily goals, and retention insights. Day boundaries use the user's preferred IANA timezone (`zoned-day.ts`).
+- Day boundaries for streaks and reminders use the user's IANA timezone (`src/server/services/learning/zoned-day.ts`; browser-detected once via `timezone.service.ts`).
+- Activity stats survive deletes: `deleteSet`, `mergeSets` (delete sources), `deleteCard(s)` first roll the cascading `ReviewHistory` / answered `SessionCard` rows into `ReviewActivityArchive` (per user, UTC day) via `archiveReviewActivity` in the same transaction; `getActivity` and `countReviewActivity` add the archive back. Any new path that deletes cards or sets must do the same.
 
 ### Offline / PWA
 

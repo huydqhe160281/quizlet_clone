@@ -189,7 +189,7 @@ export async function getStats(userId: string) {
   const [totalSets, totalCards, dueCount] = await Promise.all([
     prisma.flashcardSet.count({ where: { userId } }),
     prisma.flashcard.count({ where: { set: { userId } } }),
-    // Same "due" as the Today queue the dashboard alert links to: owned sets only.
+    // Same "due" as the review queue the dashboard alert links to: owned sets only.
     prisma.cardProgress.count({
       where: { userId, dueDate: { lte: new Date() }, card: { set: { userId } } },
     }),
@@ -215,7 +215,8 @@ export async function getActivity(userId: string, days = 365) {
   since.setUTCDate(since.getUTCDate() - (days - 1));
   since.setUTCHours(0, 0, 0, 0);
 
-  // Single round-trip: union review_history + session_cards, then sum by day.
+  // Single round-trip: union review_history + session_cards + counts archived from
+  // deleted sets/cards, then sum by day.
   const rows = await prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
     SELECT day, SUM(count)::bigint AS count
     FROM (
@@ -232,6 +233,11 @@ export async function getActivity(userId: string, days = 365) {
       WHERE ss."userId" = ${userId}
         AND sc."answeredAt" IS NOT NULL
         AND sc."answeredAt" >= ${since}
+      GROUP BY 1
+      UNION ALL
+      SELECT to_char("day", 'YYYY-MM-DD') AS day, SUM("count")::bigint AS count
+      FROM "review_activity_archive"
+      WHERE "userId" = ${userId} AND "day" >= ${since}::date
       GROUP BY 1
     ) AS activity_days
     GROUP BY day

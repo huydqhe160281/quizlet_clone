@@ -64,7 +64,7 @@ The service worker SHALL apply the following request policies:
 
 **navigateFallback denylist** SHALL include `/api/**` and `/_next/**` paths that must not be rewritten to `/offline.html` as HTML navigations.
 
-**Precache** SHALL be limited to generated static assets, icons, and `/offline.html` — MUST NOT precache arbitrary authenticated App Router HTML (`/today`, `/dashboard`, etc.).
+**Precache** SHALL be limited to generated static assets, icons, and `/offline.html` — MUST NOT precache arbitrary authenticated App Router HTML (`/dashboard`, `/sets`, etc.).
 
 The service worker MUST NOT persist session tokens or auth API bodies into Cache Storage; cookies remain browser-managed.
 
@@ -85,7 +85,7 @@ The service worker MUST NOT persist session tokens or auth API bodies into Cache
 
 #### Scenario: Stale document not served offline
 
-- **GIVEN** an activated Phase 1 service worker and a prior online visit to an authenticated app route (e.g. `/today`)
+- **GIVEN** an activated Phase 1 service worker and a prior online visit to an authenticated app route (e.g. `/dashboard`)
 - **WHEN** the browser is offline and the user navigates to that same app route
 - **THEN** the user receives the `/offline.html` fallback (or network failure handling) and MUST NOT be shown a cached HTML/RSC document for that route as a successful page load
 

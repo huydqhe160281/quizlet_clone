@@ -15,6 +15,7 @@ import {
 import { assertCanPublish } from '@/server/auth/email-verified';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
+import { archiveReviewActivity } from '@/server/services/study/review-activity';
 import { SET_TITLE_MAX } from '@/features/sets/schemas/set.schema';
 
 export const SPLIT_TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 30_000 } as const;
@@ -168,7 +169,11 @@ export async function deleteSet(setId: string, userId: string) {
     throw new ApiError('NOT_FOUND', 'Set not found', 404);
   }
   assertOwner(existing, userId);
-  await prisma.flashcardSet.delete({ where: { id: setId } });
+  // Keep the deleted set's reviews in the activity stats (heatmap, totals).
+  await prisma.$transaction([
+    archiveReviewActivity({ setIds: [setId] }),
+    prisma.flashcardSet.delete({ where: { id: setId } }),
+  ]);
   invalidateSetCache(userId, existing.visibility, { setId });
 }
 
@@ -375,6 +380,7 @@ export async function mergeSets(userId: string, input: MergeSetsInput) {
   const [set] = input.deleteSources
     ? await prisma.$transaction([
         createMerged,
+        archiveReviewActivity({ setIds }),
         prisma.flashcardSet.deleteMany({ where: { id: { in: setIds }, userId } }),
       ])
     : [await createMerged];

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { assertSameOrigin } from '@/lib/i18n/origin';
 import { requireUserId } from '@/server/auth/auth-utils';
-import { adoptDetectedTimezone } from '@/server/services/learning/study-goals';
+import { adoptDetectedTimezone } from '@/server/services/user/timezone.service';
 
 const bodySchema = z.object({ timeZone: z.string().min(1).max(64) });
 

@@ -19,8 +19,8 @@ describe('PWA SW policy', () => {
   });
 
   it('Scenario: API bypasses SW cache', () => {
-    expect(resolveRuntimeStrategy('/api/v1/today')).toBe('NetworkOnly');
-    expect(mayPersistInCacheStorage('/api/v1/today')).toBe(false);
+    expect(resolveRuntimeStrategy('/api/v1/sets')).toBe('NetworkOnly');
+    expect(mayPersistInCacheStorage('/api/v1/sets')).toBe(false);
     expect(mayPersistInCacheStorage('/api/auth/session')).toBe(false);
   });
 
@@ -35,16 +35,16 @@ describe('PWA SW policy', () => {
   });
 
   it('Scenario: Stale document not served offline', () => {
-    expect(mayPersistInCacheStorage('/today')).toBe(false);
+    expect(mayPersistInCacheStorage('/sets')).toBe(false);
     expect(mayPersistInCacheStorage('/dashboard')).toBe(false);
     expect(mayPersistInCacheStorage(OFFLINE_FALLBACK_PATH)).toBe(true);
   });
 
   it('Scenario: navigateFallback denylist excludes API and RSC paths', () => {
     expect(NAVIGATE_FALLBACK_DENYLIST.length).toBeGreaterThan(0);
-    expect(isNavigateFallbackDenied('/api/v1/today')).toBe(true);
+    expect(isNavigateFallbackDenied('/api/v1/sets')).toBe(true);
     expect(isNavigateFallbackDenied('/_next/static/x.js')).toBe(true);
-    expect(isNavigateFallbackDenied('/today')).toBe(false);
+    expect(isNavigateFallbackDenied('/sets')).toBe(false);
     expect(isNavigateFallbackDenied('/offline')).toBe(false);
   });
 

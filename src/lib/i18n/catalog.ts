@@ -10,7 +10,6 @@ const CATALOG_FILES = [
   'emails.json',
   'guide.json',
   'ui.json',
-  'today.json',
   'pwa.json',
   'settings.json',
 ] as const;

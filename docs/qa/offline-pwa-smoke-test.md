@@ -10,16 +10,16 @@ Manual checklist after `pnpm build && pnpm start` (HTTPS or `http://localhost`).
 
 ## Chromium Application panel
 
-1. Open `http://localhost:3000`, log in if needed, visit `/today` once online.
+1. Open `http://localhost:3000`, log in if needed, visit `/dashboard` once online.
 2. DevTools → **Application** → **Service Workers**: confirm `/sw.js` is registered and activated.
-3. **Cache Storage**: confirm entries for static/`offline` only — **no** `/api/**` JSON and **no** cached `/today` HTML shells.
+3. **Cache Storage**: confirm entries for static/`offline` only — **no** `/api/**` JSON and **no** cached `/dashboard` HTML shells.
 4. **Manifest**: installability metadata from `/manifest.webmanifest` (from `src/app/manifest.ts`, not a second `public/manifest.json`).
 
 ## Offline navigation
 
 1. With SW active, DevTools → Network → check **Offline**.
-2. Navigate to `/today` (or hard reload a deep link).
-3. Expect product **offline shell** (`/offline.html` via SW fallback; localized by `app-locale` cookie), **not** a stale authenticated `/today` shell.
+2. Navigate to `/dashboard` (or hard reload a deep link).
+3. Expect product **offline shell** (`/offline.html` via SW fallback; localized by `app-locale` cookie), **not** a stale authenticated `/dashboard` shell.
 4. Click **Try again** / reload CTA when back online.
 
 ## Cold first visit offline

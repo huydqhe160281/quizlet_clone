@@ -54,6 +54,7 @@ model User {
   studySessions        StudySession[]
   cardProgress         CardProgress[]
   reviewHistory        ReviewHistory[]
+  archivedActivity     ReviewActivityArchive[]
   stats                UserStats?
   pushSubscriptions    PushSubscription[]
   processedMutations   ProcessedMutation[]
@@ -247,6 +248,21 @@ model ReviewHistory {
   @@index([userId, reviewedAt(sort: Desc)])
   @@index([cardId])
   @@map("review_history")
+}
+
+/// Per-day review counts kept after the cards/sets they came from are deleted, so the
+/// activity heatmap, lifetime totals and streak-restore credit don't shrink.
+/// Written only by `archiveReviewActivity` right before a set/card delete.
+model ReviewActivityArchive {
+  userId String
+  /// UTC calendar day, matching the heatmap's day buckets.
+  day    DateTime @db.Date
+  count  Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@map("review_activity_archive")
 }
 
 model StudySession {

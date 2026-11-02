@@ -159,6 +159,22 @@ describe('dashboard stats service', () => {
     expect(hit?.count).toBe(5);
   });
 
+  it('getActivity: counts reviews archived from deleted sets in the same query', async () => {
+    prismaMock.$queryRaw.mockResolvedValueOnce([]);
+
+    await getActivity('user-a', 30);
+
+    const [strings, ...values] = prismaMock.$queryRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    const sql = strings.join('?');
+    expect(sql).toContain('FROM "review_history"');
+    expect(sql).toContain('FROM "session_cards"');
+    expect(sql).toContain('FROM "review_activity_archive"');
+    expect(values.filter((value) => value === 'user-a')).toHaveLength(3);
+  });
+
   it('test_update_streak: increments streak on consecutive day', async () => {
     prismaMock.userStats.findUnique.mockResolvedValue({
       userId: 'user-a',

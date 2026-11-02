@@ -24,7 +24,6 @@ const APP_NAV_ITEMS = [
     labelKey: 'nav.dashboard',
     guideTargetId: 'nav-dashboard',
   },
-  { id: 'today', href: '/today', labelKey: 'nav.today', guideTargetId: 'nav-today' },
   { id: 'sets', href: '/sets', labelKey: 'nav.sets', guideTargetId: 'nav-sets' },
   ...(STUDY_NAV_ENABLED
     ? [{ id: 'study', href: '/study', labelKey: 'nav.study', guideTargetId: 'nav-study' }]

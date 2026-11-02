@@ -60,7 +60,15 @@ The system SHALL provide daily review counts for the past 365 days to render a G
 
 - **GIVEN** user reviewed 15 cards yesterday and 0 cards today
 - **WHEN** GET `/api/v1/dashboard/activity`
-- **THEN** response includes daily counts for the past 365 days (zero-filled), aggregating spaced-repetition `reviewHistory` and answered `sessionCard` rows
+- **THEN** response includes daily counts for the past 365 days (zero-filled), aggregating spaced-repetition `reviewHistory`, answered `sessionCard` rows, and `ReviewActivityArchive` day counts
+
+#### Scenario: Deleting a set keeps its reviews in the stats
+
+- **GIVEN** a user made 100 reviews (spaced or in-session) on the cards of a set, spread over several days
+- **WHEN** the owner deletes that set (or some of its cards, or merges it with "delete sources")
+- **THEN** before the cascade, those reviews are rolled up per user and UTC day into `ReviewActivityArchive` in the same transaction, for every user who studied the cards
+- **AND** the heatmap's daily counts, its "N reviews (last year)" total, and the lifetime review count (`countReviewActivity`: unverified study limit, streak-restore credit) are unchanged; the streak (stored on `UserStats`) is unaffected
+- **AND** write paths and the `ProcessedMutation` replay contract are untouched: the archive only copies counts out of rows about to be deleted
 
 #### Scenario: Performance
 
@@ -98,16 +106,16 @@ The system SHALL display up to 5 recent study sessions on the Dashboard, **group
 
 ### Requirement: Due Cards Alert
 
-The system SHALL display a due-cards alert on the Dashboard when `dueToday > 0`, and its primary action SHALL unconditionally navigate to **`/today`** (Adaptive Learning Coach) instead of the SM-2 study page — this replaces the prior link target for that alert; there is no case where both destinations are offered simultaneously. When `dueToday = 0`, the alert remains hidden (existing behavior).
+The system SHALL display a due-cards alert on the Dashboard when `dueToday > 0`, and its primary action SHALL navigate to the SM-2 spaced-review page **`/study`**. When `dueToday = 0`, the alert remains hidden (existing behavior).
 
 **Constraint**: MUST  
 **Verification**: Component test `DueCardsAlert` href target; optional dashboard smoke
 
-#### Scenario: Due alert links to Today
+#### Scenario: Due alert links to spaced review
 
 - **GIVEN** dashboard stats with `dueToday = 5`
 - **WHEN** `DueCardsAlert` renders
-- **THEN** the primary CTA links to `/today`
+- **THEN** the primary CTA links to `/study`
 
 #### Scenario: No alert when none due
 

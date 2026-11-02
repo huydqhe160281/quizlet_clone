@@ -33,7 +33,7 @@ describe('middleware route protection', () => {
   });
 
   it('fails closed when the session has no user id', () => {
-    const res = run('/today', { user: {} });
+    const res = run('/dashboard', { user: {} });
     expect(res.status).toBe(302);
   });
 

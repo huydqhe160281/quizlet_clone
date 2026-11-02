@@ -14,7 +14,6 @@ export const QUICK_PROMPT_KEYS = [
   'guideUi.promptImport',
   'guideUi.promptSplitMerge',
   'guideUi.promptShare',
-  'guideUi.promptToday',
   'guideUi.promptStreak',
   'guideUi.promptReminder',
   'guideUi.promptOffline',

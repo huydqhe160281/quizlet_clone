@@ -90,10 +90,10 @@ describe('isAllowedPushEndpoint', () => {
 });
 
 describe('buildStudyReminder', () => {
-  it('mentions the streak in the user locale and links to /today', () => {
+  it('mentions the streak in the user locale and links to /study', () => {
     const payload = buildStudyReminder('en', 4);
     expect(payload.title).toContain('4-day');
-    expect(payload.url).toBe('/today');
+    expect(payload.url).toBe('/study');
   });
 
   it('falls back to Vietnamese copy without a streak', () => {
@@ -158,7 +158,7 @@ describe('push subscriptions', () => {
     expect(result).toEqual({ configured: true, sent: 1, skipped: 1, removed: 1, failed: 1 });
     expect(sendNotification).toHaveBeenCalledTimes(3);
     const [, body] = sendNotification.mock.calls[0];
-    expect(JSON.parse(body as string)).toMatchObject({ url: '/today' });
+    expect(JSON.parse(body as string)).toMatchObject({ url: '/study' });
     expect(prismaMock.pushSubscription.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['due'] } },
       data: { lastSentAt: cronRun },

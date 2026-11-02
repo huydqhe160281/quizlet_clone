@@ -23,7 +23,7 @@ describe('isStudySessionPath', () => {
     '/sets/abc123/edit',
     '/sets/abc123/study',
     '/sets/new',
-    '/today',
+    '/dashboard',
     '/sets/abc123/learn/extra',
   ])('does not match %s', (path) => {
     expect(isStudySessionPath(path)).toBe(false);

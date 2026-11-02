@@ -4,6 +4,7 @@ const prismaMock = vi.hoisted(() => ({
   userStats: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
   reviewHistory: { count: vi.fn() },
   sessionCard: { count: vi.fn() },
+  reviewActivityArchive: { aggregate: vi.fn() },
 }));
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 
@@ -140,8 +141,10 @@ describe('computeRestoreOffer', () => {
 describe('restoreStreak', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    prismaMock.reviewHistory.count.mockResolvedValue(600);
+    prismaMock.reviewHistory.count.mockResolvedValue(500);
     prismaMock.sessionCard.count.mockResolvedValue(400);
+    // 100 reviews from deleted sets still earn restores: 1000 in total.
+    prismaMock.reviewActivityArchive.aggregate.mockResolvedValue({ _sum: { count: 100 } });
     prismaMock.userStats.updateMany.mockResolvedValue({ count: 1 });
   });
 

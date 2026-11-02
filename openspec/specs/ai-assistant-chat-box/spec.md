@@ -195,7 +195,7 @@ The system SHALL render a floating chat widget at the bottom-right of all pages 
 
 - **GIVEN** the quick-prompt chips are shown
 - **WHEN** user clicks the "…" toggle (`aria-expanded`, label "Xem thêm câu hỏi gợi ý")
-- **THEN** the full list of suggested questions (AI generation, background generation, import, split/merge, sharing, Today, streak, reminders, offline, theme/language, email verification) appears, and a "Thu gọn" button collapses it again; every question has a matching FAQ entry in `docs/guide/faq.vi.json`
+- **THEN** the full list of suggested questions (AI generation, background generation, import, split/merge, sharing, streak, reminders, offline, theme/language, email verification) appears, and a "Thu gọn" button collapses it again; every question has a matching FAQ entry in `docs/guide/faq.vi.json`
 
 #### Scenario: Keyboard accessibility
 

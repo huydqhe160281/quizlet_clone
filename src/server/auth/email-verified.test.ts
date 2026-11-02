@@ -4,6 +4,7 @@ const prismaMock = vi.hoisted(() => ({
   user: { findUnique: vi.fn() },
   reviewHistory: { count: vi.fn() },
   sessionCard: { count: vi.fn() },
+  reviewActivityArchive: { aggregate: vi.fn() },
 }));
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 
@@ -48,6 +49,7 @@ describe('email-verified', () => {
     prismaMock.user.findUnique.mockResolvedValue({ emailVerified: null, passwordHash: 'h' });
     prismaMock.reviewHistory.count.mockResolvedValue(150);
     prismaMock.sessionCard.count.mockResolvedValue(49);
+    prismaMock.reviewActivityArchive.aggregate.mockResolvedValue({ _sum: { count: null } });
     await expect(getStudyLimitStatus('u1')).resolves.toEqual({
       used: 199,
       limit: 200,
@@ -58,8 +60,10 @@ describe('email-verified', () => {
 
   it('blocks starting study for unverified accounts at the limit', async () => {
     prismaMock.user.findUnique.mockResolvedValue({ emailVerified: null, passwordHash: 'h' });
-    prismaMock.reviewHistory.count.mockResolvedValue(150);
+    prismaMock.reviewHistory.count.mockResolvedValue(100);
     prismaMock.sessionCard.count.mockResolvedValue(50);
+    // Reviews of deleted sets still count, so deleting a set does not reset the budget.
+    prismaMock.reviewActivityArchive.aggregate.mockResolvedValue({ _sum: { count: 50 } });
     await expect(assertCanStartStudy('u1')).rejects.toMatchObject({
       code: 'STUDY_LIMIT_REACHED',
       status: 403,

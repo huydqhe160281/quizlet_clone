@@ -96,7 +96,7 @@ export function buildStudyReminder(
   return {
     title: t(catalog, `${key}.title`, { count: streak }),
     body: t(catalog, `${key}.body`, { count: streak }),
-    url: '/today',
+    url: '/study',
   };
 }
 

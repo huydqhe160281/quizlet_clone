@@ -4,7 +4,7 @@ import { parseInlineMarkdown } from '@/features/guide/lib/assistant-markdown';
 import { sanitizeAssistantLinks } from '@/features/guide/lib/assistant.links';
 
 describe('isSafeInternalPath', () => {
-  it.each(['/dashboard', '/sets/abc?tab=cards', '/today#goal'])('accepts %s', (path) => {
+  it.each(['/dashboard', '/sets/abc?tab=cards', '/study#due'])('accepts %s', (path) => {
     expect(isSafeInternalPath(path)).toBe(true);
   });
 

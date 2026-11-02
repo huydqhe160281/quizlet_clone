@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-01T15:09:03.993Z",
+  "generatedAt": "2026-11-02T02:24:34.660Z",
   "site": {
     "name": "QuizFree",
     "locale": "runtime"
@@ -11,12 +11,6 @@
       "label": "nav.dashboard",
       "href": "/dashboard",
       "description": "nav.dashboard"
-    },
-    {
-      "id": "today",
-      "label": "nav.today",
-      "href": "/today",
-      "description": "nav.today"
     },
     {
       "id": "sets",
@@ -159,11 +153,6 @@
       "auth": "required"
     },
     {
-      "path": "/today",
-      "title": "Today",
-      "auth": "required"
-    },
-    {
       "path": "/verify-email",
       "title": "Verify Email",
       "auth": "guest-only"
@@ -220,7 +209,7 @@
     },
     {
       "q": "Chuỗi ngày học (streak) được tính thế nào?",
-      "a": "Mỗi ngày bạn bắt đầu hoặc hoàn thành một buổi học, chuỗi tăng 1 nếu hôm qua bạn cũng học. Ngày được tính theo múi giờ của bạn (xem ở trang Hôm nay)."
+      "a": "Mỗi ngày bạn bắt đầu hoặc hoàn thành một buổi học, chuỗi tăng 1 nếu hôm qua bạn cũng học. Ngày được tính theo múi giờ trình duyệt của bạn (app tự nhận lần đầu bạn đăng nhập)."
     },
     {
       "q": "Lỡ mất vài ngày thì có giữ được chuỗi không?",
@@ -259,12 +248,12 @@
       "a": "Đặt Quyền riêng tư của bộ thẻ là Công khai (cần xác nhận email) để nó xuất hiện ở Thư viện (/library) và trong Tìm kiếm. Với bộ thẻ công khai của người khác, bấm \"Sao chép vào bộ thẻ của tôi\" (Duplicate) để có bản riêng chỉnh sửa và học."
     },
     {
-      "q": "Trang Hôm nay (/today) dùng để làm gì?",
-      "a": "Trang Hôm nay gợi ý những gì nên học trong ngày: thẻ đến hạn ôn, thẻ hay sai và thẻ mới, mục tiêu số thẻ mỗi ngày, thống kê ghi nhớ và một buổi học đề xuất. Ngày được tính theo múi giờ bạn chọn."
+      "q": "Xóa bộ thẻ có làm mất thống kê học tập không?",
+      "a": "Không. Khi bạn xóa bộ thẻ hoặc xóa thẻ, số lượt ôn đã làm vẫn được giữ trong biểu đồ hoạt động trên Dashboard (\"N lượt ôn (năm qua)\"), nên bạn vẫn biết mình đã học bao nhiêu mỗi ngày, tháng, năm. Chuỗi ngày học cũng không bị ảnh hưởng."
     },
     {
       "q": "Ôn tập ngắt quãng (spaced repetition) hoạt động thế nào?",
-      "a": "Mỗi lần bạn trả lời, app dùng thuật toán SM-2 để tính ngày ôn tiếp theo: nhớ tốt thì khoảng cách dài ra, quên thì ôn lại sớm. Các thẻ đến hạn hiện ở Dashboard và trang Hôm nay."
+      "a": "Mỗi lần bạn trả lời, app dùng thuật toán SM-2 để tính ngày ôn tiếp theo: nhớ tốt thì khoảng cách dài ra, quên thì ôn lại sớm. Các thẻ đến hạn hiện ở Dashboard; bấm \"Bắt đầu ôn\" để ôn chúng."
     },
     {
       "q": "Chế độ Viết chữ (Draw) và Bắn thiên thạch là gì?",
@@ -296,11 +285,6 @@
       "id": "nav-dashboard",
       "selector": "[data-guide=nav-dashboard]",
       "label": "nav.dashboard"
-    },
-    {
-      "id": "nav-today",
-      "selector": "[data-guide=nav-today]",
-      "label": "nav.today"
     },
     {
       "id": "nav-sets",

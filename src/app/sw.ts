@@ -83,7 +83,7 @@ self.addEventListener('push', (event) => {
       // No `badge`: Android masks it to a silhouette, so the full-colour icon became a white square.
       icon: '/icons/icon-192.png',
       tag: 'study-reminder',
-      data: { url: payload.url || '/today' },
+      data: { url: payload.url || '/study' },
     })
   );
 });
@@ -91,7 +91,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const target = new URL(
-    (event.notification.data as { url?: string } | null)?.url || '/today',
+    (event.notification.data as { url?: string } | null)?.url || '/study',
     self.location.origin
   );
   if (target.origin !== self.location.origin) return;
