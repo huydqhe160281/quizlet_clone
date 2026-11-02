@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight, CheckCircle2, XCircle } from 'lucide-react';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
+import { praiseKey, praisePercent } from '@/features/study/lib/session-praise';
 import { STUDY_MODE_SHORT_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
@@ -26,6 +28,8 @@ export function RoundSummary({
   const incorrectCount = total - correctCount;
   const scorePercent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
   const modeKey = STUDY_MODE_SHORT_LABEL_KEY[mode as StudyModeValue];
+  // Picked once so the message does not change on re-render.
+  const [praiseSeed] = useState(() => Math.random());
 
   return (
     <Card className="glass-panel mx-auto max-w-md overflow-hidden rounded-xl border-border/50 text-center shadow-lg">
@@ -34,6 +38,9 @@ export function RoundSummary({
           {t('study.roundComplete', { round: roundIndex + 1 })}
         </CardTitle>
         <CardDescription>{modeKey ? t(modeKey) : mode}</CardDescription>
+        <p className="text-base font-semibold text-primary">
+          {t(praiseKey(praisePercent(correctCount, total), praiseSeed, 'round'))}
+        </p>
       </CardHeader>
       <CardContent className="space-y-6">
         {mode === 'FLASHCARD' ? (

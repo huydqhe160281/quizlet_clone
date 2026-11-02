@@ -362,6 +362,13 @@ The system SHALL split a study run into rounds of at most `cardsPerRound` cards,
 - **WHEN** round 1 ends (all 5 cards answered)
 - **THEN** a between-round summary screen shows round 1 score (correct/total for that round) and a "Next round" action; the overall run complete screen is NOT shown yet
 
+#### Scenario: Per-Round Encouragement
+
+- **GIVEN** a round ends and the between-round summary is shown
+- **WHEN** the learner answered a share of that round's cards correctly (known cards in Flashcard)
+- **THEN** the summary shows one encouragement line for that round, picked at random from the variants of its score band: 100% congratulates, 80–99% praises, 60–79% praises and encourages, 40–59% encourages, below 40% gently suggests reviewing the missed cards
+- **AND** the session complete screen uses the same bands for its own line, scored as correct answers over all graded answers of the run
+
 ---
 
 ### Requirement: Session Settings Persistence

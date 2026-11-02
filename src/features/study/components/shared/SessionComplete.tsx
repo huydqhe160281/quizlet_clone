@@ -8,7 +8,7 @@ import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
 import { useStudyLimitReached } from '@/features/auth/hooks/useStudyLimitReached';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
-import { praiseKey } from '@/features/study/lib/session-praise';
+import { praiseKey, praisePercent } from '@/features/study/lib/session-praise';
 import { STUDY_MODE_SHORT_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
@@ -34,7 +34,6 @@ export function SessionComplete({
   // Requeued cards are answered again until right, so correct/total ends at 100% after
   // any mistake. Correct over all graded answers rewards getting cards right first time.
   const answered = reviewedCount ?? total;
-  const praisePercent = answered > 0 ? (correctCount / answered) * 100 : 0;
   // Picked once so the message does not change on re-render.
   const [praiseSeed] = useState(() => Math.random());
   const studyLimitReached = useStudyLimitReached();
@@ -48,7 +47,7 @@ export function SessionComplete({
         <CardTitle className="text-2xl font-extrabold">{t('study.sessionComplete')}</CardTitle>
         <CardDescription>{modeKey ? t(modeKey) : mode}</CardDescription>
         <p className="text-base font-semibold text-primary">
-          {t(praiseKey(praisePercent, praiseSeed))}
+          {t(praiseKey(praisePercent(correctCount, answered), praiseSeed))}
         </p>
       </CardHeader>
       <CardContent className="space-y-6">

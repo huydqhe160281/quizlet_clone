@@ -44,7 +44,7 @@ describe('SessionComplete praise', () => {
       locale: 'en',
     });
     expect(
-      screen.getByText('Don\u2019t give up — memory takes time to settle in.')
+      screen.getByText('Every review helps you remember longer. Keep going.')
     ).toBeInTheDocument();
   });
 
@@ -64,7 +64,7 @@ describe('SessionComplete praise', () => {
       <SessionComplete mode="FLASHCARD" correctCount={5} reviewedCount={8} total={5} setId="s" />,
       { locale: 'en' }
     );
-    // 5 / 8 = 63% → the 50–74% band.
+    // 5 / 8 = 63% → the 60–79% band.
     expect(screen.getByText('Past the halfway mark — keep it up!')).toBeInTheDocument();
   });
 });
