@@ -10,8 +10,9 @@ CREATE TABLE "review_activity_archive" (
 -- AddForeignKey
 ALTER TABLE "review_activity_archive" ADD CONSTRAINT "review_activity_archive_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Daily-goal setting belonged to the removed Today page.
-ALTER TABLE "user_stats" DROP COLUMN "dailyGoalCards";
+-- "user_stats"."dailyGoalCards" (removed Today page) is no longer in schema.prisma but is kept
+-- here: the deployed client still selects it. Drop it in a later migration once this
+-- release is live everywhere.
 
 -- Keep review activity when the rows it is counted from are deleted (a set, a card, a
 -- study session, or a merge that deletes its sources): every path, cascades included,
