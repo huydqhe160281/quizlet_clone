@@ -189,10 +189,9 @@ export async function getStats(userId: string) {
   const [totalSets, totalCards, dueCount] = await Promise.all([
     prisma.flashcardSet.count({ where: { userId } }),
     prisma.flashcard.count({ where: { set: { userId } } }),
-    // Same "due" as the review queue the dashboard alert links to: owned sets only.
-    prisma.cardProgress.count({
-      where: { userId, dueDate: { lte: new Date() }, card: { set: { userId } } },
-    }),
+    // Same "due" as the /study review queue the dashboard alert links to (getDueCards):
+    // every card the user has progress on, including other people's public sets.
+    prisma.cardProgress.count({ where: { userId, dueDate: { lte: new Date() } } }),
   ]);
 
   const accuracy = stats.totalReviews > 0 ? stats.totalCorrect / stats.totalReviews : 0;
@@ -214,30 +213,33 @@ export async function getActivity(userId: string, days = 365) {
   const since = new Date();
   since.setUTCDate(since.getUTCDate() - (days - 1));
   since.setUTCHours(0, 0, 0, 0);
+  // Timestamps are stored as UTC wall time (`timestamp` without zone), so bucket and filter
+  // on them directly: a non-UTC session TimeZone must not shift days.
+  const sinceDay = since.toISOString().slice(0, 10);
 
   // Single round-trip: union review_history + session_cards + counts archived from
   // deleted sets/cards, then sum by day.
   const rows = await prisma.$queryRaw<Array<{ day: string; count: bigint }>>`
     SELECT day, SUM(count)::bigint AS count
     FROM (
-      SELECT to_char("reviewedAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
+      SELECT to_char("reviewedAt", 'YYYY-MM-DD') AS day,
              COUNT(*)::bigint AS count
       FROM "review_history"
-      WHERE "userId" = ${userId} AND "reviewedAt" >= ${since}
+      WHERE "userId" = ${userId} AND "reviewedAt" >= ${sinceDay}::timestamp
       GROUP BY 1
       UNION ALL
-      SELECT to_char(sc."answeredAt" AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
+      SELECT to_char(sc."answeredAt", 'YYYY-MM-DD') AS day,
              COUNT(*)::bigint AS count
       FROM "session_cards" sc
       INNER JOIN "study_sessions" ss ON ss.id = sc."sessionId"
       WHERE ss."userId" = ${userId}
         AND sc."answeredAt" IS NOT NULL
-        AND sc."answeredAt" >= ${since}
+        AND sc."answeredAt" >= ${sinceDay}::timestamp
       GROUP BY 1
       UNION ALL
       SELECT to_char("day", 'YYYY-MM-DD') AS day, SUM("count")::bigint AS count
       FROM "review_activity_archive"
-      WHERE "userId" = ${userId} AND "day" >= ${since}::date
+      WHERE "userId" = ${userId} AND "day" >= ${sinceDay}::date
       GROUP BY 1
     ) AS activity_days
     GROUP BY day

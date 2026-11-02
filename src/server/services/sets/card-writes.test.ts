@@ -2,14 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
   flashcardSet: { findUnique: vi.fn(), findFirst: vi.fn() },
-  flashcard: {
-    findMany: vi.fn(),
-    findFirst: vi.fn(),
-    aggregate: vi.fn(),
-    createMany: vi.fn(),
-    delete: vi.fn(),
-    deleteMany: vi.fn(),
-  },
+  flashcard: { findMany: vi.fn(), aggregate: vi.fn(), createMany: vi.fn() },
   $executeRaw: vi.fn(),
   $transaction: vi.fn(),
 }));
@@ -17,12 +10,7 @@ const prismaMock = vi.hoisted(() => ({
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn(), unstable_cache: vi.fn() }));
 
-const archiveMock = vi.hoisted(() => vi.fn());
-vi.mock('@/server/services/study/review-activity', () => ({
-  archiveReviewActivity: archiveMock,
-}));
-
-import { deleteCard, deleteCards, reorderCards } from '@/server/services/sets/card.service';
+import { reorderCards } from '@/server/services/sets/card.service';
 import { importJsonToExisting } from '@/server/services/sets/import.service';
 
 describe('reorderCards', () => {
@@ -127,44 +115,5 @@ describe('folder changes invalidate the cached per-user set lists', () => {
       await action();
       expect(revalidateTag).toHaveBeenCalledWith('sets-user-a');
     }
-  });
-});
-
-describe('deleting cards keeps their review activity', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    prismaMock.flashcardSet.findUnique.mockResolvedValue({
-      id: 'set-1',
-      userId: 'user-a',
-      visibility: 'PRIVATE',
-    });
-    archiveMock.mockReturnValue('archive-op');
-    prismaMock.$transaction.mockResolvedValue([]);
-  });
-
-  it('deleteCard archives the card activity before deleting it, in one transaction', async () => {
-    prismaMock.flashcard.findFirst.mockResolvedValue({ id: 'card-1', setId: 'set-1' });
-    prismaMock.flashcard.delete.mockReturnValue('delete-op');
-
-    await deleteCard('set-1', 'card-1', 'user-a');
-
-    expect(archiveMock).toHaveBeenCalledWith({ setId: 'set-1', cardIds: ['card-1'] });
-    expect(prismaMock.$transaction).toHaveBeenCalledWith(['archive-op', 'delete-op']);
-  });
-
-  it('deleteCard archives nothing for a card outside the set', async () => {
-    prismaMock.flashcard.findFirst.mockResolvedValue(null);
-
-    await expect(deleteCard('set-1', 'card-x', 'user-a')).rejects.toMatchObject({ status: 404 });
-    expect(archiveMock).not.toHaveBeenCalled();
-  });
-
-  it('deleteCards archives the batch scoped to the set', async () => {
-    prismaMock.flashcard.deleteMany.mockReturnValue('delete-op');
-
-    await deleteCards('set-1', ['card-1', 'card-2'], 'user-a');
-
-    expect(archiveMock).toHaveBeenCalledWith({ setId: 'set-1', cardIds: ['card-1', 'card-2'] });
-    expect(prismaMock.$transaction).toHaveBeenCalledWith(['archive-op', 'delete-op']);
   });
 });

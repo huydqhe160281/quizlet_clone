@@ -22,11 +22,6 @@ vi.mock('@/server/db', () => ({
   prisma: prismaMock,
 }));
 
-const archiveMock = vi.hoisted(() => vi.fn());
-vi.mock('@/server/services/study/review-activity', () => ({
-  archiveReviewActivity: archiveMock,
-}));
-
 vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
   unstable_cache:
@@ -241,25 +236,6 @@ describe('set.service', () => {
     expect(prismaMock.flashcardSet.delete).toHaveBeenCalledWith({
       where: { id: 'set-1' },
     });
-  });
-
-  it('deleteSet: archives the set review activity in the same transaction, before the delete', async () => {
-    prismaMock.flashcardSet.findUnique.mockResolvedValue({ id: 'set-1', userId: 'user-a' });
-    archiveMock.mockReturnValue('archive-op');
-    prismaMock.flashcardSet.delete.mockReturnValue('delete-op');
-
-    await deleteSet('set-1', 'user-a');
-
-    expect(archiveMock).toHaveBeenCalledWith({ setIds: ['set-1'] });
-    expect(prismaMock.$transaction).toHaveBeenCalledWith(['archive-op', 'delete-op']);
-  });
-
-  it('deleteSet: a non-owner archives nothing', async () => {
-    prismaMock.flashcardSet.findUnique.mockResolvedValue({ id: 'set-1', userId: 'user-b' });
-
-    await expect(deleteSet('set-1', 'user-a')).rejects.toMatchObject({ status: 403 });
-    expect(archiveMock).not.toHaveBeenCalled();
-    expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
   it('test_duplicate_public_set: copies cards into private duplicate', async () => {
@@ -574,7 +550,6 @@ describe('set.service', () => {
         { ...partTwo, visibility: 'PRIVATE' },
       ]);
       prismaMock.flashcardSet.deleteMany.mockReturnValue('delete-op');
-      archiveMock.mockReturnValue('archive-op');
       prismaMock.$transaction.mockImplementation(async (ops: unknown[]) => Promise.all(ops));
 
       const result = await mergeSets('user-a', {
@@ -588,13 +563,7 @@ describe('set.service', () => {
       expect(prismaMock.flashcardSet.deleteMany).toHaveBeenCalledWith({
         where: { id: { in: ['part-1', 'part-2'] }, userId: 'user-a' },
       });
-      // Source sets' review activity is archived before they cascade away.
-      expect(archiveMock).toHaveBeenCalledWith({ setIds: ['part-1', 'part-2'] });
-      expect(prismaMock.$transaction).toHaveBeenCalledWith([
-        expect.anything(),
-        'archive-op',
-        'delete-op',
-      ]);
+      expect(prismaMock.$transaction).toHaveBeenCalledWith([expect.anything(), 'delete-op']);
       expect(revalidateTag).toHaveBeenCalledWith('public-set-part-1');
     });
 

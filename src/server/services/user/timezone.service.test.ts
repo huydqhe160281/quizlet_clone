@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/api-error';
 const ensureUserStatsMock = vi.hoisted(() => vi.fn());
 const userStatsUpdateManyMock = vi.hoisted(() => vi.fn());
 const userStatsFindUniqueMock = vi.hoisted(() => vi.fn());
+const userStatsUpdateMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/server/services/user/stats.service', () => ({
   ensureUserStats: ensureUserStatsMock,
@@ -12,6 +13,7 @@ vi.mock('@/server/services/user/stats.service', () => ({
 vi.mock('@/server/db', () => ({
   prisma: {
     userStats: {
+      update: (...args: unknown[]) => userStatsUpdateMock(...args),
       updateMany: (...args: unknown[]) => userStatsUpdateManyMock(...args),
       findUnique: (...args: unknown[]) => userStatsFindUniqueMock(...args),
     },
@@ -20,6 +22,7 @@ vi.mock('@/server/db', () => ({
 
 import {
   adoptDetectedTimezone,
+  setPreferredTimezone,
   validatePreferredTimezone,
 } from '@/server/services/user/timezone.service';
 
@@ -61,5 +64,21 @@ describe('timezone.service', () => {
   it('Scenario: Detected timezone must be valid', async () => {
     await expect(adoptDetectedTimezone('user-1', 'Not/A_Zone')).rejects.toBeInstanceOf(ApiError);
     expect(userStatsUpdateManyMock).not.toHaveBeenCalled();
+  });
+
+  it('setPreferredTimezone replaces any stored zone, even a non-default one', async () => {
+    ensureUserStatsMock.mockResolvedValue({ preferredTimezone: 'Asia/Tokyo' });
+    await expect(setPreferredTimezone('user-1', 'Asia/Ho_Chi_Minh')).resolves.toEqual({
+      preferredTimezone: 'Asia/Ho_Chi_Minh',
+    });
+    expect(userStatsUpdateMock).toHaveBeenCalledWith({
+      where: { userId: 'user-1' },
+      data: { preferredTimezone: 'Asia/Ho_Chi_Minh' },
+    });
+  });
+
+  it('setPreferredTimezone rejects an invalid zone without writing', async () => {
+    await expect(setPreferredTimezone('user-1', 'Mars/Base')).rejects.toBeInstanceOf(ApiError);
+    expect(userStatsUpdateMock).not.toHaveBeenCalled();
   });
 });

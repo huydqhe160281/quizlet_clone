@@ -5,4 +5,6 @@ export type AccountSummary = {
   emailVerified: boolean;
   /** False for OAuth-only accounts, which have no password to change. */
   hasPassword: boolean;
+  /** IANA zone used for streak days and the study reminder. */
+  preferredTimezone: string;
 };

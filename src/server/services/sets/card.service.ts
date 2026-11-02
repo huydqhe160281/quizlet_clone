@@ -3,7 +3,6 @@ import type { Visibility } from '@prisma/client';
 import type { CreateCardInput, UpdateCardInput } from '@/features/sets/cards/schemas/card.schema';
 import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
-import { archiveReviewActivity } from '@/server/services/study/review-activity';
 
 const getOwnedSet = async (setId: string, userId: string) => {
   const set = await prisma.flashcardSet.findUnique({ where: { id: setId } });
@@ -99,10 +98,7 @@ export async function deleteCard(setId: string, cardId: string, userId: string) 
     throw new ApiError('NOT_FOUND', 'Card not found', 404);
   }
 
-  await prisma.$transaction([
-    archiveReviewActivity({ setId, cardIds: [cardId] }),
-    prisma.flashcard.delete({ where: { id: cardId } }),
-  ]);
+  await prisma.flashcard.delete({ where: { id: cardId } });
   invalidateSetCache(userId, set.visibility, { setId });
 }
 
@@ -146,15 +142,12 @@ export async function reorderCards(setId: string, userId: string, cardIds: strin
 export async function deleteCards(setId: string, cardIds: string[], userId: string) {
   const set = await getOwnedSet(setId, userId);
 
-  await prisma.$transaction([
-    archiveReviewActivity({ setId, cardIds }),
-    prisma.flashcard.deleteMany({
-      where: {
-        setId,
-        id: { in: cardIds },
-      },
-    }),
-  ]);
+  await prisma.flashcard.deleteMany({
+    where: {
+      setId,
+      id: { in: cardIds },
+    },
+  });
 
   invalidateSetCache(userId, set.visibility, { setId });
 }

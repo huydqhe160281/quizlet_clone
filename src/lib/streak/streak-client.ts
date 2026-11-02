@@ -73,7 +73,7 @@ export async function fetchStreakSnapshot(userId: string): Promise<StreakSnapsho
 
 const timeZoneSyncKey = (userId: string) => `quizlet-clone-tz-sync:${userId}`;
 
-function detectTimeZone(): string | null {
+export function detectTimeZone(): string | null {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
   } catch {
@@ -115,6 +115,20 @@ export async function syncDetectedTimeZone(userId: string): Promise<boolean> {
     // ignore
   }
   return true;
+}
+
+/** Save the zone picked in Settings; replaces whatever is stored. */
+export async function savePreferredTimeZone(timeZone: string): Promise<string> {
+  const response = await fetch('/api/v1/user/timezone', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ timeZone }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to save time zone');
+  }
+  const body = (await response.json()) as { data: { preferredTimezone: string } };
+  return body.data.preferredTimezone;
 }
 
 export type StreakRestoreStatus = {

@@ -23,7 +23,12 @@
       "reminderFailed": "リマインダーを有効にできませんでした。もう一度お試しください。",
       "restoresLabel": "連続記録の復活チケット",
       "restoresHint": "1〜3日休んでも、戻ったときに休んだ日数分のチケットを使って連続記録を保てます。{reviews}回復習するごとに1枚（最大{max}枚）、毎月初めに3枚未満なら3枚まで補充されます。",
-      "restoresProgress": "あと{count}回復習すると1枚もらえます。"
+      "restoresProgress": "あと{count}回復習すると1枚もらえます。",
+      "timeZoneLabel": "タイムゾーン",
+      "timeZoneHint": "連続学習日数の日付の区切りと、リマインダーを送る時刻に使われます。",
+      "timeZoneUseDevice": "この端末のタイムゾーンを使う（{timeZone}）",
+      "timeZoneSaved": "タイムゾーンを {timeZone} に変更しました。",
+      "timeZoneFailed": "タイムゾーンを変更できませんでした。もう一度お試しください。"
     },
     "language": {
       "title": "言語",

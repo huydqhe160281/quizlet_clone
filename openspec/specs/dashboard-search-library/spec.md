@@ -66,9 +66,10 @@ The system SHALL provide daily review counts for the past 365 days to render a G
 
 - **GIVEN** a user made 100 reviews (spaced or in-session) on the cards of a set, spread over several days
 - **WHEN** the owner deletes that set (or some of its cards, or merges it with "delete sources")
-- **THEN** before the cascade, those reviews are rolled up per user and UTC day into `ReviewActivityArchive` in the same transaction, for every user who studied the cards
+- **THEN** DB triggers on `review_history`, `session_cards` and `study_sessions` roll the deleted rows up per user and UTC day into `ReviewActivityArchive` inside the deleting statement (so no concurrent review slips through, and every delete path and cascade is covered), for every user who studied the cards; rows of a user being deleted are dropped with the user
 - **AND** the heatmap's daily counts, its "N reviews (last year)" total, and the lifetime review count (`countReviewActivity`: unverified study limit, streak-restore credit) are unchanged; the streak (stored on `UserStats`) is unaffected
-- **AND** write paths and the `ProcessedMutation` replay contract are untouched: the archive only copies counts out of rows about to be deleted
+- **AND** write paths and the `ProcessedMutation` replay contract are untouched: the archive only copies counts out of rows being deleted
+- **AND** days are UTC calendar days of the stored timestamps, independent of the database session TimeZone
 
 #### Scenario: Performance
 
@@ -106,7 +107,7 @@ The system SHALL display up to 5 recent study sessions on the Dashboard, **group
 
 ### Requirement: Due Cards Alert
 
-The system SHALL display a due-cards alert on the Dashboard when `dueToday > 0`, and its primary action SHALL navigate to the SM-2 spaced-review page **`/study`**. When `dueToday = 0`, the alert remains hidden (existing behavior).
+The system SHALL display a due-cards alert on the Dashboard when `dueToday > 0`, and its primary action SHALL navigate to the SM-2 spaced-review page **`/study`**. `dueToday` SHALL count the same cards `/study` lists (all of the user's due `CardProgress`, including cards of other users' public sets). When `dueToday = 0`, the alert remains hidden (existing behavior).
 
 **Constraint**: MUST  
 **Verification**: Component test `DueCardsAlert` href target; optional dashboard smoke

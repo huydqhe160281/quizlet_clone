@@ -53,8 +53,8 @@ Server reads use `unstable_cache` with tags (e.g. `public-sets`, per-user `sets-
 
 - Study modes: Flashcard, Learn, Write (fuzzy match, `src/lib/utils/fuzzy.ts`), Test (MC/T-F/typing), Draw (CJK stroke practice via hanzi-writer; only for cards with `type = new-word`). Mode logic lives in `src/features/study/lib/` (`round-engine`, `test-generator`, `sm2`), session client state in `src/features/study/store.ts` (Zustand).
 - Spaced repetition is SM-2 (`src/features/study/lib/sm2.ts`), persisted as `CardProgress` + `ReviewHistory` by `src/server/services/study/study.service.ts`.
-- Day boundaries for streaks and reminders use the user's IANA timezone (`src/server/services/learning/zoned-day.ts`; browser-detected once via `timezone.service.ts`).
-- Activity stats survive deletes: `deleteSet`, `mergeSets` (delete sources), `deleteCard(s)` first roll the cascading `ReviewHistory` / answered `SessionCard` rows into `ReviewActivityArchive` (per user, UTC day) via `archiveReviewActivity` in the same transaction; `getActivity` and `countReviewActivity` add the archive back. Any new path that deletes cards or sets must do the same.
+- Day boundaries for streaks and reminders use the user's IANA timezone (`src/server/services/learning/zoned-day.ts`): browser-detected while still the UTC default, changeable in Settings → Study (`timezone.service.ts`, `PATCH /api/v1/user/timezone`).
+- Activity stats survive deletes: DB triggers on `review_history`, `session_cards` and `study_sessions` (raw SQL in migration `20261102090000_add_review_activity_archive`, guarded by `scripts/review-archive-guard.test.ts`) roll every deleted review / answered card into `ReviewActivityArchive` (per user, UTC day), cascades included; `getActivity` and `countReviewActivity` add the archive back. Timestamps are UTC wall time (`timestamp` without zone): bucket with `col::date` / `to_char(col, …)`, never `AT TIME ZONE`. `src/server/services/study/review-archive.db.test.ts` checks the triggers against a local Postgres (set `REVIEW_ARCHIVE_TEST_DATABASE_URL`; skipped otherwise).
 
 ### Offline / PWA
 

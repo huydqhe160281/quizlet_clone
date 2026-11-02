@@ -5,11 +5,18 @@ import { prisma } from '@/server/db';
 import { hashPassword, verifyPassword } from '@/server/auth/password';
 import { isEmailConsideredVerified } from '@/server/auth/email-verified';
 import { forgetSessionVersion } from '@/server/auth/session-version';
+import { DEFAULT_PREFERRED_TIMEZONE } from '@/server/services/learning/zoned-day';
 
 export async function getAccountSummary(userId: string): Promise<AccountSummary | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { name: true, email: true, emailVerified: true, passwordHash: true },
+    select: {
+      name: true,
+      email: true,
+      emailVerified: true,
+      passwordHash: true,
+      stats: { select: { preferredTimezone: true } },
+    },
   });
   if (!user) return null;
   return {
@@ -17,6 +24,7 @@ export async function getAccountSummary(userId: string): Promise<AccountSummary 
     email: user.email,
     emailVerified: isEmailConsideredVerified(user),
     hasPassword: user.passwordHash !== null,
+    preferredTimezone: user.stats?.preferredTimezone ?? DEFAULT_PREFERRED_TIMEZONE,
   };
 }
 

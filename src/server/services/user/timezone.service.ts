@@ -18,6 +18,14 @@ export function validatePreferredTimezone(value: unknown): string {
   return normalizeTimeZone(trimmed);
 }
 
+/** Set the zone the user picked in Settings (streak days, reminder time). */
+export async function setPreferredTimezone(userId: string, value: unknown) {
+  const preferredTimezone = validatePreferredTimezone(value);
+  await ensureUserStats(userId);
+  await prisma.userStats.update({ where: { userId }, data: { preferredTimezone } });
+  return { preferredTimezone };
+}
+
 /**
  * Adopt the browser-detected time zone only while the stored one is still the default,
  * so a zone the user already has is never overwritten. Returns the stored zone.

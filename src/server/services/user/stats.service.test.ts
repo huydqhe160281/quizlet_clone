@@ -114,12 +114,9 @@ describe('dashboard stats service', () => {
     expect(stats.totalCards).toBe(24);
     expect(stats.dueToday).toBe(4);
     expect(stats.accuracy).toBe(0.8);
+    // Counts the same cards /study lists (getDueCards): not limited to owned sets.
     expect(prismaMock.cardProgress.count).toHaveBeenCalledWith({
-      where: {
-        userId: 'user-a',
-        dueDate: { lte: expect.any(Date) },
-        card: { set: { userId: 'user-a' } },
-      },
+      where: { userId: 'user-a', dueDate: { lte: expect.any(Date) } },
     });
   });
 
@@ -173,6 +170,9 @@ describe('dashboard stats service', () => {
     expect(sql).toContain('FROM "session_cards"');
     expect(sql).toContain('FROM "review_activity_archive"');
     expect(values.filter((value) => value === 'user-a')).toHaveLength(3);
+    // UTC buckets on the stored wall time, independent of the session TimeZone.
+    expect(sql).not.toContain('AT TIME ZONE');
+    expect(values).toContain(new Date(Date.now() - 29 * 86_400_000).toISOString().slice(0, 10));
   });
 
   it('test_update_streak: increments streak on consecutive day', async () => {

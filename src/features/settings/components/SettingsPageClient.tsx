@@ -22,6 +22,7 @@ import { EmailVerificationNotice } from '@/features/settings/components/EmailVer
 import { StreakRestoreInfo } from '@/features/settings/components/StreakRestoreInfo';
 import { StudyReminderToggle } from '@/features/settings/components/StudyReminderToggle';
 import { StudySoundToggle } from '@/features/settings/components/StudySoundToggle';
+import { TimeZoneSetting } from '@/features/settings/components/TimeZoneSetting';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import type { AccountSummary } from '@/features/settings/types';
 
@@ -94,6 +95,7 @@ export function SettingsPageClient({ account }: { account: AccountSummary }) {
         <div className="space-y-5">
           <StudySoundToggle />
           <StudyReminderToggle />
+          <TimeZoneSetting initialTimeZone={account.preferredTimezone} />
           <StreakRestoreInfo />
         </div>
       </SettingsSection>

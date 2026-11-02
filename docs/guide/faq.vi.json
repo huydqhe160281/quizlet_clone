@@ -13,7 +13,7 @@
   },
   {
     "q": "Chuỗi ngày học (streak) được tính thế nào?",
-    "a": "Mỗi ngày bạn bắt đầu hoặc hoàn thành một buổi học, chuỗi tăng 1 nếu hôm qua bạn cũng học. Ngày được tính theo múi giờ trình duyệt của bạn (app tự nhận lần đầu bạn đăng nhập)."
+    "a": "Mỗi ngày bạn bắt đầu hoặc hoàn thành một buổi học, chuỗi tăng 1 nếu hôm qua bạn cũng học. Ngày được tính theo múi giờ của bạn: app tự nhận từ trình duyệt, và bạn đổi được ở Cài đặt → Học tập → Múi giờ."
   },
   {
     "q": "Lỡ mất vài ngày thì có giữ được chuỗi không?",

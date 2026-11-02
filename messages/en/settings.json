@@ -23,7 +23,12 @@
       "reminderFailed": "Couldn't enable the reminder. Please try again.",
       "restoresLabel": "Streak restores",
       "restoresHint": "If you miss 1–3 days, you can spend 1 restore per missed day when you come back to keep your streak. Earn 1 for every {reviews} reviews (up to {max}); topped up to 3 each month if lower.",
-      "restoresProgress": "{count} more reviews until your next restore."
+      "restoresProgress": "{count} more reviews until your next restore.",
+      "timeZoneLabel": "Time zone",
+      "timeZoneHint": "Decides when a study day starts for your streak and when the reminder is sent.",
+      "timeZoneUseDevice": "Use this device's time zone ({timeZone})",
+      "timeZoneSaved": "Time zone changed to {timeZone}.",
+      "timeZoneFailed": "Couldn't change the time zone. Please try again."
     },
     "language": {
       "title": "Language",

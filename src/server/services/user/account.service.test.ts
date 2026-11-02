@@ -26,13 +26,26 @@ describe('account.service', () => {
       email: 'ann@example.com',
       emailVerified: new Date(),
       passwordHash: 'hash',
+      stats: { preferredTimezone: 'Asia/Tokyo' },
     });
     await expect(getAccountSummary('u1')).resolves.toEqual({
       name: 'Ann',
       email: 'ann@example.com',
       emailVerified: true,
       hasPassword: true,
+      preferredTimezone: 'Asia/Tokyo',
     });
+  });
+
+  it('defaults the time zone to UTC before any stats exist', async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      name: null,
+      email: 'new@example.com',
+      emailVerified: null,
+      passwordHash: 'hash',
+      stats: null,
+    });
+    await expect(getAccountSummary('u1')).resolves.toMatchObject({ preferredTimezone: 'UTC' });
   });
 
   it('treats OAuth-only accounts as verified and unconfirmed password accounts as not', async () => {

@@ -122,3 +122,18 @@ the auth limiter; same-origin only.
 
 - **WHEN** the change succeeds
 - **THEN** the client shows a toast and signs out to `/login`
+
+### Requirement: Study Time Zone Setting
+
+The Settings page SHALL show, in the Study section, the account's IANA time zone (`UserStats.preferredTimezone`), which decides when a streak day starts and when the daily reminder is sent. The user SHALL be able to pick any zone the browser knows, or adopt the device's zone with one click; `PATCH /api/v1/user/timezone` validates and stores it for the signed-in user only. The browser-detected zone is still adopted automatically (`POST /api/v1/user/timezone`) only while the stored zone is the UTC default.
+
+#### Scenario: Change time zone after moving
+
+- **GIVEN** a user whose stored zone is `Asia/Tokyo` and whose device reports `Asia/Ho_Chi_Minh`
+- **WHEN** they open Settings → Study and choose "Use this device's time zone"
+- **THEN** the stored zone becomes `Asia/Ho_Chi_Minh` and later streak days and reminders follow it
+
+#### Scenario: Invalid zone rejected
+
+- **WHEN** `PATCH /api/v1/user/timezone` receives an unknown zone
+- **THEN** it answers `400 VALIDATION_ERROR` and nothing is stored

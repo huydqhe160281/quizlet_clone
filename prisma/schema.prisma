@@ -252,7 +252,8 @@ model ReviewHistory {
 
 /// Per-day review counts kept after the cards/sets they came from are deleted, so the
 /// activity heatmap, lifetime totals and streak-restore credit don't shrink.
-/// Written only by `archiveReviewActivity` right before a set/card delete.
+/// Written only by DB triggers on `review_history` / `session_cards` / `study_sessions`
+/// deletes (raw SQL in migration 20261102090000_add_review_activity_archive).
 model ReviewActivityArchive {
   userId String
   /// UTC calendar day, matching the heatmap's day buckets.
@@ -310,7 +311,6 @@ model UserStats {
   totalReviews    Int       @default(0)
   totalCorrect    Int       @default(0)
   lastStudiedDate DateTime?
-  dailyGoalCards  Int       @default(20)
   preferredTimezone String  @default("UTC")
   /// Streak restores left (cap 5); see openspec/changes/streak-restore.
   streakRestores        Int       @default(5)
