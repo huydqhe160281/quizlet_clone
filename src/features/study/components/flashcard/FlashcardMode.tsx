@@ -37,6 +37,10 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   const [lastRoundIndex, setLastRoundIndex] = useState(0);
   const [lastRoundSize, setLastRoundSize] = useState(0);
   const [lastRoundKnown, setLastRoundKnown] = useState(0);
+  const [lastRoundGraded, setLastRoundGraded] = useState(0);
+  // Graded (non-autoplay) answers in the current round, so an autoplayed round is
+  // not scored as all misses.
+  const gradedInRoundRef = useRef({ round: '', count: 0 });
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [autoplay, setAutoplay] = useState(false);
   const autoplayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -81,6 +85,14 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
       setLastRoundIndex(study.roundIndex);
       setLastRoundSize(roundCards.length);
       setLastRoundKnown(study.correctInRound + (countsAsKnown ? 1 : 0));
+      const graded = gradedInRoundRef.current;
+      const roundKey = `${study.sessionId}:${study.roundIndex}`;
+      if (graded.round !== roundKey) {
+        graded.round = roundKey;
+        graded.count = 0;
+      }
+      if (!passive) graded.count += 1;
+      setLastRoundGraded(graded.count);
 
       const roundEnded = study.recordRoundAnswer(currentCard.cardId, isKnown || passive, {
         countAsCorrect: countsAsKnown,
@@ -191,6 +203,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         roundIndex={lastRoundIndex}
         correctCount={lastRoundKnown}
         total={lastRoundSize}
+        gradedCount={lastRoundGraded}
         mode="FLASHCARD"
         onNextRound={() => setShowSummary(false)}
       />
@@ -204,6 +217,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         correctCount={study.correctCount}
         reviewedCount={study.reviewedCount}
         total={study.cards.length}
+        lastRound={{ roundIndex: lastRoundIndex, correct: lastRoundKnown, graded: lastRoundGraded }}
         setId={setId}
       />
     );

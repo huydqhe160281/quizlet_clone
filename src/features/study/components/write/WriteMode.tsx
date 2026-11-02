@@ -138,6 +138,11 @@ export function WriteMode({ setId }: WriteModeProps) {
         correctCount={study.correctCount}
         reviewedCount={study.reviewedCount}
         total={study.cards.length}
+        lastRound={{
+          roundIndex: lastRoundIndex,
+          correct: lastRoundCorrect,
+          graded: lastRoundTotal,
+        }}
         setId={setId}
       />
     );

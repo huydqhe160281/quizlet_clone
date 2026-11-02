@@ -67,6 +67,45 @@ describe('SessionComplete praise', () => {
     // 5 / 8 = 63% → the 60–79% band.
     expect(screen.getByText('Past the halfway mark — keep it up!')).toBeInTheDocument();
   });
+
+  it('shows no praise when nothing was graded (flashcards on autoplay)', () => {
+    const { container } = renderWithLocale(
+      <SessionComplete mode="FLASHCARD" correctCount={0} reviewedCount={0} total={5} setId="s" />,
+      { locale: 'en' }
+    );
+    expect(container.querySelector('p.text-primary')).toBeNull();
+  });
+
+  it('adds the final round’s own line after a multi-round run', () => {
+    renderWithLocale(
+      <SessionComplete
+        mode="LEARN"
+        correctCount={18}
+        reviewedCount={20}
+        total={20}
+        lastRound={{ roundIndex: 1, correct: 2, graded: 10 }}
+        setId="s"
+      />,
+      { locale: 'en' }
+    );
+    // Run is 90%, but the last round was 2/10 → its own "low" line.
+    const line = screen.getByText(/^Round 2: /).textContent ?? '';
+    expect(line).toMatch(/new cards take time|start is always hard|Don’t give up|Every pass/);
+  });
+
+  it('skips the final-round line for a single-round run', () => {
+    renderWithLocale(
+      <SessionComplete
+        mode="LEARN"
+        correctCount={8}
+        total={10}
+        lastRound={{ roundIndex: 0, correct: 8, graded: 10 }}
+        setId="s"
+      />,
+      { locale: 'en' }
+    );
+    expect(screen.queryByText(/^Round 1: /)).toBeNull();
+  });
 });
 
 describe('SessionComplete study limit', () => {

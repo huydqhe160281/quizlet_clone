@@ -196,6 +196,11 @@ export function LearnMode({ setId }: LearnModeProps) {
         correctCount={study.correctCount}
         reviewedCount={study.reviewedCount}
         total={study.cards.length}
+        lastRound={{
+          roundIndex: lastRoundIndex,
+          correct: lastRoundCorrect,
+          graded: lastRoundTotal,
+        }}
         setId={setId}
       />
     );

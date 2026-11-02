@@ -8,7 +8,7 @@ import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
 import { useStudyLimitReached } from '@/features/auth/hooks/useStudyLimitReached';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
-import { praiseKey, praisePercent } from '@/features/study/lib/session-praise';
+import { getRoundPraiseSeed, praiseKey, praisePercent } from '@/features/study/lib/session-praise';
 import { STUDY_MODE_SHORT_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
@@ -18,6 +18,11 @@ type SessionCompleteProps = {
   total: number;
   /** Graded answers, counting requeued cards each time they were answered. */
   reviewedCount?: number;
+  /**
+   * The final round's score. Its own summary is skipped for the session screen, so
+   * its line is shown here; ignored for a single-round run, where it equals the run.
+   */
+  lastRound?: { roundIndex: number; correct: number; graded: number };
   setId: string;
 };
 
@@ -26,6 +31,7 @@ export function SessionComplete({
   correctCount,
   total,
   reviewedCount,
+  lastRound,
   setId,
 }: SessionCompleteProps) {
   const t = useTranslations();
@@ -46,9 +52,26 @@ export function SessionComplete({
         </div>
         <CardTitle className="text-2xl font-extrabold">{t('study.sessionComplete')}</CardTitle>
         <CardDescription>{modeKey ? t(modeKey) : mode}</CardDescription>
-        <p className="text-base font-semibold text-primary">
-          {t(praiseKey(praisePercent(correctCount, answered), praiseSeed))}
-        </p>
+        {answered > 0 && (
+          <p className="text-base font-semibold text-primary">
+            {t(praiseKey(praisePercent(correctCount, answered), praiseSeed))}
+          </p>
+        )}
+        {lastRound && lastRound.roundIndex > 0 && lastRound.graded > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {t('study.lastRoundPraise', {
+              round: lastRound.roundIndex + 1,
+              message: t(
+                praiseKey(
+                  praisePercent(lastRound.correct, lastRound.graded),
+                  getRoundPraiseSeed(),
+                  'round',
+                  lastRound.roundIndex
+                )
+              ),
+            })}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         {mode === 'FLASHCARD' ? (

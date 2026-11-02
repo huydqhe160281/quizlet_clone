@@ -837,6 +837,11 @@ export function GravityMode({ setId }: GravityModeProps) {
         correctCount={study.correctCount}
         reviewedCount={study.reviewedCount}
         total={study.cards.length}
+        lastRound={{
+          roundIndex: lastRoundStats.roundIndex,
+          correct: lastRoundStats.correctCount,
+          graded: lastRoundStats.total,
+        }}
         setId={setId}
       />
     );

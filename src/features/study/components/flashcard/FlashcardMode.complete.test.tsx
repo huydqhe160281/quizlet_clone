@@ -227,4 +227,62 @@ describe('FlashcardMode completion & known/still-learning flow', () => {
       vi.useRealTimers();
     }
   });
+
+  const threeCards = [
+    ...twoCards,
+    { ...twoCards[0]!, sessionCardId: 'sc-2', cardId: 'c2', front: 'card 2', back: 'back 2' },
+  ] as StudyCard[];
+
+  const initThreeCards = () => {
+    act(() => {
+      useStudyStore.getState().initSession({
+        sessionId: 'session-1',
+        setId: 'set-1',
+        mode: 'FLASHCARD',
+        cards: threeCards,
+        settings: {
+          randomize: false,
+          cardsPerRound: 2,
+          requeueWrong: true,
+          presentation: 'default',
+          mcDirection: 'front_to_back',
+        },
+      });
+    });
+    return renderWithLocale(<FlashcardMode setId="set-1" />, { locale: 'en' });
+  };
+
+  it('praises a graded round by its known cards', async () => {
+    const { container } = initThreeCards();
+    await act(async () => {
+      fireEvent.keyDown(window, { code: 'ArrowRight' });
+    });
+    await act(async () => {
+      fireEvent.keyDown(window, { code: 'ArrowRight' });
+    });
+
+    expect(screen.getByRole('button', { name: /Next round/i })).toBeInTheDocument();
+    // 2 known of 2 graded → a "perfect" round line.
+    expect(container.querySelector('p.text-primary')?.textContent).toMatch(
+      /Perfect|congratulations|Outstanding|flawless|Brilliant/
+    );
+  });
+
+  it('shows no praise for a round played on autoplay, where nothing was graded', () => {
+    vi.useFakeTimers();
+    try {
+      const { container } = initThreeCards();
+      fireEvent.click(screen.getByRole('button', { name: /Autoplay/i }));
+      for (let i = 0; i < 4; i++) {
+        act(() => {
+          vi.advanceTimersByTime(4000);
+        });
+      }
+
+      expect(screen.getByRole('button', { name: /Next round/i })).toBeInTheDocument();
+      expect(container.querySelector('p.text-primary')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

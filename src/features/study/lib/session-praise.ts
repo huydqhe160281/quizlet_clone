@@ -2,17 +2,15 @@
 export type PraiseTier = 'perfect' | 'great' | 'good' | 'fair' | 'low';
 
 /**
- * Which screen the line is for: `round` lines talk about the round just played
- * (`study.roundPraise.*`), `session` lines about the whole run (`study.praise.*`).
+ * Which screen the line is for: `round` lines talk about the round just played,
+ * `session` lines about the whole run.
  */
 export type PraiseScope = 'round' | 'session';
 
-/** Number of message variants per tier in each scope's catalog keys (`<tier><n>`, 1-based). */
-export const PRAISE_VARIANTS: Record<PraiseScope, number> = { round: 4, session: 3 };
-
-const PRAISE_PREFIX: Record<PraiseScope, string> = {
-  round: 'study.roundPraise',
-  session: 'study.praise',
+/** Catalog prefix and number of variants per tier (`<prefix>.<tier><n>`, 1-based). */
+export const PRAISE_CATALOG: Record<PraiseScope, { prefix: string; variants: number }> = {
+  round: { prefix: 'study.roundPraise', variants: 4 },
+  session: { prefix: 'study.praise', variants: 3 },
 };
 
 /** 10/10 → perfect, 8–9/10 → great, 6–7/10 → good, 4–5/10 → fair, 0–3/10 → low. */
@@ -29,9 +27,29 @@ export function praisePercent(correct: number, answered: number): number {
   return answered > 0 ? (correct / answered) * 100 : 0;
 }
 
-/** Catalog key for a tier; `seed` in [0, 1) picks one of the scope's variants. */
-export function praiseKey(percent: number, seed: number, scope: PraiseScope = 'session'): string {
-  const count = PRAISE_VARIANTS[scope];
-  const variant = Math.min(count - 1, Math.max(0, Math.floor(seed * count))) + 1;
-  return `${PRAISE_PREFIX[scope]}.${praiseTier(percent)}${variant}`;
+/**
+ * Catalog key for a tier. `seed` in [0, 1) picks the starting variant and `step`
+ * rotates from it, so consecutive rounds (step = round index) never repeat a line.
+ */
+export function praiseKey(
+  percent: number,
+  seed: number,
+  scope: PraiseScope = 'session',
+  step = 0
+): string {
+  const { prefix, variants } = PRAISE_CATALOG[scope];
+  const start = Math.min(variants - 1, Math.max(0, Math.floor(seed * variants)));
+  const variant = (((start + step) % variants) + variants) % variants;
+  return `${prefix}.${praiseTier(percent)}${variant + 1}`;
+}
+
+let roundPraiseSeed: number | null = null;
+
+/**
+ * One random seed per page load for round lines: round summaries remount every
+ * round, so a per-mount seed could repeat the previous round's line.
+ */
+export function getRoundPraiseSeed(): number {
+  roundPraiseSeed ??= Math.random();
+  return roundPraiseSeed;
 }

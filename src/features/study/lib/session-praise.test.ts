@@ -44,6 +44,17 @@ describe('praiseKey', () => {
     expect(praiseKey(20, 0.999, 'round')).toBe('study.roundPraise.low4');
   });
 
+  it('rotates the variant by step so consecutive rounds differ', () => {
+    const keys = [0, 1, 2, 3, 4].map((step) => praiseKey(70, 0.6, 'round', step));
+    expect(keys).toEqual([
+      'study.roundPraise.good3',
+      'study.roundPraise.good4',
+      'study.roundPraise.good1',
+      'study.roundPraise.good2',
+      'study.roundPraise.good3',
+    ]);
+  });
+
   it('clamps an out-of-range seed', () => {
     expect(praiseKey(50, 1, 'round')).toBe('study.roundPraise.fair4');
     expect(praiseKey(50, -0.1, 'round')).toBe('study.roundPraise.fair1');

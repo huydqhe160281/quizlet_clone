@@ -368,6 +368,9 @@ The system SHALL split a study run into rounds of at most `cardsPerRound` cards,
 - **WHEN** the learner answered a share of that round's cards correctly (known cards in Flashcard)
 - **THEN** the summary shows one encouragement line for that round, picked at random from the variants of its score band: 100% congratulates, 80–99% praises, 60–79% praises and encourages, 40–59% encourages, below 40% gently suggests reviewing the missed cards
 - **AND** the session complete screen uses the same bands for its own line, scored as correct answers over all graded answers of the run
+- **AND** consecutive rounds in the same band never show the same line (variants rotate by round)
+- **AND** cards passed on Flashcard autoplay are not graded, so they do not count; a round with no graded card shows no line
+- **AND** when the final round of a multi-round run ends, the session complete screen also shows that round's own line ("Round N: …")
 
 ---
 
