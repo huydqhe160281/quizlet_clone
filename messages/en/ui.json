@@ -230,6 +230,8 @@
     "subtitleNew": "Create a new set from CSV or JSON.",
     "subtitleIntoSet": "Add cards from a CSV or JSON file.",
     "titleLabel": "Set title *",
+    "titleFromFile": "Taken from the JSON file — you can still edit it.",
+    "titleJsonHint": "Optional when the JSON has \"set\": { \"title\": … }",
     "titlePlaceholder": "E.g. Fast Accounting TT99",
     "descriptionLabel": "Description",
     "descriptionPlaceholder": "Short description (optional)",

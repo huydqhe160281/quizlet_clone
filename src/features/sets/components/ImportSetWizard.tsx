@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { apiErrorMessage } from '@/lib/i18n/api-error-message';
+import { buildJsonImportBody, readJsonSetMeta } from '@/features/sets/lib/import-json-meta';
 
 type ImportResult = {
   set: { id: string; title: string };
@@ -316,6 +317,10 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  // Set while the field holds the value pre-filled from the pasted JSON's `set`, so a
+  // new paste may replace it; typing in the field hands it back to the learner.
+  const [titleFromFile, setTitleFromFile] = useState(false);
+  const [descriptionFromFile, setDescriptionFromFile] = useState(false);
   const [chosenVisibility, setVisibility] = useState<'PRIVATE' | 'PUBLIC'>('PRIVATE');
   const publicLocked = useNeedsEmailVerification();
   // Public may have been picked before the account status loaded; never submit it once locked.
@@ -337,16 +342,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
       return;
     }
 
-    const body = setId
-      ? {
-          format: 'json',
-          ...(typeof parsed === 'object' && parsed !== null && 'cards' in parsed ? parsed : {}),
-        }
-      : {
-          format: 'json',
-          set: { title, description: description || undefined, visibility },
-          ...(typeof parsed === 'object' && parsed !== null && 'cards' in parsed ? parsed : {}),
-        };
+    const body = buildJsonImportBody(parsed, setId ? null : { title, description, visibility });
 
     const url = setId ? `/api/v1/sets/import?setId=${setId}` : '/api/v1/sets/import';
     return fetch(url, {
@@ -375,8 +371,26 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
     return fetch(url, { method: 'POST', body: form });
   };
 
+  /** Pre-fills title/description from the JSON's `set`, never over what the learner typed. */
+  const handleJsonTextChange = (text: string) => {
+    setJsonText(text);
+    setError(null);
+    if (setId) return;
+    const meta = readJsonSetMeta(text);
+    if (titleFromFile || !title.trim()) {
+      setTitle(meta?.title ?? (titleFromFile ? '' : title));
+      setTitleFromFile(Boolean(meta?.title));
+    }
+    if (descriptionFromFile || !description.trim()) {
+      setDescription(meta?.description ?? (descriptionFromFile ? '' : description));
+      setDescriptionFromFile(Boolean(meta?.description));
+    }
+  };
+
   const handleSubmit = async (format: 'json' | 'csv') => {
-    if (!setId && !title.trim()) {
+    // A JSON file's own `set.title` counts, even if the learner cleared the field.
+    const fileTitle = format === 'json' ? readJsonSetMeta(jsonText)?.title : undefined;
+    if (!setId && !title.trim() && !fileTitle) {
       setError(t('importWizard.errorNoTitle'));
       return;
     }
@@ -474,18 +488,31 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
             <Input
               id="import-title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setTitleFromFile(false);
+              }}
               placeholder={t('importWizard.titlePlaceholder')}
               className="rounded-xl"
               required
             />
+            {titleFromFile ? (
+              <p className="text-xs text-muted-foreground">{t('importWizard.titleFromFile')}</p>
+            ) : (
+              importTab === 'json' && (
+                <p className="text-xs text-muted-foreground">{t('importWizard.titleJsonHint')}</p>
+              )
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="import-description">{t('importWizard.descriptionLabel')}</Label>
             <Textarea
               id="import-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setDescriptionFromFile(false);
+              }}
               rows={2}
               placeholder={t('importWizard.descriptionPlaceholder')}
               className="rounded-xl"
@@ -585,10 +612,7 @@ export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSe
             <Textarea
               id="import-json"
               value={jsonText}
-              onChange={(e) => {
-                setJsonText(e.target.value);
-                setError(null);
-              }}
+              onChange={(e) => handleJsonTextChange(e.target.value)}
               rows={9}
               placeholder={SIMPLE_JSON_EXAMPLE}
               className="max-w-full rounded-xl font-mono text-base leading-relaxed sm:text-[11px]"

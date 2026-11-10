@@ -230,6 +230,8 @@
     "subtitleNew": "Tạo bộ thẻ mới từ CSV hoặc JSON.",
     "subtitleIntoSet": "Thêm thẻ từ file CSV hoặc JSON.",
     "titleLabel": "Tên bộ thẻ *",
+    "titleFromFile": "Đã lấy từ file JSON — bạn vẫn có thể sửa.",
+    "titleJsonHint": "Không bắt buộc nếu JSON có \"set\": { \"title\": … }",
     "titlePlaceholder": "VD: Fast Accounting TT99",
     "descriptionLabel": "Mô tả",
     "descriptionPlaceholder": "Mô tả ngắn (tùy chọn)",

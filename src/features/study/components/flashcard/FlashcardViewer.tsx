@@ -35,7 +35,9 @@ export function FlashcardViewer({
 }: FlashcardViewerProps) {
   const t = useTranslations();
   const multilineFront = isDenseStudyText(front);
-  const multilineBack = isDenseStudyText(back);
+  // Line-broken backs (e.g. answer lists) read best left-aligned; anything else, even a
+  // long one-line meaning with an example under it, stays centered on the card.
+  const backAlignLeft = back.includes('\n');
 
   return (
     <div
@@ -133,18 +135,23 @@ export function FlashcardViewer({
 
           <div
             className={cn(
-              'flex min-h-0 flex-1 flex-col px-4',
-              multilineBack || example
-                ? 'items-stretch justify-start overflow-y-auto py-2 text-left'
-                : 'items-center justify-center text-center'
+              'flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-2',
+              backAlignLeft ? 'items-stretch text-left' : 'items-center text-center'
             )}
           >
-            <StudyCardText text={back} side="back" />
-            {example && (
-              <p className="mt-4 whitespace-pre-line text-sm font-medium leading-relaxed text-primary-foreground/80">
-                {example}
-              </p>
-            )}
+            {/* my-auto centers short content but still scrolls from the top when it overflows. */}
+            <div className={cn('w-full', !backAlignLeft && 'my-auto')}>
+              <StudyCardText
+                text={back}
+                side="back"
+                className={backAlignLeft ? undefined : 'text-center'}
+              />
+              {example && (
+                <p className="mt-4 whitespace-pre-line break-words text-sm font-medium leading-relaxed text-primary-foreground/80">
+                  {example}
+                </p>
+              )}
+            </div>
           </div>
 
           <p className="text-[11px] font-semibold text-primary-foreground/70">

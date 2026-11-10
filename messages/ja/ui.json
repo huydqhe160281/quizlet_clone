@@ -230,6 +230,8 @@
     "subtitleNew": "CSV または JSON から新しいセットを作成します。",
     "subtitleIntoSet": "CSV または JSON ファイルからカードを追加します。",
     "titleLabel": "セット名 *",
+    "titleFromFile": "JSON ファイルから入力しました。編集もできます。",
+    "titleJsonHint": "JSON に \"set\": { \"title\": … } があれば省略できます",
     "titlePlaceholder": "例: Fast Accounting TT99",
     "descriptionLabel": "説明",
     "descriptionPlaceholder": "短い説明（任意）",
