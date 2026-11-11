@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -43,6 +43,9 @@ interface SpacedRepetitionSettings {
   randomize: boolean;
   requeueWrong: boolean;
 }
+
+/** Ignores an accidental second tap so it does not grade the next card too. */
+const GRADE_DOUBLE_TAP_LOCK_MS = 300;
 
 export function SpacedRepetitionStudy() {
   const t = useTranslations();
@@ -98,6 +101,7 @@ export function SpacedRepetitionStudy() {
 
   const gradingRef = useRef(false);
   const [isGrading, setIsGrading] = useState(false);
+  const gradeLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleStart = () => {
     if (totalCards === 0) return;
@@ -120,18 +124,27 @@ export function SpacedRepetitionStudy() {
     setShowRoundSummary(false);
   };
 
-  const handleGrade = async (grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY') => {
+  useEffect(
+    () => () => {
+      if (gradeLockTimerRef.current) clearTimeout(gradeLockTimerRef.current);
+    },
+    []
+  );
+
+  const handleGrade = (grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY') => {
     // One grade per card: a double tap must not apply SM-2 twice or skip a card.
     if (!currentCard || gradingRef.current) return;
     gradingRef.current = true;
     setIsGrading(true);
-    playAnswerFeedback(isCorrectGrade(grade));
-    try {
-      await submitReview(currentCard.cardId, grade);
-    } finally {
+    gradeLockTimerRef.current = setTimeout(() => {
+      gradeLockTimerRef.current = null;
       gradingRef.current = false;
       setIsGrading(false);
-    }
+    }, GRADE_DOUBLE_TAP_LOCK_MS);
+    playAnswerFeedback(isCorrectGrade(grade));
+    // Advance optimistically; the review carries a clientMutationId and is queued
+    // offline on network failure, so the UI never waits for the round trip.
+    void submitReview(currentCard.cardId, grade);
     resetFlip();
 
     const isCorrect = isCorrectGrade(grade);
@@ -434,10 +447,10 @@ export function SpacedRepetitionStudy() {
             onFlip={flip}
           />
           <GradeButtons
-            onAgain={() => void handleGrade('AGAIN')}
-            onHard={() => void handleGrade('HARD')}
-            onGood={() => void handleGrade('GOOD')}
-            onEasy={() => void handleGrade('EASY')}
+            onAgain={() => handleGrade('AGAIN')}
+            onHard={() => handleGrade('HARD')}
+            onGood={() => handleGrade('GOOD')}
+            onEasy={() => handleGrade('EASY')}
             disabled={isGrading}
           />
         </>

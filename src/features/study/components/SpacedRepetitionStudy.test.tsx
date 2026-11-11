@@ -73,41 +73,51 @@ describe('SpacedRepetitionStudy grading', () => {
     cleanup();
   });
 
-  it('submits one review per card even when a grade is tapped twice', async () => {
-    let resolveReview: (value: unknown) => void = () => undefined;
-    submitReviewMock.mockImplementation(() => new Promise((resolve) => (resolveReview = resolve)));
-    startFlashcardReview();
+  it('advances immediately and grades once even when a grade is tapped twice', () => {
+    vi.useFakeTimers();
+    try {
+      // Never-resolving review: the UI must not wait for the network.
+      submitReviewMock.mockImplementation(() => new Promise(() => undefined));
+      startFlashcardReview();
 
-    const good = screen.getByRole('button', { name: 'Good' });
-    fireEvent.click(good);
-    fireEvent.click(good);
-    fireEvent.click(screen.getByRole('button', { name: 'Easy' }));
+      const good = screen.getByRole('button', { name: 'Good' });
+      fireEvent.click(good);
+      fireEvent.click(good);
+      fireEvent.click(screen.getByRole('button', { name: 'Easy' }));
 
-    expect(submitReviewMock).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: 'Good' })).toBeDisabled();
+      expect(submitReviewMock).toHaveBeenCalledTimes(1);
+      // Advanced exactly one card without waiting for the review request.
+      expect(screen.getByText('2 / 3', { exact: false })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Good' })).toBeDisabled();
 
-    await act(async () => {
-      resolveReview({ status: 'ok' });
-    });
-
-    // Advanced exactly one card, and grading is enabled again.
-    expect(screen.getByText('2 / 3', { exact: false })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Good' })).toBeEnabled();
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(screen.getByRole('button', { name: 'Good' })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it('counts HARD as not correct, like the server', async () => {
-    submitReviewMock.mockResolvedValue({ status: 'ok' });
-    startFlashcardReview();
+  it('counts HARD as not correct, like the server', () => {
+    vi.useFakeTimers();
+    try {
+      submitReviewMock.mockResolvedValue({ status: 'ok' });
+      startFlashcardReview();
 
-    for (const grade of ['Hard', 'Good', 'Easy']) {
-      await act(async () => {
+      for (const grade of ['Hard', 'Good', 'Easy']) {
         fireEvent.click(screen.getByRole('button', { name: grade }));
-      });
-    }
+        act(() => {
+          vi.advanceTimersByTime(300);
+        });
+      }
 
-    // Round summary: 2 of 3 correct (HARD is a miss).
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+      // Round summary: 2 of 3 correct (HARD is a miss).
+      expect(screen.getByText('2')).toBeInTheDocument();
+      expect(screen.getByText('1')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('requeues wrong MCQ answers synchronously even when submitReview is still in flight', () => {

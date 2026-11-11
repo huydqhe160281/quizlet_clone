@@ -26,7 +26,7 @@ import { PwaProvider } from '@/features/pwa/PwaProvider';
 import { AiGenerateJobNotifier } from '@/features/sets/components/AiGenerateJobNotifier';
 import { StudyOfflineSyncProvider } from '@/features/study-offline/StudyOfflineSyncProvider';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const inter = Inter({ subsets: ['latin', 'vietnamese'], variable: '--font-sans' });
 // Paper & Ink body font (full Vietnamese coverage); only referenced by styles/themes/paper.css,
 // so with preload off the files are fetched only when that theme is active.
 const beVietnamPro = Be_Vietnam_Pro({
