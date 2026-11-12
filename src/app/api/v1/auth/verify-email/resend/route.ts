@@ -1,5 +1,6 @@
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { authRateLimit } from '@/lib/rate-limit/rate-limit';
+import { assertRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { requireUserId } from '@/server/auth/auth-utils';
 import { issueEmailVerification } from '@/server/auth/email-verification';
 import { resolveEmailLocale } from '@/server/auth/email';
@@ -8,12 +9,7 @@ import { prisma } from '@/server/db';
 
 export const POST = withErrorHandler(async () => {
   const userId = await requireUserId();
-  const decision = await authRateLimit.check(`verify-email-resend:${userId}`);
-  if (decision.limited) {
-    throw new ApiError('RATE_LIMITED', 'Too many requests', 429, {
-      retryAfter: decision.retryAfterSec,
-    });
-  }
+  await assertRateLimit(authRateLimit, `verify-email-resend:${userId}`);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },

@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -127,12 +128,13 @@ export function StudyOfflineSyncProvider({ children }: { children: ReactNode }) 
     };
   }, [userId, syncNow]);
 
+  const value = useMemo(
+    () => ({ counts, lastSyncedAt, syncNow, dismissFailed, refreshCounts }),
+    [counts, lastSyncedAt, syncNow, dismissFailed, refreshCounts]
+  );
+
   return (
-    <StudyOfflineSyncContext.Provider
-      value={{ counts, lastSyncedAt, syncNow, dismissFailed, refreshCounts }}
-    >
-      {children}
-    </StudyOfflineSyncContext.Provider>
+    <StudyOfflineSyncContext.Provider value={value}>{children}</StudyOfflineSyncContext.Provider>
   );
 }
 

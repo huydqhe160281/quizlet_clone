@@ -15,6 +15,7 @@ import {
   type FlashcardSetSummary,
 } from '@/features/sets/api/sets-api';
 import { setKeys } from '@/features/sets/query-keys';
+import { invalidateStudyActivityQueries } from '@/lib/study-activity';
 
 export { setKeys };
 
@@ -58,6 +59,12 @@ export function useSetMutations() {
     void queryClient.invalidateQueries({ queryKey: setKeys.list() });
     void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
     void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
+  };
+
+  // Deleted cards must leave the due list right away: it is cached for minutes and
+  // reviewing a card that no longer exists fails.
+  const invalidateDueCards = () => {
+    invalidateStudyActivityQueries(queryClient);
   };
 
   const createSet = useMutation({
@@ -115,7 +122,10 @@ export function useSetMutations() {
         throw new Error('Failed to delete set');
       }
     },
-    onSuccess: invalidateSets,
+    onSuccess: () => {
+      invalidateSets();
+      invalidateDueCards();
+    },
   });
 
   const duplicateSet = useMutation({
@@ -164,6 +174,7 @@ export function useSetMutations() {
     onSuccess: (_result, input) => {
       invalidateSets();
       if (input.deleteSources) {
+        invalidateDueCards();
         // Back navigation must not show a deleted source set from the cache.
         for (const setId of input.setIds) {
           queryClient.removeQueries({ queryKey: setKeys.detail(setId) });
@@ -254,6 +265,7 @@ export function useSetMutations() {
     onSettled: (_data, _error, { setId }) => {
       void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
       void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
+      invalidateDueCards();
     },
   });
 
@@ -286,6 +298,7 @@ export function useSetMutations() {
     onSettled: (_data, _error, { setId }) => {
       void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
       void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
+      invalidateDueCards();
     },
   });
 

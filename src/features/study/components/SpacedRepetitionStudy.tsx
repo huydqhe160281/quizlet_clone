@@ -84,9 +84,8 @@ export function SpacedRepetitionStudy() {
   const totalCards = cards.length;
 
   const roundCards = useMemo(() => {
-    return currentRound
-      .map((id) => cards.find((c) => c.cardId === id))
-      .filter((c): c is NonNullable<typeof c> => !!c);
+    const byId = new Map(cards.map((card) => [card.cardId, card]));
+    return currentRound.map((id) => byId.get(id)).filter((c): c is NonNullable<typeof c> => !!c);
   }, [currentRound, cards]);
 
   const currentCard = roundCards[currentIndex];

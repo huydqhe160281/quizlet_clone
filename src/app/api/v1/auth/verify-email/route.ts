@@ -1,4 +1,4 @@
-import { ApiError, withErrorHandler } from '@/lib/api-error';
+import { ApiError, withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
 import { verifyEmailSchema } from '@/features/auth/schemas/auth.schema';
 import { verifyEmailToken } from '@/server/auth/email-verification';
@@ -11,7 +11,7 @@ export const POST = withErrorHandler(async (req) => {
     });
   }
 
-  const { token } = verifyEmailSchema.parse(await req.json());
+  const { token } = verifyEmailSchema.parse(await readJsonBody(req));
   const result = await verifyEmailToken(token);
   if (result === 'invalid') {
     throw new ApiError('TOKEN_INVALID', 'Invalid or expired token', 400);

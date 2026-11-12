@@ -12,6 +12,18 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Reads a JSON request body. A missing or malformed body is the client's fault, so it
+ * becomes a 400 instead of surfacing as an unhandled SyntaxError (500).
+ */
+export async function readJsonBody(req: Request): Promise<unknown> {
+  try {
+    return await req.json();
+  } catch {
+    throw new ApiError('VALIDATION_ERROR', 'Invalid JSON body', 400);
+  }
+}
+
 type RouteContext = { params: Promise<Record<string, string>> };
 
 type RouteHandler = (req: Request, ctx: RouteContext) => Promise<Response> | Response;

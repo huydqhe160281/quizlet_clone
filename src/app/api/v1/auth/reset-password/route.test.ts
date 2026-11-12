@@ -10,6 +10,13 @@ const sessionVersionMock = vi.hoisted(() => ({ forgetSessionVersion: vi.fn() }))
 
 vi.mock('@/server/db', () => ({ prisma: prismaMock }));
 vi.mock('@/server/auth/session-version', () => sessionVersionMock);
+const rateLimitMock = vi.hoisted(() => ({
+  check: vi.fn(async () => ({ limited: false, retryAfterSec: 60 })),
+}));
+vi.mock('@/lib/rate-limit/rate-limit', () => ({
+  passwordResetRateLimit: rateLimitMock,
+  getClientIp: vi.fn(() => '127.0.0.1'),
+}));
 
 import { POST } from './route';
 
@@ -72,5 +79,24 @@ describe('POST /api/v1/auth/reset-password', () => {
 
     expect(res.status).toBe(400);
     expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects with 429 before touching the token when rate limited', async () => {
+    rateLimitMock.check.mockResolvedValueOnce({ limited: true, retryAfterSec: 30 });
+
+    const res = await POST(request('raw'), ctx);
+
+    expect(res.status).toBe(429);
+    expect(prismaMock.verificationToken.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for a malformed JSON body', async () => {
+    const res = await POST(
+      new Request('http://localhost/api/v1/auth/reset-password', { method: 'POST', body: '{' }),
+      ctx
+    );
+
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('VALIDATION_ERROR');
   });
 });

@@ -1,4 +1,4 @@
-import { withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { createCardSchema } from '@/features/sets/cards/schemas/card.schema';
 import { auth } from '@/server/auth/auth';
@@ -16,7 +16,7 @@ export const POST = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { setId } = await params;
   const userId = await requireUserId();
-  const body = await req.json();
+  const body = await readJsonBody(req);
   const input = createCardSchema.parse(body);
   const card = await createCard(setId, userId, input);
   return Response.json({ data: card }, { status: 201 });
@@ -26,8 +26,8 @@ export const DELETE = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { setId } = await params;
   const userId = await requireUserId();
-  const body = await req.json();
-  const { cardIds } = body;
+  const body = await readJsonBody(req);
+  const cardIds = (body as { cardIds?: unknown } | null)?.cardIds;
   if (!Array.isArray(cardIds) || cardIds.length === 0) {
     return Response.json(
       { error: 'VALIDATION_ERROR', message: 'cardIds must be a non-empty array' },

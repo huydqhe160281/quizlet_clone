@@ -1,4 +1,4 @@
-import { withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertAiGenerateRateLimit } from '@/lib/rate-limit/ai-rate-limit-guard';
 import { aiGenerateInputSchema } from '@/features/sets/schemas/ai-generate.schema';
 import { requireUserId } from '@/server/auth/auth-utils';
@@ -10,7 +10,7 @@ export const maxDuration = 300;
 
 export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();
-  const [emailVerified, body] = await Promise.all([hasVerifiedEmail(userId), req.json()]);
+  const [emailVerified, body] = await Promise.all([hasVerifiedEmail(userId), readJsonBody(req)]);
   const input = aiGenerateInputSchema.parse(body);
   const quota = await assertAiGenerateRateLimit(userId, { emailVerified });
 

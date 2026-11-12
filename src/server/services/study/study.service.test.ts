@@ -70,6 +70,15 @@ import {
 import { recordDailyStudyActivity } from '@/server/services/user/stats.service';
 import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
 
+/** Incomplete sessions for the resume scan, plus the by-id reload of the match. */
+function mockIncompleteSessions(sessions: Array<{ id: string } & Record<string, unknown>>) {
+  prismaMock.studySession.findMany.mockResolvedValue(sessions);
+  prismaMock.studySession.findUnique.mockImplementation(
+    async ({ where }: { where: { id: string } }) =>
+      sessions.find((session) => session.id === where.id) ?? null
+  );
+}
+
 describe('study.service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -135,7 +144,7 @@ describe('study.service', () => {
       settings: null,
       sessionCards: [{ cardId: 'card-1' }],
     };
-    prismaMock.studySession.findMany.mockResolvedValue([existing]);
+    mockIncompleteSessions([existing]);
 
     const { session } = await createSession('user-a', 'set-1', 'LEARN');
 
@@ -154,7 +163,7 @@ describe('study.service', () => {
       Object.assign(new Error('limit'), { code: 'STUDY_LIMIT_REACHED', status: 403 })
     );
 
-    prismaMock.studySession.findMany.mockResolvedValue([
+    mockIncompleteSessions([
       { id: 'session-open', settings: null, sessionCards: [{ cardId: 'card-1' }] },
     ]);
     const { session } = await createSession('user-a', 'set-1', 'LEARN');
@@ -210,7 +219,7 @@ describe('study.service', () => {
     });
 
     // Postgres JSONB orders keys by length, then bytes — not by insertion order.
-    prismaMock.studySession.findMany.mockResolvedValue([
+    mockIncompleteSessions([
       {
         id: 'session-existing',
         totalCards: 1,
@@ -315,7 +324,7 @@ describe('study.service', () => {
         { id: 'c3', sortOrder: 2, type: null },
       ],
     });
-    prismaMock.studySession.findMany.mockResolvedValue([
+    mockIncompleteSessions([
       {
         id: 'newer-c3',
         settings: null,
@@ -462,7 +471,7 @@ describe('study.service', () => {
 
     expect(prismaMock.sessionCard.updateMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.sessionCard.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { sessionId: 'session-1', cardId: 'card-1' } })
+      expect.objectContaining({ where: { sessionId: 'session-1', cardId: { in: ['card-1'] } } })
     );
     // Score uses the 3 cards still in the session.
     expect(prismaMock.studySession.updateMany).toHaveBeenCalledWith(

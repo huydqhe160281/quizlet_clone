@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   Compass,
   Edit3,
@@ -86,7 +86,6 @@ const MODES: ModeConfig[] = [
 
 export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLauncherProps) {
   const t = useTranslations();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [hoveredMode, setHoveredMode] = useState<StudyModeValue | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -98,9 +97,12 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
       setHideModeSelect(false);
       setInitialMode('FLASHCARD');
       setSettingsOpen(true);
-      router.replace(`/sets/${setId}`, { scroll: false });
+      // Strip the param without a router navigation: a navigation would re-render the
+      // page segment behind its loading boundary and remount this component, closing
+      // the dialog it just opened. Next keeps useSearchParams in sync with replaceState.
+      window.history.replaceState(window.history.state, '', `/sets/${setId}`);
     }
-  }, [router, searchParams, setId]);
+  }, [searchParams, setId]);
 
   const openSettings = (mode?: StudyModeValue) => {
     if (mode) {

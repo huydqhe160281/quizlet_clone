@@ -120,7 +120,7 @@ export async function recordDailyStudyActivity(userId: string, studiedAt = new D
   return { stats: updated, changed: true as const };
 }
 
-export async function updateStreak(userId: string, studiedAt = new Date()) {
+export async function updateStreak(userId: string, studiedAt = new Date(), isCorrect = false) {
   const stats = await ensureUserStats(userId);
   const next = computeNextStreak(
     stats.currentStreak,
@@ -138,6 +138,7 @@ export async function updateStreak(userId: string, studiedAt = new Date()) {
       lastStudiedDate: next.lastStudiedDate,
       ...next.broken,
       totalReviews: { increment: 1 },
+      ...(isCorrect ? { totalCorrect: { increment: 1 } } : {}),
     },
   });
 }
@@ -169,13 +170,8 @@ export async function getStreakSnapshot(userId: string) {
 }
 
 export async function recordReviewStats(userId: string, isCorrect: boolean) {
-  await updateStreak(userId);
-  if (isCorrect) {
-    await prisma.userStats.update({
-      where: { userId },
-      data: { totalCorrect: { increment: 1 } },
-    });
-  }
+  // One update for streak, review count and correct count.
+  await updateStreak(userId, new Date(), isCorrect);
 }
 
 export async function getStats(userId: string) {

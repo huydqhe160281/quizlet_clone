@@ -46,9 +46,9 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
 
   const roundCards = useMemo(() => {
     if (!study.currentRound) return [];
-    return study.currentRound
-      .map((id) => study.cards.find((c) => c.cardId === id))
-      .filter((c): c is StudyCard => !!c);
+    // Map lookup: a per-id `find` is quadratic on large sets (up to 2000 cards).
+    const byId = new Map(study.cards.map((card) => [card.cardId, card]));
+    return study.currentRound.map((id) => byId.get(id)).filter((c): c is StudyCard => !!c);
   }, [study.currentRound, study.cards]);
 
   const currentCard = roundCards[study.currentIndex];
@@ -109,6 +109,15 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
     [answer]
   );
 
+  // `answer` changes identity on every render (it closes over the session snapshot).
+  // The key listener and the autoplay timer read the latest one through a ref so they
+  // are not torn down and re-created — which restarted the autoplay countdown — on
+  // each render.
+  const answerRef = useRef(answer);
+  useEffect(() => {
+    answerRef.current = answer;
+  }, [answer]);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (study.isComplete || showSummary || !currentCard || event.repeat) {
@@ -127,17 +136,17 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
       }
       if (event.code === 'ArrowRight') {
         event.preventDefault();
-        void answer(true);
+        void answerRef.current(true);
       }
       if (event.code === 'ArrowLeft') {
         event.preventDefault();
-        void answer(false);
+        void answerRef.current(false);
       }
     };
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [study.isComplete, showSummary, currentCard, flip, answer]);
+  }, [study.isComplete, showSummary, currentCard, flip]);
 
   useEffect(() => {
     if (!speechEnabled || !currentCard || isFlipped) {
@@ -162,7 +171,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
           speakStudyText(currentCard.back, undefined, speechHints);
         }
       } else {
-        void answer(true, { passive: true });
+        void answerRef.current(true, { passive: true });
       }
     }, 4000);
 
@@ -171,7 +180,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
         clearInterval(autoplayTimerRef.current);
       }
     };
-  }, [autoplay, currentCard, isFlipped, flip, answer, speechEnabled, speechHints]);
+  }, [autoplay, currentCard, isFlipped, flip, speechEnabled, speechHints]);
 
   if (study.isLoading) {
     return (

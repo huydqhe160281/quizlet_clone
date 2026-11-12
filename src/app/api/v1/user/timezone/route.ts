@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ApiError, withErrorHandler } from '@/lib/api-error';
 import { assertSameOrigin } from '@/lib/i18n/origin';
+import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { requireUserId } from '@/server/auth/auth-utils';
 import {
   adoptDetectedTimezone,
@@ -13,6 +14,7 @@ const bodySchema = z.object({ timeZone: z.string().min(1).max(64) });
 export const POST = withErrorHandler(async (request) => {
   assertSameOrigin(request);
   const userId = await requireUserId();
+  await assertApiRateLimit(request);
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     throw new ApiError('VALIDATION_ERROR', 'Invalid timeZone', 400);
@@ -25,6 +27,7 @@ export const POST = withErrorHandler(async (request) => {
 export const PATCH = withErrorHandler(async (request) => {
   assertSameOrigin(request);
   const userId = await requireUserId();
+  await assertApiRateLimit(request);
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     throw new ApiError('VALIDATION_ERROR', 'Invalid timeZone', 400);
