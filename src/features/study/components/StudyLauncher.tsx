@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   Compass,
   Edit3,
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
+import { preloadStudyMode } from '@/features/study/lib/study-mode-loaders';
 import { StudySettingsModal } from '@/features/study/components/StudySettingsModal';
 import { STUDY_MODE_DESC_KEY, STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -86,7 +87,6 @@ const MODES: ModeConfig[] = [
 
 export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLauncherProps) {
   const t = useTranslations();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [hoveredMode, setHoveredMode] = useState<StudyModeValue | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -98,9 +98,14 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
       setHideModeSelect(false);
       setInitialMode('FLASHCARD');
       setSettingsOpen(true);
-      router.replace(`/sets/${setId}`, { scroll: false });
+      // Strip the param without a router navigation: a navigation would re-render the
+      // page segment behind its loading boundary and remount this component, closing
+      // the dialog it just opened. The state must be null: Next treats a state carrying
+      // its own `__NA` marker as internal and would not sync useSearchParams or its
+      // canonical URL, so a later router refresh would put the param back.
+      window.history.replaceState(null, '', `/sets/${setId}`);
     }
-  }, [router, searchParams, setId]);
+  }, [searchParams, setId]);
 
   const openSettings = (mode?: StudyModeValue) => {
     if (mode) {
@@ -200,7 +205,11 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
                 key={mode.value}
                 type="button"
                 onClick={() => openSettings(mode.value)}
-                onMouseEnter={() => setHoveredMode(mode.value)}
+                onMouseEnter={() => {
+                  setHoveredMode(mode.value);
+                  preloadStudyMode(mode.value);
+                }}
+                onFocus={() => preloadStudyMode(mode.value)}
                 onMouseLeave={() => setHoveredMode(null)}
                 className={cn(
                   'glass-panel group flex items-center gap-3 rounded-xl border border-border/50 p-3.5 text-left sm:items-start sm:gap-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',

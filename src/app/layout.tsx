@@ -8,6 +8,7 @@ import '@/styles/themes/pastel.css';
 import '@/styles/themes/paper.css';
 import { QueryProvider } from '@/components/providers/query-provider';
 import { LoadingOverlayProvider } from '@/components/providers/loading-overlay-provider';
+import { getServerSession } from '@/server/auth/auth-utils';
 import { AuthSessionProvider } from '@/components/providers/session-provider';
 import { RootJsonLd } from '@/components/shared/RootJsonLd';
 import { ThemeColorSync } from '@/components/shared/ThemeColorSync';
@@ -26,7 +27,7 @@ import { PwaProvider } from '@/features/pwa/PwaProvider';
 import { AiGenerateJobNotifier } from '@/features/sets/components/AiGenerateJobNotifier';
 import { StudyOfflineSyncProvider } from '@/features/study-offline/StudyOfflineSyncProvider';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const inter = Inter({ subsets: ['latin', 'vietnamese'], variable: '--font-sans' });
 // Paper & Ink body font (full Vietnamese coverage); only referenced by styles/themes/paper.css,
 // so with preload off the files are fetched only when that theme is active.
 const beVietnamPro = Be_Vietnam_Pro({
@@ -63,7 +64,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const locale = await getRequestLocale();
+  const [locale, session] = await Promise.all([getRequestLocale(), getServerSession()]);
   const catalog = loadCatalog(locale);
 
   return (
@@ -86,7 +87,7 @@ export default async function RootLayout({
         >
           <ThemeColorSync />
           <QueryProvider>
-            <AuthSessionProvider>
+            <AuthSessionProvider session={session}>
               <LocaleProvider locale={locale} catalog={catalog}>
                 <PwaProvider>
                   {/* Root level: a background AI job can finish on any page, (public) ones included. */}

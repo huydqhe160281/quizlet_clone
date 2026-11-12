@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ type SharedSetPreviewProps = {
 
 export function SharedSetPreview({ set }: SharedSetPreviewProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

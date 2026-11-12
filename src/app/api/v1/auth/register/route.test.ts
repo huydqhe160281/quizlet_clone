@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { Prisma } from '@prisma/client';
 
 const prismaMock = vi.hoisted(() => ({
   user: {
@@ -64,6 +65,23 @@ describe('POST /api/v1/auth/register', () => {
     expect(response.status).toBe(400);
     expect(payload.error).toBe('EMAIL_ALREADY_EXISTS');
     expect(prismaMock.user.create).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when a concurrent sign-up wins the unique index race', async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    prismaMock.user.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
+        code: 'P2002',
+        clientVersion: 'test',
+      })
+    );
+
+    const response = await POST(registerRequest('race@example.com'), {
+      params: Promise.resolve({}),
+    });
+
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe('EMAIL_ALREADY_EXISTS');
   });
 
   it('sends a verification email after creating the account', async () => {

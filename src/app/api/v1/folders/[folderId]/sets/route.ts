@@ -1,4 +1,4 @@
-import { withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { addSetToFolderSchema } from '@/features/folders/schemas/folder.schema';
 import { requireUserId } from '@/server/auth/auth-utils';
@@ -8,7 +8,7 @@ export const POST = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { folderId } = await params;
   const userId = await requireUserId();
-  const body = await req.json();
+  const body = await readJsonBody(req);
   const { setId } = addSetToFolderSchema.parse(body);
   const link = await addSetToFolder(folderId, userId, setId);
   return Response.json({ data: link }, { status: 201 });

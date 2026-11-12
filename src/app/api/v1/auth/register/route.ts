@@ -1,40 +1,24 @@
-import { ApiError, withErrorHandler } from '@/lib/api-error';
+import { ApiError, withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { authRateLimit, getClientIp } from '@/lib/rate-limit/rate-limit';
+import { assertRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { registerSchema } from '@/features/auth/schemas/auth.schema';
-import { prisma } from '@/server/db';
-import { hashPassword } from '@/server/auth/password';
 import { issueEmailVerification } from '@/server/auth/email-verification';
+import { registerUser } from '@/server/services/auth/registration.service';
 import { getRequestLocale } from '@/lib/i18n/getRequestLocale';
 
 export const POST = withErrorHandler(async (req) => {
-  const ip = getClientIp(req);
-  const decision = await authRateLimit.check(`register:${ip}`);
-  if (decision.limited) {
-    throw new ApiError('RATE_LIMITED', 'Too many requests', 429, {
-      retryAfter: decision.retryAfterSec,
-    });
-  }
+  await assertRateLimit(authRateLimit, `register:${getClientIp(req)}`);
 
-  const body = await req.json();
-  const parsed = registerSchema.safeParse(body);
+  const parsed = registerSchema.safeParse(await readJsonBody(req));
   if (!parsed.success) {
     throw new ApiError('VALIDATION_ERROR', 'Invalid input', 400, parsed.error.flatten());
   }
 
   const email = parsed.data.email.toLowerCase();
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) {
-    throw new ApiError('EMAIL_ALREADY_EXISTS', 'Email already registered', 400);
-  }
-
-  const passwordHash = await hashPassword(parsed.data.password);
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name: parsed.data.name,
-      passwordHash,
-    },
-    select: { id: true, email: true, name: true },
+  const user = await registerUser({
+    email,
+    password: parsed.data.password,
+    name: parsed.data.name,
   });
 
   try {

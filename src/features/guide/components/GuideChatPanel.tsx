@@ -18,7 +18,11 @@ export function GuideChatPanel({ onClose }: { onClose: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    // While a reply streams in, each chunk would restart a smooth scroll and jitter.
+    listRef.current?.scrollTo({
+      top: listRef.current.scrollHeight,
+      behavior: isLoading ? 'auto' : 'smooth',
+    });
   }, [messages, isLoading]);
 
   useEffect(() => {

@@ -140,6 +140,8 @@ model FolderSet {
   set    FlashcardSet @relation(fields: [setId], references: [id], onDelete: Cascade)
 
   @@id([folderId, setId])
+  // Backs the cascade when a set is deleted (the PK leads with folderId).
+  @@index([setId])
   @@map("folder_sets")
 }
 
@@ -182,8 +184,10 @@ model FlashcardSet {
   folders        FolderSet[]
   studySessions  StudySession[]
 
-  @@index([userId])
-  @@index([visibility])
+  // "My sets" lists filter on userId and sort newest first.
+  @@index([userId, createdAt(sort: Desc)])
+  // Public library keyset paging: WHERE visibility ORDER BY createdAt DESC, id DESC.
+  @@index([visibility, createdAt(sort: Desc), id(sort: Desc)])
   @@index([language])
   @@index([createdAt(sort: Desc)])
   @@map("flashcard_sets")
@@ -299,7 +303,10 @@ model SessionCard {
   session StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   card    Flashcard    @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
-  @@index([sessionId])
+  // Per-card answer updates filter on (sessionId, cardId); the prefix also serves
+  // session lookups. The cardId index backs the cascade when a card is deleted.
+  @@index([sessionId, cardId])
+  @@index([cardId])
   @@map("session_cards")
 }
 

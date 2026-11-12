@@ -1,4 +1,4 @@
-import { withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { updateSetSchema } from '@/features/sets/schemas/set.schema';
 import { auth } from '@/server/auth/auth';
@@ -16,7 +16,7 @@ export const PATCH = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { setId } = await params;
   const userId = await requireUserId();
-  const body = await req.json();
+  const body = await readJsonBody(req);
   const input = updateSetSchema.parse(body);
   const set = await updateSet(setId, userId, input);
   return Response.json({ data: set });

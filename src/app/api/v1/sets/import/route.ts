@@ -1,4 +1,4 @@
-import { withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { requireUserId } from '@/server/auth/auth-utils';
 import {
@@ -50,7 +50,7 @@ export const POST = withErrorHandler(async (req) => {
 
   if (contentType.startsWith('application/json')) {
     // ── JSON import ─────────────────────────────────────────────────────────
-    const body = await req.json();
+    const body = await readJsonBody(req);
 
     if (setId) {
       const result = await importJsonToExisting(userId, setId, body);

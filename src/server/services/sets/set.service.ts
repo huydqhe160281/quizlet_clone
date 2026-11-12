@@ -123,7 +123,10 @@ export async function createSet(userId: string, input: CreateSetInput) {
 }
 
 export async function updateSet(setId: string, userId: string, input: UpdateSetInput) {
-  const existing = await prisma.flashcardSet.findUnique({ where: { id: setId } });
+  const existing = await prisma.flashcardSet.findUnique({
+    where: { id: setId },
+    select: { userId: true, visibility: true },
+  });
   if (!existing) {
     throw new ApiError('NOT_FOUND', 'Set not found', 404);
   }
@@ -163,7 +166,10 @@ export async function updateSet(setId: string, userId: string, input: UpdateSetI
 }
 
 export async function deleteSet(setId: string, userId: string) {
-  const existing = await prisma.flashcardSet.findUnique({ where: { id: setId } });
+  const existing = await prisma.flashcardSet.findUnique({
+    where: { id: setId },
+    select: { userId: true, visibility: true },
+  });
   if (!existing) {
     throw new ApiError('NOT_FOUND', 'Set not found', 404);
   }

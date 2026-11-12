@@ -1,4 +1,4 @@
-import { ApiError, withErrorHandler } from '@/lib/api-error';
+import { ApiError, withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { createSessionSchema } from '@/features/study/schemas/study.schema';
 import { requireUserId } from '@/server/auth/auth-utils';
@@ -12,7 +12,7 @@ export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();
   const locale = await getRequestLocale();
   const catalog = loadCatalog(locale);
-  const body = await req.json();
+  const body = await readJsonBody(req);
   const input = createSessionSchema.parse(body);
   try {
     const { session, streak } = await createSession(

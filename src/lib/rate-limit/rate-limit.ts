@@ -99,6 +99,9 @@ export const createRateLimiter = ({ intervalMs, maxRequests }: RateLimitOptions)
 };
 
 export const authRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 5 });
+// Looser than authRateLimit: reset tokens are 256-bit, so this only caps load, and users
+// behind a shared NAT who mistype the new password should not hit a 429 on a valid link.
+export const passwordResetRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 20 });
 export const apiRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 100 });
 export const uploadRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 10 });
 export const reviewRateLimit = createRateLimiter({ intervalMs: 60_000, maxRequests: 200 });

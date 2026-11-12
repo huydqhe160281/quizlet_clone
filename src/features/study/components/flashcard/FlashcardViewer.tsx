@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Volume2 } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { CardMediaImage } from '@/components/shared/CardMediaImage';
 import { Button } from '@/components/ui/button';
 import { guessSpeechLang, type SpeechLangHints } from '@/features/study/lib/speech-lang';
@@ -61,7 +61,7 @@ export function FlashcardViewer({
         <div
           data-slot="flashcard-face"
           className={cn(
-            'absolute inset-0 flex flex-col justify-between rounded-xl border border-border/50 bg-card/90 p-6 shadow-lg backface-hidden backdrop-blur-sm'
+            'absolute inset-0 flex flex-col justify-between rounded-xl border border-border/50 bg-card p-6 shadow-lg backface-hidden'
           )}
         >
           <div className="flex items-center justify-between text-muted-foreground">
@@ -165,8 +165,9 @@ export function FlashcardViewer({
 
 export function useFlipState() {
   const [isFlipped, setIsFlipped] = useState(false);
-  const flip = () => setIsFlipped((value) => !value);
-  const resetFlip = () => setIsFlipped(false);
+  // Stable identities: callers list these in effect dependencies (key handlers, autoplay).
+  const flip = useCallback(() => setIsFlipped((value) => !value), []);
+  const resetFlip = useCallback(() => setIsFlipped(false), []);
   return { isFlipped, flip, resetFlip };
 }
 

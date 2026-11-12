@@ -24,7 +24,15 @@ const shuffle = <T>(items: T[]): T[] => {
 const getOwnedOrPublicSet = async (setId: string, userId: string) => {
   const set = await prisma.flashcardSet.findUnique({
     where: { id: setId },
-    include: { cards: { orderBy: { sortOrder: 'asc' } } },
+    // Session setup only needs ids (and the type for the Draw pool); the card text is
+    // loaded once, with the session's own cards.
+    select: {
+      id: true,
+      title: true,
+      userId: true,
+      visibility: true,
+      cards: { select: { id: true, type: true }, orderBy: { sortOrder: 'asc' } },
+    },
   });
 
   if (!set) {
@@ -208,6 +216,26 @@ async function answersStillInSession(
   return answers.filter((answer) => present.has(answer.cardId));
 }
 
+/**
+ * Writes a batch of answers in at most two statements (one per outcome) instead of one
+ * round trip per card: inside an interactive transaction those run serially.
+ */
+async function applySessionAnswers(
+  tx: Prisma.TransactionClient,
+  sessionId: string,
+  answers: Array<{ cardId: string; isCorrect: boolean }>
+) {
+  const answeredAt = new Date();
+  for (const isCorrect of [true, false]) {
+    const cardIds = answers.filter((a) => a.isCorrect === isCorrect).map((a) => a.cardId);
+    if (cardIds.length === 0) continue;
+    await tx.sessionCard.updateMany({
+      where: { sessionId, cardId: { in: cardIds } },
+      data: { isCorrect, answeredAt },
+    });
+  }
+}
+
 export async function createSession(
   userId: string,
   setId: string,
@@ -231,18 +259,27 @@ export async function createSession(
   const targetIds = targetCards.map((card) => card.id);
 
   // Idempotent resume: scan incompletes; match settings + sessionCards membership.
+  // The scan reads card ids only — full card rows are loaded for the one match.
   const incompletes = await prisma.studySession.findMany({
     where: { userId, setId, mode, completedAt: null },
-    include: sessionCardsInclude,
+    select: { id: true, settings: true, sessionCards: { select: { cardId: true } } },
     orderBy: { startedAt: 'desc' },
   });
 
-  const matching = incompletes.find((session) => {
+  const matchingId = incompletes.find((session) => {
     if (!settingsMatchStored(session.settings, settings)) return false;
     const sessionIds = session.sessionCards.map((row) => row.cardId);
     return cardIdSetEqual(sessionIds, targetIds);
-  });
+  })?.id;
 
+  const matching = matchingId
+    ? await prisma.studySession.findUnique({
+        where: { id: matchingId },
+        include: sessionCardsInclude,
+      })
+    : null;
+
+  // A null here means the session was deleted since the scan: start a new one.
   if (matching) {
     const streak = await recordStreakForStudy(userId);
     return {
@@ -367,15 +404,7 @@ export async function recordSessionAnswersBatch(
     await claimAnswerMutationIds(tx, userId, survivors);
     const normalizedAnswers = await answersStillInSession(tx, sessionId, dedupeAnswers(survivors));
 
-    const now = new Date();
-    await Promise.all(
-      normalizedAnswers.map(({ cardId, isCorrect }) =>
-        tx.sessionCard.updateMany({
-          where: { sessionId, cardId },
-          data: { isCorrect, answeredAt: now },
-        })
-      )
-    );
+    await applySessionAnswers(tx, sessionId, normalizedAnswers);
 
     return { recorded: normalizedAnswers.length };
   });
@@ -415,24 +444,22 @@ export async function completeSession(
           dedupeAnswers(survivors)
         );
 
-        if (normalizedAnswers.length > 0) {
-          const now = new Date();
-          await Promise.all(
-            normalizedAnswers.map(({ cardId, isCorrect }) =>
-              tx.sessionCard.updateMany({
-                where: { sessionId, cardId },
-                data: { isCorrect, answeredAt: now },
-              })
-            )
-          );
-        }
+        await applySessionAnswers(tx, sessionId, normalizedAnswers);
       }
 
-      const correctCount = await tx.sessionCard.count({
-        where: { sessionId, isCorrect: true },
+      // One pass for both totals. Score against the cards that still exist: deleted
+      // cards cascade out of the session.
+      const answerGroups = await tx.sessionCard.groupBy({
+        by: ['isCorrect'],
+        where: { sessionId },
+        _count: { _all: true },
       });
-      // Score against the cards that still exist: deleted cards cascade out of the session.
-      const totalCards = await tx.sessionCard.count({ where: { sessionId } });
+      let correctCount = 0;
+      let totalCards = 0;
+      for (const group of answerGroups) {
+        totalCards += group._count._all;
+        if (group.isCorrect === true) correctCount += group._count._all;
+      }
       const score = totalCards > 0 ? correctCount / totalCards : 0;
       const completedAt = new Date();
 
@@ -490,11 +517,15 @@ export async function getDueCards(userId: string) {
 
   const dueProgress = await prisma.cardProgress.findMany({
     where: { userId, dueDate: { lte: now } },
-    include: {
+    // Only the fields the review queue shows (not the full progress and card rows).
+    select: {
+      cardId: true,
+      dueDate: true,
+      easeFactor: true,
+      interval: true,
+      repetitions: true,
       card: {
-        include: {
-          set: { select: { id: true, title: true } },
-        },
+        select: { front: true, back: true, setId: true, set: { select: { title: true } } },
       },
     },
     orderBy: { dueDate: 'asc' },
@@ -504,8 +535,12 @@ export async function getDueCards(userId: string) {
   // library does not ship every new card on each visit; the rest come in later sessions.
   const newCards = await prisma.flashcard.findMany({
     where: { set: { userId }, progress: { none: { userId } } },
-    include: {
-      set: { select: { id: true, title: true } },
+    select: {
+      id: true,
+      front: true,
+      back: true,
+      setId: true,
+      set: { select: { title: true } },
     },
     orderBy: { createdAt: 'asc' },
     take: DUE_CARDS_NEW_LIMIT,

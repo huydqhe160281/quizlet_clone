@@ -32,7 +32,7 @@ Never rename a migration folder: Prisma records applied names in `_prisma_migrat
 
 ### Layering
 
-- `src/app/` — App Router. Route groups: `(app)` protected pages, `(auth)` login/register/reset, `(public)` library + shared set preview. REST API lives under `src/app/api/v1/**/route.ts`.
+- `src/app/` — App Router. Route groups: `(shell)` holds the shared app chrome (sidebar/navbar) with `(app)` protected pages and `(public)` library + shared set preview nested inside; `(auth)` login/register/reset. REST API lives under `src/app/api/v1/**/route.ts`.
 - `src/server/` — server-only code. `services/` holds business logic (sets, study, learning, search, ai, user); `auth/` is NextAuth config; `ai/` wraps LLM providers; `db.ts` is the Prisma singleton.
 - `src/features/<domain>/` — client-side feature modules: `components/`, `hooks/`, `schemas/` (Zod), `api/` (fetch clients), `query-keys.ts`, `lib/` (pure logic).
 - `src/lib/` — cross-cutting helpers (i18n, rate limiting, http, navigation, seo). `src/components/ui/` is shadcn/ui.

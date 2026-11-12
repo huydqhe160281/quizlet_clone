@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
+import { studyModeLoaders } from '@/features/study/lib/study-mode-loaders';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 
 function StudyLoading() {
@@ -13,30 +14,14 @@ function StudyLoading() {
   );
 }
 
-const FlashcardMode = dynamic(
-  () => import('@/features/study/components/flashcard/FlashcardMode').then((m) => m.FlashcardMode),
-  { ssr: false, loading: () => <StudyLoading /> }
-);
-const LearnMode = dynamic(
-  () => import('@/features/study/components/learn/LearnMode').then((m) => m.LearnMode),
-  { ssr: false, loading: () => <StudyLoading /> }
-);
-const WriteMode = dynamic(
-  () => import('@/features/study/components/write/WriteMode').then((m) => m.WriteMode),
-  { ssr: false, loading: () => <StudyLoading /> }
-);
-const TestMode = dynamic(
-  () => import('@/features/study/components/test/TestMode').then((m) => m.TestMode),
-  { ssr: false, loading: () => <StudyLoading /> }
-);
-const DrawMode = dynamic(
-  () => import('@/features/study/components/draw/DrawMode').then((m) => m.DrawMode),
-  { ssr: false, loading: () => <StudyLoading /> }
-);
-const GravityMode = dynamic(
-  () => import('@/features/study/components/gravity/GravityMode').then((m) => m.GravityMode),
-  { ssr: false, loading: () => <StudyLoading /> }
-);
+const modeOptions = { ssr: false, loading: () => <StudyLoading /> } as const;
+
+const FlashcardMode = dynamic(studyModeLoaders.FLASHCARD, modeOptions);
+const LearnMode = dynamic(studyModeLoaders.LEARN, modeOptions);
+const WriteMode = dynamic(studyModeLoaders.WRITE, modeOptions);
+const TestMode = dynamic(studyModeLoaders.TEST, modeOptions);
+const DrawMode = dynamic(studyModeLoaders.DRAW, modeOptions);
+const GravityMode = dynamic(studyModeLoaders.GRAVITY, modeOptions);
 
 type StudyPageClientProps = {
   setId: string;

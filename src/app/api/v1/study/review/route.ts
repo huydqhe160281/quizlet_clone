@@ -1,19 +1,15 @@
-import { ApiError, withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { reviewRateLimit } from '@/lib/rate-limit/rate-limit';
+import { assertRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import { reviewSchema } from '@/features/study/schemas/study.schema';
 import { requireUserId } from '@/server/auth/auth-utils';
 import { reviewCard } from '@/server/services/study/study.service';
 
 export const POST = withErrorHandler(async (req) => {
   const userId = await requireUserId();
-  const decision = await reviewRateLimit.check(`review:${userId}`);
-  if (decision.limited) {
-    throw new ApiError('RATE_LIMITED', 'Too many review submissions', 429, {
-      retryAfter: decision.retryAfterSec,
-    });
-  }
+  await assertRateLimit(reviewRateLimit, `review:${userId}`, 'Too many review submissions');
 
-  const body = await req.json();
+  const body = await readJsonBody(req);
   const input = reviewSchema.parse(body);
   const result = await reviewCard(
     userId,

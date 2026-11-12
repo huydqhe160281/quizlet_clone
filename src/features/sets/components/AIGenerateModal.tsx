@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ type AIGenerateModalProps = {
 
 export function AIGenerateModal({ open, onOpenChange }: AIGenerateModalProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const job = useAiGenerateJobStore((state) => state.job);
   const startJob = useAiGenerateJobStore((state) => state.start);
   const clearJob = useAiGenerateJobStore((state) => state.clear);

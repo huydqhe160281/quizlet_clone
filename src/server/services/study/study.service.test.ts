@@ -19,6 +19,7 @@ const prismaMock = vi.hoisted(() => ({
     update: vi.fn(),
     updateMany: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
   },
   processedMutation: {
     findMany: vi.fn(),
@@ -69,6 +70,15 @@ import {
 } from '@/server/services/study/study.service';
 import { recordDailyStudyActivity } from '@/server/services/user/stats.service';
 import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
+
+/** Incomplete sessions for the resume scan, plus the by-id reload of the match. */
+function mockIncompleteSessions(sessions: Array<{ id: string } & Record<string, unknown>>) {
+  prismaMock.studySession.findMany.mockResolvedValue(sessions);
+  prismaMock.studySession.findUnique.mockImplementation(
+    async ({ where }: { where: { id: string } }) =>
+      sessions.find((session) => session.id === where.id) ?? null
+  );
+}
 
 describe('study.service', () => {
   beforeEach(() => {
@@ -135,7 +145,7 @@ describe('study.service', () => {
       settings: null,
       sessionCards: [{ cardId: 'card-1' }],
     };
-    prismaMock.studySession.findMany.mockResolvedValue([existing]);
+    mockIncompleteSessions([existing]);
 
     const { session } = await createSession('user-a', 'set-1', 'LEARN');
 
@@ -154,7 +164,7 @@ describe('study.service', () => {
       Object.assign(new Error('limit'), { code: 'STUDY_LIMIT_REACHED', status: 403 })
     );
 
-    prismaMock.studySession.findMany.mockResolvedValue([
+    mockIncompleteSessions([
       { id: 'session-open', settings: null, sessionCards: [{ cardId: 'card-1' }] },
     ]);
     const { session } = await createSession('user-a', 'set-1', 'LEARN');
@@ -210,7 +220,7 @@ describe('study.service', () => {
     });
 
     // Postgres JSONB orders keys by length, then bytes — not by insertion order.
-    prismaMock.studySession.findMany.mockResolvedValue([
+    mockIncompleteSessions([
       {
         id: 'session-existing',
         totalCards: 1,
@@ -315,7 +325,7 @@ describe('study.service', () => {
         { id: 'c3', sortOrder: 2, type: null },
       ],
     });
-    prismaMock.studySession.findMany.mockResolvedValue([
+    mockIncompleteSessions([
       {
         id: 'newer-c3',
         settings: null,
@@ -422,7 +432,11 @@ describe('study.service', () => {
         completedAt: new Date(),
       });
     // correct answers, then live session-card total
-    prismaMock.sessionCard.count.mockResolvedValueOnce(2).mockResolvedValueOnce(4);
+    prismaMock.sessionCard.groupBy.mockResolvedValueOnce([
+      { isCorrect: true, _count: { _all: 2 } },
+      { isCorrect: false, _count: { _all: 1 } },
+      { isCorrect: null, _count: { _all: 1 } },
+    ]);
     prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
     prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
@@ -452,7 +466,10 @@ describe('study.service', () => {
     // card-gone was deleted: its SessionCard cascaded away.
     prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
     prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
-    prismaMock.sessionCard.count.mockResolvedValueOnce(1).mockResolvedValueOnce(3);
+    prismaMock.sessionCard.groupBy.mockResolvedValueOnce([
+      { isCorrect: true, _count: { _all: 1 } },
+      { isCorrect: false, _count: { _all: 2 } },
+    ]);
     prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
 
     await completeSession('session-1', 'user-a', [
@@ -462,7 +479,7 @@ describe('study.service', () => {
 
     expect(prismaMock.sessionCard.updateMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.sessionCard.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { sessionId: 'session-1', cardId: 'card-1' } })
+      expect.objectContaining({ where: { sessionId: 'session-1', cardId: { in: ['card-1'] } } })
     );
     // Score uses the 3 cards still in the session.
     expect(prismaMock.studySession.updateMany).toHaveBeenCalledWith(

@@ -7,7 +7,7 @@ import { useGuideChatUi } from '@/features/guide/context/GuideChatContext';
 import { GUIDE_CHAT_MOBILE_BOTTOM_OFFSET } from '@/features/guide/constants';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { isStudySessionPath } from '@/lib/navigation/study-focus';
 
@@ -17,14 +17,12 @@ export function GuideChatWidget() {
   const [expanded, setExpanded] = useState(false);
   // Focus mode on phones: the FAB would cover the study card and its controls.
   const studyFocus = isStudySessionPath(usePathname());
+  // Stable: the panel's Escape listener (and input focus) re-runs when this changes.
+  const handlePanelClose = useCallback(() => setExpanded(false), []);
 
   if (dismissed) {
     return null;
   }
-
-  const handlePanelClose = () => {
-    setExpanded(false);
-  };
 
   return (
     <>

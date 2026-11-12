@@ -19,7 +19,7 @@ describe('invalidateSetCache', () => {
 
   it('list-visible changes on a public set refresh lists and its preview', () => {
     invalidateSetCache('user-a', 'PUBLIC', { setId: 'set-1' });
-    expect(tags().sort()).toEqual(['public-set-set-1', 'public-sets', 'sets-user-a']);
+    expect(tags().sort()).toEqual(['public-set-lists', 'public-set-set-1', 'sets-user-a']);
   });
 
   it('private sets never touch public caches', () => {

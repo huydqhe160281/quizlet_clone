@@ -1,4 +1,4 @@
-import { withErrorHandler } from '@/lib/api-error';
+import { withErrorHandler, readJsonBody } from '@/lib/api-error';
 import { assertApiRateLimit } from '@/lib/rate-limit/rate-limit-guard';
 import {
   batchAnswersSchema,
@@ -25,7 +25,7 @@ export const POST = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { sessionId } = await params;
   const userId = await requireUserId();
-  const { answers } = batchAnswersSchema.parse(await req.json());
+  const { answers } = batchAnswersSchema.parse(await readJsonBody(req));
   const result = await recordSessionAnswersBatch(sessionId, userId, answers);
   return Response.json({ data: result });
 });
@@ -34,7 +34,9 @@ export const PATCH = withErrorHandler(async (req, { params }) => {
   await assertApiRateLimit(req);
   const { sessionId } = await params;
   const userId = await requireUserId();
-  const body = await req.json();
+  const parsedBody = await readJsonBody(req);
+  // A non-object body (null, string, …) matches neither shape and falls through to 400.
+  const body: object = typeof parsedBody === 'object' && parsedBody !== null ? parsedBody : {};
 
   // Batch-only flush (sendBeacon mid-session or unmount without completion)
   if ('answers' in body && !('correctCount' in body)) {

@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +13,7 @@ import { apiErrorMessage } from '@/lib/i18n/api-error-message';
 
 export function ResetPasswordForm() {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const [password, setPassword] = useState('');

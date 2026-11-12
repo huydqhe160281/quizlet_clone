@@ -5,7 +5,10 @@ import { prisma } from '@/server/db';
 import { invalidateSetCache } from '@/server/services/sets/set-cache';
 
 const getOwnedSet = async (setId: string, userId: string) => {
-  const set = await prisma.flashcardSet.findUnique({ where: { id: setId } });
+  const set = await prisma.flashcardSet.findUnique({
+    where: { id: setId },
+    select: { userId: true, visibility: true },
+  });
   if (!set) {
     throw new ApiError('NOT_FOUND', 'Set not found', 404);
   }
@@ -16,7 +19,10 @@ const getOwnedSet = async (setId: string, userId: string) => {
 };
 
 export async function getCards(setId: string, userId?: string) {
-  const set = await prisma.flashcardSet.findUnique({ where: { id: setId } });
+  const set = await prisma.flashcardSet.findUnique({
+    where: { id: setId },
+    select: { userId: true, visibility: true },
+  });
   if (!set) {
     throw new ApiError('NOT_FOUND', 'Set not found', 404);
   }

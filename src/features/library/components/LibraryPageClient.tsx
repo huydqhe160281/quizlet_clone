@@ -10,6 +10,7 @@ import { QueryErrorPanel } from '@/components/shared/QueryErrorPanel';
 import { Button } from '@/components/ui/button';
 import { SetCard } from '@/components/shared/SetCard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { publicSetKeys } from '@/features/library/query-keys';
 import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
 
 type SortOption = 'newest' | 'most_studied' | 'trending';
@@ -47,7 +48,7 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['library', sort],
+    queryKey: publicSetKeys.library(sort),
     queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams({ sort });
       if (pageParam) params.set('cursor', pageParam);

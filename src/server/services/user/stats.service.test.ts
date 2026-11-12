@@ -202,9 +202,14 @@ describe('dashboard stats service', () => {
 
     await recordReviewStats('user-a', true);
 
+    // Folded into the single streak update instead of a second round trip.
+    expect(prismaMock.userStats.update).toHaveBeenCalledTimes(1);
     expect(prismaMock.userStats.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { totalCorrect: { increment: 1 } },
+        data: expect.objectContaining({
+          totalReviews: { increment: 1 },
+          totalCorrect: { increment: 1 },
+        }),
       })
     );
   });
@@ -451,6 +456,7 @@ describe('user stats rows and streak writes', () => {
     await recordReviewStats('u', false);
 
     expect(prismaMock.userStats.update).toHaveBeenCalledTimes(1);
+    expect(prismaMock.userStats.update.mock.calls[0]?.[0].data).not.toHaveProperty('totalCorrect');
   });
 
   it('getStats reports zero accuracy before any review', async () => {

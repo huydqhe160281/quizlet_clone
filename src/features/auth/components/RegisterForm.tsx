@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ type RegisterFormProps = {
 
 export function RegisterForm({ googleAuthEnabled = false }: RegisterFormProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -13,9 +13,12 @@ import {
 } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { LoadingOverlay } from '@/components/shared/LoadingOverlay';
+import { NavigationProgressBar } from '@/components/shared/NavigationProgressBar';
+import { NAVIGATION_START_EVENT } from '@/lib/navigation/navigation-progress';
 
+/** Prefetched navigations usually finish before this, so they never show the bar. */
 const NAV_SHOW_DELAY_MS = 100;
-const NAV_SETTLE_MS = 420;
+/** Safety net if a navigation never commits (e.g. aborted). */
 const NAV_TIMEOUT_MS = 30_000;
 const EXIT_ANIMATION_MS = 240;
 
@@ -54,161 +57,54 @@ function isInternalNavigationLink(anchor: HTMLAnchorElement): boolean {
   }
 }
 
-function useLoadingOverlayController() {
-  const taskCountRef = useRef(0);
-  const navCountRef = useRef(0);
-  const navShowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const navHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const navSettleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [taskVisible, setTaskVisible] = useState(false);
-  const [navVisible, setNavVisible] = useState(false);
-  const [message, setMessage] = useState<string | undefined>();
-
-  const visible = taskVisible || navVisible;
-
-  const clearNavShowTimer = useCallback(() => {
-    if (navShowTimerRef.current) {
-      clearTimeout(navShowTimerRef.current);
-      navShowTimerRef.current = null;
-    }
-  }, []);
-
-  const clearNavHideTimer = useCallback(() => {
-    if (navHideTimerRef.current) {
-      clearTimeout(navHideTimerRef.current);
-      navHideTimerRef.current = null;
-    }
-  }, []);
-
-  const clearNavSettleTimer = useCallback(() => {
-    if (navSettleTimerRef.current) {
-      clearTimeout(navSettleTimerRef.current);
-      navSettleTimerRef.current = null;
-    }
-  }, []);
-
-  const syncNavVisible = useCallback(() => {
-    setNavVisible(navCountRef.current > 0);
-  }, []);
-
-  const startTaskLoading = useCallback((nextMessage?: string) => {
-    if (taskCountRef.current === 0) {
-      setMessage(nextMessage);
-      setTaskVisible(true);
-    }
-
-    taskCountRef.current += 1;
-  }, []);
-
-  const stopTaskLoading = useCallback(() => {
-    taskCountRef.current = Math.max(0, taskCountRef.current - 1);
-
-    if (taskCountRef.current > 0) {
-      return;
-    }
-
-    window.setTimeout(() => {
-      if (taskCountRef.current === 0) {
-        setTaskVisible(false);
-        setMessage(undefined);
-      }
-    }, EXIT_ANIMATION_MS);
-  }, []);
-
-  const startNavLoading = useCallback(() => {
-    navCountRef.current += 1;
-    clearNavHideTimer();
-    clearNavSettleTimer();
-
-    if (navCountRef.current === 1 && !navVisible && !navShowTimerRef.current) {
-      navShowTimerRef.current = setTimeout(() => {
-        navShowTimerRef.current = null;
-        if (navCountRef.current > 0) {
-          syncNavVisible();
-        }
-      }, NAV_SHOW_DELAY_MS);
-    }
-  }, [clearNavHideTimer, clearNavSettleTimer, navVisible, syncNavVisible]);
-
-  const stopNavLoading = useCallback(() => {
-    navCountRef.current = Math.max(0, navCountRef.current - 1);
-
-    if (navCountRef.current > 0) {
-      return;
-    }
-
-    clearNavShowTimer();
-
-    clearNavHideTimer();
-    navHideTimerRef.current = setTimeout(() => {
-      navHideTimerRef.current = null;
-      syncNavVisible();
-    }, EXIT_ANIMATION_MS);
-  }, [clearNavHideTimer, clearNavShowTimer, syncNavVisible]);
-
-  const scheduleNavSettle = useCallback(() => {
-    clearNavSettleTimer();
-    navSettleTimerRef.current = setTimeout(() => {
-      navSettleTimerRef.current = null;
-      stopNavLoading();
-    }, NAV_SETTLE_MS);
-  }, [clearNavSettleTimer, stopNavLoading]);
-
-  useEffect(
-    () => () => {
-      clearNavShowTimer();
-      clearNavHideTimer();
-      clearNavSettleTimer();
-    },
-    [clearNavHideTimer, clearNavSettleTimer, clearNavShowTimer]
-  );
-
-  return {
-    visible,
-    message,
-    startTaskLoading,
-    stopTaskLoading,
-    startNavLoading,
-    stopNavLoading,
-    scheduleNavSettle,
-  };
-}
-
-function NavigationLoadingListener({
-  startNavLoading,
-  stopNavLoading,
-  scheduleNavSettle,
-}: {
-  startNavLoading: () => void;
-  stopNavLoading: () => void;
-  scheduleNavSettle: () => void;
-}) {
+/**
+ * Shows a thin, non-blocking progress bar while a link navigation is pending and
+ * hides it as soon as the route commits. The new page (or its `loading.tsx`
+ * skeleton) is never dimmed or blocked.
+ */
+function NavigationProgress() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchKey = searchParams.toString();
-  const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isFirstRouteRef = useRef(true);
+  const [visible, setVisible] = useState(false);
+  const showTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const clearTimers = useCallback(() => {
+    if (showTimerRef.current) {
+      clearTimeout(showTimerRef.current);
+      showTimerRef.current = null;
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  const stop = useCallback(() => {
+    clearTimers();
+    setVisible(false);
+  }, [clearTimers]);
+
+  const start = useCallback(() => {
+    clearTimers();
+    showTimerRef.current = setTimeout(() => {
+      showTimerRef.current = null;
+      setVisible(true);
+    }, NAV_SHOW_DELAY_MS);
+    timeoutRef.current = setTimeout(stop, NAV_TIMEOUT_MS);
+  }, [clearTimers, stop]);
+
+  // Route committed: hide immediately.
   useEffect(() => {
-    if (isFirstRouteRef.current) {
-      isFirstRouteRef.current = false;
-      return;
-    }
-
-    scheduleNavSettle();
-
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-      navigationTimeoutRef.current = null;
-    }
-  }, [pathname, searchKey, scheduleNavSettle]);
+    stop();
+  }, [pathname, searchKey, stop]);
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
-      if (event.defaultPrevented) {
+      if (event.defaultPrevented || event.button !== 0) {
         return;
       }
-
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
       }
@@ -223,104 +119,70 @@ function NavigationLoadingListener({
         return;
       }
 
-      startNavLoading();
-
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
-
-      navigationTimeoutRef.current = setTimeout(() => {
-        navigationTimeoutRef.current = null;
-        stopNavLoading();
-      }, NAV_TIMEOUT_MS);
+      start();
     };
 
+    // Capture phase: next/link calls preventDefault on every click it handles.
+    // Same-URL clicks (nav reselect) are already skipped by isInternalNavigationLink.
     document.addEventListener('click', handleClick, true);
-
+    // Programmatic navigations (useAppRouter) announce themselves.
+    window.addEventListener(NAVIGATION_START_EVENT, start);
     return () => {
       document.removeEventListener('click', handleClick, true);
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-        navigationTimeoutRef.current = null;
-      }
+      window.removeEventListener(NAVIGATION_START_EVENT, start);
+      clearTimers();
     };
-  }, [startNavLoading, stopNavLoading]);
+  }, [clearTimers, start]);
 
-  return null;
+  return <NavigationProgressBar visible={visible} />;
 }
 
 export function LoadingOverlayProvider({ children }: { children: ReactNode }) {
-  const {
-    visible,
-    message,
-    startTaskLoading,
-    stopTaskLoading,
-    startNavLoading,
-    stopNavLoading,
-    scheduleNavSettle,
-  } = useLoadingOverlayController();
+  const taskCountRef = useRef(0);
+  const [visible, setVisible] = useState(false);
+  const [message, setMessage] = useState<string | undefined>();
 
   const withLoading = useCallback(
     async <T,>(fn: () => Promise<T>, options?: LoadingOptions): Promise<T> => {
-      startTaskLoading(options?.message);
+      if (taskCountRef.current === 0) {
+        setMessage(options?.message);
+        setVisible(true);
+      }
+      taskCountRef.current += 1;
       try {
         return await fn();
       } finally {
-        stopTaskLoading();
+        taskCountRef.current = Math.max(0, taskCountRef.current - 1);
+        if (taskCountRef.current === 0) {
+          window.setTimeout(() => {
+            if (taskCountRef.current === 0) {
+              setVisible(false);
+              setMessage(undefined);
+            }
+          }, EXIT_ANIMATION_MS);
+        }
       }
     },
-    [startTaskLoading, stopTaskLoading]
+    []
   );
 
-  const value = useMemo(
-    () => ({
-      isLoading: visible,
-      withLoading,
-    }),
-    [visible, withLoading]
-  );
+  const value = useMemo(() => ({ isLoading: visible, withLoading }), [visible, withLoading]);
 
   return (
     <LoadingOverlayContext.Provider value={value}>
-      <LoadingOverlayContextInternal.Provider
-        value={{ startNavLoading, stopNavLoading, scheduleNavSettle }}
-      >
-        {children}
-        <LoadingOverlay visible={visible} message={message} />
-        <Suspense fallback={null}>
-          <NavigationLoadingListener
-            startNavLoading={startNavLoading}
-            stopNavLoading={stopNavLoading}
-            scheduleNavSettle={scheduleNavSettle}
-          />
-        </Suspense>
-      </LoadingOverlayContextInternal.Provider>
+      {children}
+      <LoadingOverlay visible={visible} message={message} />
+      <Suspense fallback={null}>
+        <NavigationProgress />
+      </Suspense>
     </LoadingOverlayContext.Provider>
   );
 }
-
-type LoadingOverlayInternalContextValue = {
-  startNavLoading: () => void;
-  stopNavLoading: () => void;
-  scheduleNavSettle: () => void;
-};
-
-const LoadingOverlayContextInternal = createContext<LoadingOverlayInternalContextValue | null>(
-  null
-);
 
 export function useLoadingOverlay(): LoadingOverlayContextValue {
   const context = useContext(LoadingOverlayContext);
   if (!context) {
     throw new Error('useLoadingOverlay must be used within LoadingOverlayProvider');
-  }
-  return context;
-}
-
-export function useNavigationLoading(): LoadingOverlayInternalContextValue {
-  const context = useContext(LoadingOverlayContextInternal);
-  if (!context) {
-    throw new Error('useNavigationLoading must be used within LoadingOverlayProvider');
   }
   return context;
 }

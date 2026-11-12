@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { Suspense, useState } from 'react';
 import { ArrowLeft, Combine, Copy, Pencil, Scissors, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ function defaultChunkSizeFor(cardCount: number): number {
 
 export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailClientProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const [importOpen, setImportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
