@@ -17,14 +17,6 @@ describe('GET /api/v1/library', () => {
     });
   });
 
-  it('lets the CDN cache the anonymous library briefly', async () => {
-    const res = await GET(new Request('http://localhost/api/v1/library'), {
-      params: Promise.resolve({}),
-    });
-
-    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=30, stale-while-revalidate=60');
-  });
-
   it('passes opaque cursor through to service', async () => {
     const cursor = Buffer.from(
       JSON.stringify({

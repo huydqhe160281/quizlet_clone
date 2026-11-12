@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { Compass, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -47,7 +47,7 @@ export function StudySettingsForm({
   onClose,
 }: StudySettingsFormProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const [mode, setMode] = useState<StudyModeValue>(initialMode);
   const [settings, setSettings] = useState<StudySessionSettings>({
     ...STUDY_SESSION_SETTINGS_DEFAULTS,

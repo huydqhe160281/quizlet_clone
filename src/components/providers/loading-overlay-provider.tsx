@@ -14,6 +14,7 @@ import {
 import { usePathname, useSearchParams } from 'next/navigation';
 import { LoadingOverlay } from '@/components/shared/LoadingOverlay';
 import { NavigationProgressBar } from '@/components/shared/NavigationProgressBar';
+import { NAVIGATION_START_EVENT } from '@/lib/navigation/navigation-progress';
 
 /** Prefetched navigations usually finish before this, so they never show the bar. */
 const NAV_SHOW_DELAY_MS = 100;
@@ -85,6 +86,15 @@ function NavigationProgress() {
     setVisible(false);
   }, [clearTimers]);
 
+  const start = useCallback(() => {
+    clearTimers();
+    showTimerRef.current = setTimeout(() => {
+      showTimerRef.current = null;
+      setVisible(true);
+    }, NAV_SHOW_DELAY_MS);
+    timeoutRef.current = setTimeout(stop, NAV_TIMEOUT_MS);
+  }, [clearTimers, stop]);
+
   // Route committed: hide immediately.
   useEffect(() => {
     stop();
@@ -109,22 +119,20 @@ function NavigationProgress() {
         return;
       }
 
-      clearTimers();
-      showTimerRef.current = setTimeout(() => {
-        showTimerRef.current = null;
-        setVisible(true);
-      }, NAV_SHOW_DELAY_MS);
-      timeoutRef.current = setTimeout(stop, NAV_TIMEOUT_MS);
+      start();
     };
 
     // Capture phase: next/link calls preventDefault on every click it handles.
     // Same-URL clicks (nav reselect) are already skipped by isInternalNavigationLink.
     document.addEventListener('click', handleClick, true);
+    // Programmatic navigations (useAppRouter) announce themselves.
+    window.addEventListener(NAVIGATION_START_EVENT, start);
     return () => {
       document.removeEventListener('click', handleClick, true);
+      window.removeEventListener(NAVIGATION_START_EVENT, start);
       clearTimers();
     };
-  }, [clearTimers, stop]);
+  }, [clearTimers, start]);
 
   return <NavigationProgressBar visible={visible} />;
 }

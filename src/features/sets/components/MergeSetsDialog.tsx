@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ type MergeSetsFormProps = {
 
 function MergeSetsForm({ mergeSets, onClose, initialSelection }: MergeSetsFormProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useSets();
   const [selection, setSelection] = useState<MergeCandidate[]>(initialSelection);
   const [title, setTitle] = useState('');

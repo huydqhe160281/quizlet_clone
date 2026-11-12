@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,7 @@ type LoginFormProps = {
 
 export function LoginForm({ googleAuthEnabled = false }: LoginFormProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const searchParams = useSearchParams();
   const callbackUrl = safeCallbackUrl(searchParams.get('callbackUrl'));
   const [email, setEmail] = useState('');

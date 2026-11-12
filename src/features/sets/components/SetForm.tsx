@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ export function SetForm({
   isModal = false,
 }: SetFormProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const { createSet, updateSet } = useSetMutations();
   const [title, setTitle] = useState(initial?.title ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');

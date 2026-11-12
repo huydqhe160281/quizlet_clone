@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SetCard } from '@/components/shared/SetCard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { publicSetKeys } from '@/features/library/query-keys';
 import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
 
 type PublicSetItem = {
@@ -34,7 +35,7 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
 
   const { data, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
-      queryKey: isSearching ? ['search-page', submitted] : ['library', 'newest'],
+      queryKey: isSearching ? publicSetKeys.search(submitted) : publicSetKeys.library('newest'),
       queryFn: async ({ pageParam }) => {
         const params = new URLSearchParams();
         if (isSearching) {

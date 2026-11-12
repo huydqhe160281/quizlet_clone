@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { enqueueMutation } from '@/features/study-offline/queue';
@@ -42,21 +43,26 @@ export type SubmitReviewResult =
   | { status: 'error'; httpStatus?: number };
 
 function shouldEnqueueReview(status: number): boolean {
-  // Durable queue only for transient / auth-expiry cases — not definitive 4xx.
-  return status >= 500 || status === 401 || status === 0;
+  // Durable queue only for transient / auth-expiry cases — not definitive 4xx. A 429 is
+  // transient too: grading is optimistic, so the replay (which honours Retry-After) is
+  // the only way a rate-limited review still counts.
+  return status >= 500 || status === 401 || status === 429 || status === 0;
 }
 
 export function useSubmitReview() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  return async (
-    cardId: string,
-    grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY'
-  ): Promise<SubmitReviewResult> => {
-    const clientMutationId = crypto.randomUUID();
-    const clientTimestamp = Date.now();
+  // Grading does not wait for the server, so reviews are chained: two in flight for the
+  // same card (a grade and its requeued retry) would race on its CardProgress row.
+  const queueRef = useRef<Promise<unknown>>(Promise.resolve());
 
+  const send = async (
+    cardId: string,
+    grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY',
+    clientMutationId: string,
+    clientTimestamp: number
+  ): Promise<SubmitReviewResult> => {
     try {
       const response = await fetch('/api/v1/study/review', {
         method: 'POST',
@@ -93,5 +99,19 @@ export function useSubmitReview() {
       }
       return { status: 'error' };
     }
+  };
+
+  return (
+    cardId: string,
+    grade: 'AGAIN' | 'HARD' | 'GOOD' | 'EASY'
+  ): Promise<SubmitReviewResult> => {
+    // Stamped at grade time, not when the chained request actually goes out.
+    const clientMutationId = crypto.randomUUID();
+    const clientTimestamp = Date.now();
+    const result = queueRef.current.then(() =>
+      send(cardId, grade, clientMutationId, clientTimestamp)
+    );
+    queueRef.current = result.catch(() => undefined);
+    return result;
   };
 }

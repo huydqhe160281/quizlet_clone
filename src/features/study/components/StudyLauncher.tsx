@@ -100,8 +100,10 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
       setSettingsOpen(true);
       // Strip the param without a router navigation: a navigation would re-render the
       // page segment behind its loading boundary and remount this component, closing
-      // the dialog it just opened. Next keeps useSearchParams in sync with replaceState.
-      window.history.replaceState(window.history.state, '', `/sets/${setId}`);
+      // the dialog it just opened. The state must be null: Next treats a state carrying
+      // its own `__NA` marker as internal and would not sync useSearchParams or its
+      // canonical URL, so a later router refresh would put the param back.
+      window.history.replaceState(null, '', `/sets/${setId}`);
     }
   }, [searchParams, setId]);
 

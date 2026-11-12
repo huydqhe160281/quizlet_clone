@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Check, Pause, Play, Shuffle, Sparkles, Volume2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -113,8 +113,9 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   // The key listener and the autoplay timer read the latest one through a ref so they
   // are not torn down and re-created — which restarted the autoplay countdown — on
   // each render.
+  // Layout effect: updated before the browser can deliver the next key event.
   const answerRef = useRef(answer);
-  useEffect(() => {
+  useLayoutEffect(() => {
     answerRef.current = answer;
   }, [answer]);
 

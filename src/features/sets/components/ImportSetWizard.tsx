@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAppRouter } from '@/lib/navigation/use-app-router';
 import { useLoadingOverlay } from '@/components/providers/loading-overlay-provider';
 import {
   CheckCircle2,
@@ -308,7 +308,7 @@ function importErrorMessage(
 
 export function ImportSetWizard({ setId, onSuccess, variant = 'page' }: ImportSetWizardProps) {
   const t = useTranslations();
-  const router = useRouter();
+  const router = useAppRouter();
   const { withLoading } = useLoadingOverlay();
   const { invalidateSetData } = useSetMutations();
   const fileRef = useRef<HTMLInputElement>(null);
