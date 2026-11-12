@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
+import { preloadStudyMode } from '@/features/study/lib/study-mode-loaders';
 import { StudySettingsModal } from '@/features/study/components/StudySettingsModal';
 import { STUDY_MODE_DESC_KEY, STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
@@ -202,7 +203,11 @@ export function StudyLauncher({ setId, cardCount, newWordCount = 0 }: StudyLaunc
                 key={mode.value}
                 type="button"
                 onClick={() => openSettings(mode.value)}
-                onMouseEnter={() => setHoveredMode(mode.value)}
+                onMouseEnter={() => {
+                  setHoveredMode(mode.value);
+                  preloadStudyMode(mode.value);
+                }}
+                onFocus={() => preloadStudyMode(mode.value)}
                 onMouseLeave={() => setHoveredMode(null)}
                 className={cn(
                   'glass-panel group flex items-center gap-3 rounded-xl border border-border/50 p-3.5 text-left sm:items-start sm:gap-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl animate-in fade-in slide-in-from-bottom-4 zoom-in-[0.98] fill-mode-both',

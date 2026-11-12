@@ -6,6 +6,7 @@ import type {
   searchQuerySchema,
 } from '@/features/search/schemas/search.schema';
 import { prisma } from '@/server/db';
+import { PUBLIC_SET_LISTS_TAG, publicSetTag } from '@/server/services/sets/set-cache';
 import type { z } from 'zod';
 
 type SearchQuery = z.infer<typeof searchQuerySchema>;
@@ -337,7 +338,7 @@ export const getCachedPublicLibrary = async (query: LibraryQuery) => {
   return unstable_cache(
     async () => getPublicLibrary(query),
     ['public-library', JSON.stringify(query)],
-    { tags: ['public-sets'], revalidate: 3600 }
+    { tags: [PUBLIC_SET_LISTS_TAG], revalidate: 3600 }
   )();
 };
 
@@ -349,13 +350,13 @@ export const getCachedSearchPublicSets = async (query: SearchQuery, userId?: str
   return unstable_cache(
     async () => searchPublicSets(query),
     ['public-search', JSON.stringify(query)],
-    { tags: ['public-sets'], revalidate: 3600 }
+    { tags: [PUBLIC_SET_LISTS_TAG], revalidate: 3600 }
   )();
 };
 
 export const getCachedPublicSetPreview = async (setId: string) => {
   return unstable_cache(async () => getPublicSetPreview(setId), ['public-set-preview', setId], {
-    tags: ['public-sets', `public-set-${setId}`],
+    tags: [publicSetTag(setId)],
     revalidate: 300,
   })();
 };

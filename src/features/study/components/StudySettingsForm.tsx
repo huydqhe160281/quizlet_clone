@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import type { StudyModeValue, StudySessionSettings } from '@/features/study/schemas/study.schema';
 import { STUDY_SESSION_SETTINGS_DEFAULTS } from '@/features/study/schemas/study.schema';
+import { preloadStudyMode } from '@/features/study/lib/study-mode-loaders';
 import { createStudySessionOnce } from '@/features/study/lib/create-session-once';
 import { STUDY_LIMIT_REACHED, studyStartError } from '@/features/study/lib/study-limit';
 import { StudyLimitNotice } from '@/features/auth/components/StudyLimitNotice';
@@ -84,6 +85,13 @@ export function StudySettingsForm({
       setMode('FLASHCARD');
     }
   }, [mode, newWordCount]);
+
+  // Warm the mode's JS chunk and route while the user is still on the form, so
+  // starting does not wait on them after the session is created.
+  useEffect(() => {
+    preloadStudyMode(mode);
+    router.prefetch(`/sets/${setId}/${mode.toLowerCase()}`);
+  }, [mode, router, setId]);
 
   const handleStart = async () => {
     if (loading) return;

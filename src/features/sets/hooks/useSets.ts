@@ -53,10 +53,15 @@ export function useSetMutations() {
   // so e.g. renaming a set refetched an open 2000-card editor.
   const invalidateSets = () => {
     void queryClient.invalidateQueries({ queryKey: setKeys.list() });
+    // Publishing, unpublishing, renaming or deleting a public set changes the public
+    // library and search pages too. They are usually unmounted here, so this only
+    // marks them stale for their next visit.
+    void queryClient.invalidateQueries({ queryKey: ['library'] });
+    void queryClient.invalidateQueries({ queryKey: ['search-page'] });
   };
 
   const invalidateSetData = (setId: string) => {
-    void queryClient.invalidateQueries({ queryKey: setKeys.list() });
+    invalidateSets();
     void queryClient.invalidateQueries({ queryKey: setKeys.detail(setId) });
     void queryClient.invalidateQueries({ queryKey: setKeys.cards(setId) });
   };

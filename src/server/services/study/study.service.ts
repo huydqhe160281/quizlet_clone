@@ -447,11 +447,19 @@ export async function completeSession(
         await applySessionAnswers(tx, sessionId, normalizedAnswers);
       }
 
-      const correctCount = await tx.sessionCard.count({
-        where: { sessionId, isCorrect: true },
+      // One pass for both totals. Score against the cards that still exist: deleted
+      // cards cascade out of the session.
+      const answerGroups = await tx.sessionCard.groupBy({
+        by: ['isCorrect'],
+        where: { sessionId },
+        _count: { _all: true },
       });
-      // Score against the cards that still exist: deleted cards cascade out of the session.
-      const totalCards = await tx.sessionCard.count({ where: { sessionId } });
+      let correctCount = 0;
+      let totalCards = 0;
+      for (const group of answerGroups) {
+        totalCards += group._count._all;
+        if (group.isCorrect === true) correctCount += group._count._all;
+      }
       const score = totalCards > 0 ? correctCount / totalCards : 0;
       const completedAt = new Date();
 

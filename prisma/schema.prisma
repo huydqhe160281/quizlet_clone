@@ -186,7 +186,8 @@ model FlashcardSet {
 
   // "My sets" lists filter on userId and sort newest first.
   @@index([userId, createdAt(sort: Desc)])
-  @@index([visibility])
+  // Public library keyset paging: WHERE visibility ORDER BY createdAt DESC, id DESC.
+  @@index([visibility, createdAt(sort: Desc), id(sort: Desc)])
   @@index([language])
   @@index([createdAt(sort: Desc)])
   @@map("flashcard_sets")

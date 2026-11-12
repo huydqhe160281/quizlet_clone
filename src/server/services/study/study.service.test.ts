@@ -19,6 +19,7 @@ const prismaMock = vi.hoisted(() => ({
     update: vi.fn(),
     updateMany: vi.fn(),
     count: vi.fn(),
+    groupBy: vi.fn(),
   },
   processedMutation: {
     findMany: vi.fn(),
@@ -431,7 +432,11 @@ describe('study.service', () => {
         completedAt: new Date(),
       });
     // correct answers, then live session-card total
-    prismaMock.sessionCard.count.mockResolvedValueOnce(2).mockResolvedValueOnce(4);
+    prismaMock.sessionCard.groupBy.mockResolvedValueOnce([
+      { isCorrect: true, _count: { _all: 2 } },
+      { isCorrect: false, _count: { _all: 1 } },
+      { isCorrect: null, _count: { _all: 1 } },
+    ]);
     prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
     prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
@@ -461,7 +466,10 @@ describe('study.service', () => {
     // card-gone was deleted: its SessionCard cascaded away.
     prismaMock.sessionCard.findMany.mockResolvedValue([{ cardId: 'card-1' }]);
     prismaMock.sessionCard.updateMany.mockResolvedValue({ count: 1 });
-    prismaMock.sessionCard.count.mockResolvedValueOnce(1).mockResolvedValueOnce(3);
+    prismaMock.sessionCard.groupBy.mockResolvedValueOnce([
+      { isCorrect: true, _count: { _all: 1 } },
+      { isCorrect: false, _count: { _all: 2 } },
+    ]);
     prismaMock.studySession.updateMany.mockResolvedValue({ count: 1 });
 
     await completeSession('session-1', 'user-a', [

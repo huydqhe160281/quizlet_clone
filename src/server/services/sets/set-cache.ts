@@ -1,6 +1,11 @@
 import type { Visibility } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 
+/** Library and anonymous search pages. */
+export const PUBLIC_SET_LISTS_TAG = 'public-set-lists';
+/** One public set's preview page. */
+export const publicSetTag = (setId: string) => `public-set-${setId}`;
+
 export type SetCacheChange = {
   /** The set whose own cached views (public preview) must be refreshed. */
   setId?: string;
@@ -23,11 +28,11 @@ export function invalidateSetCache(
   }
   if (visibility !== 'PUBLIC') return;
   if (change.setId) {
-    revalidateTag(`public-set-${change.setId}`);
+    revalidateTag(publicSetTag(change.setId));
   }
-  // The shared public tag covers every library/search page, so only flush it when a
-  // list view can actually differ.
+  // The list tag covers every library/search page, so only flush it when a list view
+  // can actually differ. Previews of other sets keep their own tag and stay cached.
   if (listChanged) {
-    revalidateTag('public-sets');
+    revalidateTag(PUBLIC_SET_LISTS_TAG);
   }
 }
