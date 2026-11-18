@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/components/shared/PageSkeleton';
+import { SetDetailSkeleton } from '@/features/sets/components/SetsSkeletons';
 
 export default function SetLoading() {
-  return <PageSkeleton variant="detail" />;
+  return <SetDetailSkeleton />;
 }

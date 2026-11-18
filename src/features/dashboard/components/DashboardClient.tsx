@@ -6,12 +6,13 @@ import { DueCardsAlert } from '@/features/dashboard/components/DueCardsAlert';
 import { StatsCards } from '@/features/dashboard/components/StatsCards';
 import { RecentSessions } from '@/features/dashboard/components/RecentSessions';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { ActivityHeatmapSkeleton } from '@/features/dashboard/components/DashboardSkeleton';
 
 const ActivityHeatmap = dynamic(
   () => import('@/features/dashboard/components/ActivityHeatmap').then((m) => m.ActivityHeatmap),
   {
     ssr: false,
-    loading: () => <div className="h-32 animate-pulse rounded-xl border bg-muted/40" aria-hidden />,
+    loading: () => <ActivityHeatmapSkeleton />,
   }
 );
 

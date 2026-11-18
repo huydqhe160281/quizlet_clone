@@ -30,6 +30,8 @@ import type { FlashcardItem } from '@/features/sets/api/sets-api';
 import { useCards, useSetMutations } from '@/features/sets/hooks/useSets';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
+import { SkeletonScreen } from '@/components/shared/Skeleton';
+import { CardListSkeleton } from '@/features/sets/components/SetsSkeletons';
 
 type SortableCardProps = {
   card: FlashcardItem;
@@ -245,9 +247,9 @@ export function CardEditor({ setId }: CardEditorProps) {
 
   if (isLoading) {
     return (
-      <div className="glass-panel animate-pulse rounded-xl p-8 text-sm text-muted-foreground">
-        {t('cards.loading')}
-      </div>
+      <SkeletonScreen label={t('cards.loading')}>
+        <CardListSkeleton />
+      </SkeletonScreen>
     );
   }
 

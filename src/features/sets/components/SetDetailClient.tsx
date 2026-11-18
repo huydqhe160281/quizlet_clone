@@ -25,6 +25,9 @@ import { MergeSetsDialog } from '@/features/sets/components/MergeSetsDialog';
 import { SetForm } from '@/features/sets/components/SetForm';
 import { MAX_SPLIT_PARTS } from '@/features/sets/schemas/set.schema';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { SkeletonScreen } from '@/components/shared/Skeleton';
+import { SetDetailSkeleton } from '@/features/sets/components/SetsSkeletons';
+import { StudyModesSkeleton } from '@/features/study/components/shared/StudySkeletons';
 
 type SetDetailClientProps = {
   setId: string;
@@ -86,11 +89,7 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
   }
 
   if (isLoading || !set) {
-    return (
-      <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
-        {t('setsPage.loadingSet')}
-      </div>
-    );
+    return <SetDetailSkeleton label={t('setsPage.loadingSet')} />;
   }
 
   return (
@@ -333,9 +332,9 @@ export function SetDetailClient({ setId, initialNewWordCount = 0 }: SetDetailCli
       </div>
       <Suspense
         fallback={
-          <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
-            {t('setsPage.loadingModes')}
-          </div>
+          <SkeletonScreen label={t('setsPage.loadingModes')}>
+            <StudyModesSkeleton />
+          </SkeletonScreen>
         }
       >
         <StudyLauncher setId={setId} cardCount={set._count.cards} newWordCount={newWordCount} />

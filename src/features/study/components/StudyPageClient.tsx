@@ -3,25 +3,34 @@
 import dynamic from 'next/dynamic';
 import type { StudyModeValue } from '@/features/study/schemas/study.schema';
 import { studyModeLoaders } from '@/features/study/lib/study-mode-loaders';
-import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { StudySessionSkeleton } from '@/features/study/components/shared/StudySkeletons';
 
-function StudyLoading() {
-  const t = useTranslations();
-  return (
-    <div className="glass-panel animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-      {t('ui.loading')}
-    </div>
-  );
-}
-
-const modeOptions = { ssr: false, loading: () => <StudyLoading /> } as const;
-
-const FlashcardMode = dynamic(studyModeLoaders.FLASHCARD, modeOptions);
-const LearnMode = dynamic(studyModeLoaders.LEARN, modeOptions);
-const WriteMode = dynamic(studyModeLoaders.WRITE, modeOptions);
-const TestMode = dynamic(studyModeLoaders.TEST, modeOptions);
-const DrawMode = dynamic(studyModeLoaders.DRAW, modeOptions);
-const GravityMode = dynamic(studyModeLoaders.GRAVITY, modeOptions);
+// next/dynamic options must be an object literal at each call site: the SWC
+// transform rejects a shared variable and the build fails.
+const FlashcardMode = dynamic(studyModeLoaders.FLASHCARD, {
+  ssr: false,
+  loading: () => <StudySessionSkeleton variant="flashcard" />,
+});
+const LearnMode = dynamic(studyModeLoaders.LEARN, {
+  ssr: false,
+  loading: () => <StudySessionSkeleton variant="quiz" />,
+});
+const WriteMode = dynamic(studyModeLoaders.WRITE, {
+  ssr: false,
+  loading: () => <StudySessionSkeleton variant="write" />,
+});
+const TestMode = dynamic(studyModeLoaders.TEST, {
+  ssr: false,
+  loading: () => <StudySessionSkeleton variant="quiz" />,
+});
+const DrawMode = dynamic(studyModeLoaders.DRAW, {
+  ssr: false,
+  loading: () => <StudySessionSkeleton variant="draw" />,
+});
+const GravityMode = dynamic(studyModeLoaders.GRAVITY, {
+  ssr: false,
+  loading: () => <StudySessionSkeleton variant="gravity" />,
+});
 
 type StudyPageClientProps = {
   setId: string;

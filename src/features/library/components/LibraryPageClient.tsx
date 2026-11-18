@@ -12,6 +12,7 @@ import { SetCard } from '@/components/shared/SetCard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { publicSetKeys } from '@/features/library/query-keys';
 import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
+import { SetCardGridSkeleton, SkeletonScreen } from '@/components/shared/Skeleton';
 
 type SortOption = 'newest' | 'most_studied' | 'trending';
 
@@ -85,7 +86,11 @@ export function LibraryPageClient({ initialData }: { initialData: LibraryPage })
           </Button>
         ))}
       </div>
-      {isLoading && <p className="text-sm text-muted-foreground">{t('library.loading')}</p>}
+      {isLoading && (
+        <SkeletonScreen label={t('library.loading')}>
+          <SetCardGridSkeleton />
+        </SkeletonScreen>
+      )}
       {isError && <QueryErrorPanel message={t('library.loadFailed')} onRetry={refetch} />}
       {showEmpty && (
         <EmptyStatePanel

@@ -34,6 +34,8 @@ import { isCorrectGrade } from '@/features/study/lib/sm2';
 import { fuzzyMatch } from '@/lib/utils/fuzzy';
 import { isImeComposing } from '@/lib/utils/keyboard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
+import { SkeletonScreen } from '@/components/shared/Skeleton';
+import { SpacedRepetitionFormSkeleton } from '@/features/study/components/shared/StudySkeletons';
 
 type StudyStyle = 'flashcard' | 'multiple_choice' | 'default';
 
@@ -271,9 +273,9 @@ export function SpacedRepetitionStudy() {
 
   if (isLoading) {
     return (
-      <div className="glass-panel animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        {t('studyUi.spacedLoadingDue')}
-      </div>
+      <SkeletonScreen label={t('studyUi.spacedLoadingDue')}>
+        <SpacedRepetitionFormSkeleton />
+      </SkeletonScreen>
     );
   }
 
