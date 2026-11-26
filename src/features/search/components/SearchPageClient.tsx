@@ -12,6 +12,7 @@ import { SetCard } from '@/components/shared/SetCard';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { publicSetKeys } from '@/features/library/query-keys';
 import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
+import { SetCardGridSkeleton, SkeletonScreen } from '@/components/shared/Skeleton';
 
 type PublicSetItem = {
   id: string;
@@ -100,9 +101,11 @@ export function SearchPageClient({ initialData }: { initialData: SetsPage }) {
           : t('searchPage.showingAll')}
       </p>
       {isLoading && (
-        <p className="text-sm text-muted-foreground">
-          {isSearching ? t('searchPage.searching') : t('searchPage.loadingSets')}
-        </p>
+        <SkeletonScreen
+          label={isSearching ? t('searchPage.searching') : t('searchPage.loadingSets')}
+        >
+          <SetCardGridSkeleton />
+        </SkeletonScreen>
       )}
       {error && <QueryErrorPanel message={t('searchPage.loadFailed')} onRetry={refetch} />}
       {!isLoading && !error && sets.length === 0 && (

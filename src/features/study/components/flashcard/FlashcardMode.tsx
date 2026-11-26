@@ -24,6 +24,7 @@ import type { StudyCard } from '@/features/study/store';
 import { isTextEntryElement } from '@/lib/utils/touch';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
+import { StudySessionSkeleton } from '@/features/study/components/shared/StudySkeletons';
 
 type FlashcardModeProps = {
   setId: string;
@@ -196,11 +197,7 @@ export function FlashcardMode({ setId }: FlashcardModeProps) {
   }, [autoplay, currentCard, isFlipped, flip, speechEnabled, speechHints]);
 
   if (study.isLoading) {
-    return (
-      <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        {t('studyUi.loadingSession')}
-      </div>
-    );
+    return <StudySessionSkeleton variant="flashcard" label={t('studyUi.loadingSession')} />;
   }
 
   if (study.error) {

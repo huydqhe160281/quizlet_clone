@@ -54,6 +54,7 @@ import { StudyOfflineSyncStatus } from '@/features/study-offline/StudyOfflineSyn
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { cn } from '@/lib/utils';
 import { isCoarsePointer, isTextEntryElement } from '@/lib/utils/touch';
+import { StudySessionSkeleton } from '@/features/study/components/shared/StudySkeletons';
 
 type GravityModeProps = {
   setId: string;
@@ -807,11 +808,7 @@ export function GravityMode({ setId }: GravityModeProps) {
   );
 
   if (study.isLoading) {
-    return (
-      <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        {t('studyUi.loadingSession')}
-      </div>
-    );
+    return <StudySessionSkeleton variant="gravity" label={t('studyUi.loadingSession')} />;
   }
 
   if (study.error) {

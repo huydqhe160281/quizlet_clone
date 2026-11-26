@@ -16,6 +16,7 @@ import { useSets } from '@/features/sets/hooks/useSets';
 import { MIN_MERGE_SETS } from '@/features/sets/schemas/set.schema';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { useNavReselectRefetch } from '@/lib/navigation/use-nav-reselect-refetch';
+import { SetsListSkeleton } from '@/features/sets/components/SetsSkeletons';
 
 export function SetsListClient() {
   const t = useTranslations();
@@ -78,11 +79,7 @@ export function SetsListClient() {
   );
 
   if (isLoading) {
-    return (
-      <div className="glass-panel animate-pulse rounded-2xl p-8 text-sm text-muted-foreground">
-        {t('setsPage.loading')}
-      </div>
-    );
+    return <SetsListSkeleton label={t('setsPage.loading')} />;
   }
 
   if (sets.length === 0) {

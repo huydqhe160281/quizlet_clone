@@ -28,6 +28,7 @@ import type { StudyCard } from '@/features/study/store';
 import { cn } from '@/lib/utils';
 import { useTranslations } from '@/lib/i18n/LocaleProvider';
 import { STUDY_MODE_LABEL_KEY } from '@/features/study/lib/study-mode-i18n';
+import { StudySessionSkeleton } from '@/features/study/components/shared/StudySkeletons';
 
 /** Brief pause so correct-answer feedback is visible before auto-advance. */
 export const LEARN_CORRECT_AUTO_ADVANCE_MS = CORRECT_AUTO_ADVANCE_MS;
@@ -166,11 +167,7 @@ export function LearnMode({ setId }: LearnModeProps) {
   };
 
   if (study.isLoading) {
-    return (
-      <div className="glass-panel mx-auto max-w-xl animate-pulse rounded-2xl p-8 text-center text-sm text-muted-foreground">
-        {t('studyUi.loadingSession')}
-      </div>
-    );
+    return <StudySessionSkeleton variant="quiz" label={t('studyUi.loadingSession')} />;
   }
 
   if (study.error) {
