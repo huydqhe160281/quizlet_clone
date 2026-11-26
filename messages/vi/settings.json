@@ -24,6 +24,8 @@
       "restoresLabel": "Lượt khôi phục chuỗi",
       "restoresHint": "Lỡ 1–3 ngày, khi vào lại app bạn có thể dùng 1 lượt cho mỗi ngày lỡ để giữ chuỗi. Mỗi {reviews} lượt ôn được thêm 1 lượt (tối đa {max}); đầu mỗi tháng nâng lên 3 nếu đang ít hơn.",
       "restoresProgress": "Còn {count} lượt ôn để nhận thêm 1 lượt.",
+      "restoreAvailable": "Chuỗi {streak} ngày của bạn vừa bị gãy và vẫn có thể khôi phục.",
+      "restoreAction": "Khôi phục chuỗi",
       "timeZoneLabel": "Múi giờ",
       "timeZoneHint": "Dùng để tính ngày học cho chuỗi (streak) và giờ gửi nhắc học.",
       "timeZoneUseDevice": "Dùng múi giờ thiết bị ({timeZone})",

@@ -170,21 +170,23 @@ export async function requestStreakRestore(userId: string) {
   return data;
 }
 
-const restoreDismissKey = (userId: string) => `quizlet-clone-streak-restore-dismissed:${userId}`;
+// "Not now" hides the restore prompt until the next page load. Module state survives
+// client-side navigation; a reload shows the offer again so a mis-tap never forfeits it.
+const dismissedRestorePrompts = new Set<string>();
 
-/** "Not now" hides the restore prompt for the rest of the local day. */
+export const OPEN_STREAK_RESTORE_EVENT = 'streak-restore-open';
+
 export function isStreakRestoreDismissed(userId: string): boolean {
-  try {
-    return localStorage.getItem(restoreDismissKey(userId)) === localDateKey();
-  } catch {
-    return false;
-  }
+  return dismissedRestorePrompts.has(userId);
 }
 
 export function dismissStreakRestore(userId: string): void {
-  try {
-    localStorage.setItem(restoreDismissKey(userId), localDateKey());
-  } catch {
-    // ignore
-  }
+  dismissedRestorePrompts.add(userId);
+}
+
+/** Reopen the restore prompt (e.g. from Settings) even after it was dismissed. */
+export function openStreakRestorePrompt(userId: string): void {
+  dismissedRestorePrompts.delete(userId);
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(OPEN_STREAK_RESTORE_EVENT));
 }

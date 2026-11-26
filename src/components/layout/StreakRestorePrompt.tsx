@@ -17,6 +17,7 @@ import {
   dismissStreakRestore,
   fetchStreakRestoreStatus,
   isStreakRestoreDismissed,
+  OPEN_STREAK_RESTORE_EVENT,
   requestStreakRestore,
   syncDetectedTimeZone,
   type StreakRestoreStatus,
@@ -36,20 +37,34 @@ export function StreakRestorePrompt() {
   const [cracked, setCracked] = useState(false);
 
   useEffect(() => {
-    if (!userId || isStreakRestoreDismissed(userId)) return;
+    if (!userId) return;
     let active = true;
-    // Missed days depend on the user's time zone, so adopt the browser zone first.
-    void syncDetectedTimeZone(userId)
-      .catch(() => false)
-      .then(() => fetchStreakRestoreStatus())
-      .then((data) => {
-        if (!active || !data.offer) return;
-        setStatus(data);
-        setOpen(true);
-      })
-      .catch(() => {});
+    const show = (data: StreakRestoreStatus) => {
+      if (!active || !data.offer) return;
+      setStatus(data);
+      setCracked(false);
+      setOpen(true);
+    };
+
+    if (!isStreakRestoreDismissed(userId)) {
+      // Missed days depend on the user's time zone, so adopt the browser zone first.
+      void syncDetectedTimeZone(userId)
+        .catch(() => false)
+        .then(() => fetchStreakRestoreStatus())
+        .then(show)
+        .catch(() => {});
+    }
+
+    // Settings can reopen the prompt after it was dismissed.
+    const reopen = () => {
+      void fetchStreakRestoreStatus()
+        .then(show)
+        .catch(() => {});
+    };
+    window.addEventListener(OPEN_STREAK_RESTORE_EVENT, reopen);
     return () => {
       active = false;
+      window.removeEventListener(OPEN_STREAK_RESTORE_EVENT, reopen);
     };
   }, [userId]);
 
